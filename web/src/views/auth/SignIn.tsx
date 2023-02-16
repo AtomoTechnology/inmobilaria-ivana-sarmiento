@@ -109,7 +109,7 @@ const SignIn = () => {
           <fieldset>
             <button
               disabled={loading}
-              className='btn '
+              className='btn gradient '
               type='submit'
             >
               {!loading ? ('Inicia sesión') : (<Loading />)}

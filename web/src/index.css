@@ -2,38 +2,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* :root {
 
+:root {
+  --PrimaryColor: #f16fa1;
+  --SecondaryColor: #8b55f5;
 
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  --brand-color: #f16fa1;
+  --brand-color-2: #8b55f5;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: rgb(0, 10, 19);
-  background-color: rgb(227 227 227);
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-} */
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  /* background-color: rgb(0, 10, 19); */
-  background-color: rgb(227 227 227);
-  font-family: 'Roboto Slab';
+  --dark-color: rgb(15 23 42);
+  --dark-color-box: rgba(20, 42, 59, 0.835);
+  --dark-text: rgb(148 163 184);
+  --scroll-bar: rgba(2, 34, 58, 0.84);
 }
 
 * {
@@ -41,4 +21,19 @@ body {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+}
+
+/* a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: var(--PrimaryColor);
+} */
+
+body {
+  /* background-color: rgb(0, 10, 19); */
+  background-color: rgb(227 227 227);
+  font-family: 'Roboto Slab';
 }
