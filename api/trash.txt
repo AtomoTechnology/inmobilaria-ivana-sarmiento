@@ -1,0 +1,30 @@
+ if (options.filter) {
+      options.filter
+        .toString()
+        .split(';')
+        .map((item: string) => item.split(' '))
+        .map((i: string[], j: number) => {
+
+          options = {} ;
+        
+          if(i[1][0] == 'or'){
+  options = {
+    [Op.or] :{
+       
+    }
+  };
+          }
+          console.log('gasta aca');
+          if ((j + 1) % 2 == 0) {
+          } else {
+
+            console.log('estoy...', i);
+            if (i[1] === 'eq') {
+              options[`${i[0]}`] = { [Op.eq]: i[2] };
+            }
+            // i.map((it: string, i: number) => {
+
+            // });
+          }
+        });
+    }
