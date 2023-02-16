@@ -60,12 +60,22 @@ const Put = (req, res) =>{
             id:  req.params.id,
         }
     }).then((response) =>{ 
-        return res.json({
-            status: 200,
-            success: true,
-            message:'El tipo de forma de pago fue actualizado con exito',
-            data:response
-        });
+        if(response === 1){ 
+            return res.json({
+                status: 200,
+                success: true,
+                message:'El tipo de forma de pago fue actualizado con exito',
+                data:response
+            }); 
+        }
+        else
+        {
+            return res.json({
+                status: 500,
+                success: false,
+                message:'El tipo de forma de pago no fue actualizado'
+            });
+        }
     })
     .catch((err) =>{
         return res.json({
