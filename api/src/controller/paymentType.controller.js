@@ -8,8 +8,7 @@ const GetAll = (req, res) =>{
             success: true,
             message:'',
             data:result
-        }
-        );
+        });
     });    
 }
 

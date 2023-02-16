@@ -1,4 +1,3 @@
-require('dotenv').config();
 const {zone} = require('../../models');
 
 const GetAll = (req, res) =>{   
