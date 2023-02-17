@@ -26,11 +26,16 @@ const AllZones = () => {
   const currentId = useRef<Izone>();
   const { name, values, handleInputChange, reset } = useForm({ name: '' })
   const [errors, setErrors] = useState<any>();
+  const [editMode, setEditMode] = useState(false)
 
 
   const { data, isError, isLoading, error, refetch, isFetching } = useZones();
 
   const edit = (data: Izone) => {
+    handleInputChange(data.name, 'name');
+    setShowCreateModal(true)
+    setEditMode(true)
+    currentId.current = data;
     console.log(data);
   };
   const destroy = (data: Izone) => {
@@ -40,15 +45,23 @@ const AllZones = () => {
   };
 
   const destroyt = async (id: number) => {
-    const res = await http.delete('/zones/' + id);
-    if (res.data.success) {
-      console.log('exito!!!');
-      setShow(false);
-      // refetch();
-    } else {
-      console.log('somes wrong hapenn!');
-      console.log(res.data);
+    try {
+      const res = await http.delete('/zones/' + id);
+      if (res.data.success) {
+        console.log('exito!!!');
+        data?.data && (data.data! = data?.data.filter(z => z.id !== id));
+        setShow(false);
+        // refetch();
+      } else {
+        console.log('somes wrong hapenn!');
+        console.log(res.data);
+      }
+    } catch (error: any) {
+      if (error.response) {
+        console.log(error.response.data);
+      }
     }
+
   };
 
   const actionBodyTemplate = (rowData: any) => {
@@ -71,14 +84,56 @@ const AllZones = () => {
     return ok;
   };
 
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (verifyForm()) {
-      console.log('okkkk')
+      if (editMode) {
+        try {
+          const res = await http.put(`/zones/${currentId.current?.id}`, values);
+          if (res.data.success) {
+            data?.data && (data.data = data?.data.map(z => {
+              if (z.id === currentId.current?.id) {
+                z.name = values.name
+              }
+              return z;
+            }))
+            reset();
+            console.log('exito!!!');
+            setShowCreateModal(false);
+          } else {
+            console.log('somes wrong hapenn!');
+            console.log(res.data);
+          }
+        } catch (error: any) {
+          if (error.response) {
+            console.log(error.response.data);
+          }
+        }
+
+      } else {
+        try {
+          const res = await http.post('/zones', values);
+          if (res.data.success) {
+            data?.data.push(res.data.data)
+            reset();
+            console.log('exito!!!');
+            setShowCreateModal(false);
+          } else {
+            console.log('somes wrong hapenn!');
+            console.log(res.data);
+          }
+        } catch (error: any) {
+          if (error.response) {
+            console.log(error.response.data);
+          }
+        }
+      }
+
     } else {
-      console.log(values)
+
     }
   }
+
   if (isLoading) return <Loading />;
 
   return (
@@ -115,20 +170,18 @@ const AllZones = () => {
         text={`${currentId.current?.name}`}
       />
       <CreateModal
-        title='Crear zona'
         show={showCreateModal}
         setShow={setShowCreateModal}
-        destroy={() => destroyt(currentId.current?.id!)}
-        text={`${currentId.current?.name}`}
+        className='max-w-[400px] w-[300px]'
       >
         <form action="" onSubmit={handleSave}>
 
           <div className=' flex justify-between'>
-            <h2 className='title-form'>Creer zona</h2>
+            <h2 className='title-form'>Crear zona</h2>
           </div>
 
           <fieldset className=''>
-            <CustomInput placeholder='Sur,Este,Norte' onChange={(value) => handleInputChange(value, 'name')} />
+            <CustomInput placeholder='Sur,Este,Norte' initialValue={name} onChange={(value) => handleInputChange(value, 'name')} />
             {errors?.name && <FormError text='El nombre es obligatorio.' />}
           </fieldset>
           <section className='action flex items-center gap-x-3 mt-4'>

@@ -3,11 +3,14 @@ import { createContext, useEffect, useReducer } from 'react';
 import Loading from '../components/Loading';
 // import { ResponseLogin } from '../interfaces/UserLogged';
 import { authReducer } from '../reducer/authReducer';
+import jwt_decode from "jwt-decode";
+
+export interface Iuser { fullName: string; email: string; id: number, photo: string };
 
 export interface AuthState {
   checking: Boolean;
   token: string | null;
-  user?: { username: string; email: string; id: number, photo: string } | null
+  user?: Iuser | null
 }
 
 export const initialState = {
@@ -28,12 +31,19 @@ export const AuthProvider = ({ children }: any) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   useEffect(() => {
-    const user = localStorage.getItem(import.meta.env.VITE_HASH_USER_LOCAL_HOST)
+    const token = localStorage.getItem(import.meta.env.VITE_HASH_USER_LOCAL_HOST)
       ? JSON.parse(localStorage.getItem(import.meta.env.VITE_HASH_USER_LOCAL_HOST)!)
       : null;
-    console.log({ user })
-    if (user) {
-      signIn(user);
+    console.log({ token })
+    if (token) {
+      try {
+        var decoded = jwt_decode(token);
+        console.log(decoded)
+        signIn(token);
+      } catch (error) {
+        signOut();
+      }
+
     } else {
       signOut();
     }
@@ -41,7 +51,7 @@ export const AuthProvider = ({ children }: any) => {
   }, []);
 
   const signIn = (data: any) => {
-    localStorage.setItem(import.meta.env.VITE_HASH_USER_LOCAL_HOST, JSON.stringify(data));
+    localStorage.setItem(import.meta.env.VITE_HASH_USER_LOCAL_HOST, data.token);
     dispatch({ type: 'signIn', payload: data });
   };
   const signOut = () => {
