@@ -17,8 +17,13 @@ module.exports = {
         unique: true,
         allowNull: false
       },
+      fullName: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
       password: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false
       },
       restPassword: {
         type: Sequelize.STRING
