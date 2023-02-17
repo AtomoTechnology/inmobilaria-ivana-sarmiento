@@ -14,23 +14,24 @@ const SignIn = (req, res) =>{
         console.log("Account",account)
         if (!account)
         {   
-            return res.json({
+            throw new Error(res.json({
                 status: 500,
                 success: false,
                 error:"No encontrado",                    
                 message:"Usuario incorrecto"
-            });
+            }));
         }
         else{
             encripto.compare(password,account.dataValues.password).then((response)=>
             {
                 if(!response){
-                    return res.json({
+                    throw new Error( 
+                        res.json({
                         status: 500,
                         success: false,
                         error:"No encontrado",                   
                         message:"contraseña incorrecta"
-                    });
+                    }));
                 }
                 else
                 { 
@@ -39,7 +40,8 @@ const SignIn = (req, res) =>{
                         {
                             id:account.dataValues.id, 
                             uid:account.dataValues.uuid, 
-                            role:account.dataValues.email
+                            email:account.dataValues.email,
+                            fullname:account.dataValues.fullName
                         },
                         "6a698217-a233-40da-a643-72367ff09e89",{
                             expiresIn:86400 // vence en un dia
