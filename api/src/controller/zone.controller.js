@@ -68,7 +68,7 @@ const Put = (req, res) => {
       }
     )
     .then((response) => {
-      if (response === 1) {
+      if (response[0] === 1) {
         return res.json({
           status: 200,
           success: true,
