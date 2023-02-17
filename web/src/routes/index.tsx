@@ -4,7 +4,7 @@ import SignIn from "../views/auth/SignIn";
 import Contracts from "../views/contracts/Contracts";
 import Home from "../views/Home";
 import AllPayment from "../views/payment/all";
-import AllZones from "../views/zones/all";
+import AllZones from "../views/zones/allZones";
 
 export const router = createBrowserRouter([
   {

@@ -6,7 +6,7 @@
 :root {
   --PrimaryColor: #f16fa1;
   --SecondaryColor: #8b55f5;
-
+  --AppBg: rgb(227 227 227);
   --brand-color: #f16fa1;
   --brand-color-2: #8b55f5;
 
@@ -34,6 +34,6 @@ a:hover {
 
 body {
   /* background-color: rgb(0, 10, 19); */
-  background-color: rgb(227 227 227);
+  background-color: var(--AppBg);
   font-family: 'Roboto Slab';
 }
