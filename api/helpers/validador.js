@@ -1,3 +1,5 @@
+const jwt = require('jsonwebtoken');
+
 const isPassValid = (req, res, next) =>{
     try {
         let {password} = req.body;  
@@ -107,5 +109,21 @@ const IsValidDataLogin = (req, res, next) => {
     }
     
 }
-
-module.exports = {isPassValid,IsmailValid,IsValidDataLogin}
+const verifyToken = async (req, res, next) => {
+    try {
+        const token = req.headers["x-access-token"];
+        if (!token) {
+            return res.status(403).json({
+                error: "token",
+                message: "Token requiere"
+            });
+        }
+        next();
+    } catch (e) {
+        return res.status(403).json({
+            error: "token",
+            message: "No autorizado"
+        });
+    }
+};
+module.exports = {isPassValid,IsmailValid,IsValidDataLogin,verifyToken}
