@@ -31,8 +31,7 @@ const GetById = (req, res) =>{
 const Post = (req, res) =>{
     const { name} = req.body;
     zone.create({
-        name : name,
-        state:1
+        name : name
     }).then(response => {       
         return res.json({
             status: 200,
