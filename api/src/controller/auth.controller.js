@@ -13,33 +13,27 @@ const SignIn = (req, res) => {
     .then((account) => {
       console.log('Account', account);
       if (!account) {
-        throw new Error(
-          res.json({
+        return res.json({
             status: 500,
             success: false,
-            error: 'No encontrado',
-            message: 'Usuario incorrecto',
-          })
-        );
+            message: 'No tiene un usuario creado para ese correo',
+          });
       } else {
         encripto.compare(password, account.dataValues.password).then((response) => {
-          if (!response) {
-            throw new Error(
-              res.json({
+          if (!response) {            
+              return res.json({
                 status: 500,
                 success: false,
-                error: 'No encontrado',
-                message: 'contraseña incorrecta',
-              })
-            );
+                message: 'usuario y/o contraseña incorrecto',
+              });
           } else {
-            console.log('account', account);
             const token = jwt.sign(
               {
                 id: account.dataValues.id,
                 uid: account.dataValues.uuid,
                 email: account.dataValues.email,
                 fullName: account.dataValues.fullName,
+                photo: account.dataValues.photo
               },
               '6a698217-a233-40da-a643-72367ff09e89',
               {
@@ -64,8 +58,8 @@ const GetAll = (req, res) => {
       order: [['id', 'DESC']],
     })
     .then((result) => {
-      res.json({
-        code: 200,
+      return res.json({
+        status: 200,
         success: true,
         message: '',
         data: result,
@@ -82,8 +76,8 @@ const GetById = (req, res) => {
       },
     })
     .then((result) => {
-      res.json({
-        code: 200,
+      return res.json({
+        status: 200,
         success: true,
         message: '',
         data: result,
@@ -102,7 +96,7 @@ const Post = (req, res) => {
         photo: photo
       })
       .then((response) => {
-        res.json({
+        return res.json({
           status: 200,
           success: true,
           message: 'El usuario fue creado con exito',
