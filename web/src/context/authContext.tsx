@@ -10,7 +10,7 @@ export interface Iuser { fullName: string; email: string; id: number, photo: str
 export interface AuthState {
   checking: Boolean;
   token: string | null;
-  user?: Iuser | null
+  user: Iuser | null
 }
 
 export const initialState = {
@@ -31,28 +31,40 @@ export const AuthProvider = ({ children }: any) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   useEffect(() => {
-    const token = localStorage.getItem(import.meta.env.VITE_HASH_USER_LOCAL_HOST)
-      ? JSON.parse(localStorage.getItem(import.meta.env.VITE_HASH_USER_LOCAL_HOST)!)
-      : null;
-    console.log({ token })
+    const token = localStorage.getItem(import.meta.env.VITE_HASH_USER_LOCAL_HOST) || null;
     if (token) {
       try {
         var decoded = jwt_decode(token);
-        console.log(decoded)
-        signIn(token);
+        dispatch({
+          type: 'signIn', payload: {
+            token,
+            user: decoded
+          }
+        });
       } catch (error) {
         signOut();
       }
 
     } else {
-      signOut();
+      dispatch({ type: 'signOut' });
     }
     return () => { };
   }, []);
 
   const signIn = (data: any) => {
     localStorage.setItem(import.meta.env.VITE_HASH_USER_LOCAL_HOST, data.token);
-    dispatch({ type: 'signIn', payload: data });
+    try {
+      var decoded = jwt_decode(data.token);
+      dispatch({
+        type: 'signIn', payload: {
+          token: data.token,
+          user: decoded
+        }
+      });
+    } catch (error) {
+      console.log(error)
+    }
+
   };
   const signOut = () => {
     dispatch({ type: 'signOut' });

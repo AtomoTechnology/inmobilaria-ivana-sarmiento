@@ -37,3 +37,8 @@ body {
   background-color: var(--AppBg);
   font-family: 'Roboto Slab';
 }
+
+.p-toast {
+  /* right:  10px; */
+  /* width: 270px !important; */
+}

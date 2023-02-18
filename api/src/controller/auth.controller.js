@@ -60,7 +60,7 @@ const SignIn = (req, res) => {
 const GetAll = (req, res) => {
   auth
     .findAll({
-      attributes: ['id', 'uuid', 'email','fullName','photo'],
+      attributes: ['id', 'uuid', 'email', 'fullName', 'photo'],
       order: [['id', 'DESC']],
     })
     .then((result) => {
@@ -76,7 +76,7 @@ const GetAll = (req, res) => {
 const GetById = (req, res) => {
   auth
     .findOne({
-      attributes: ['id', 'uuid', 'email','fullName','photo'],
+      attributes: ['id', 'uuid', 'email', 'fullName', 'photo'],
       where: {
         id: req.params.id,
       },
@@ -92,14 +92,14 @@ const GetById = (req, res) => {
 };
 
 const Post = (req, res) => {
-  const { email, password,fullName,photo } = req.body;
+  const { email, password, fullName, photo } = req.body;
   encripto.encryptPassword(password).then((pass) => {
     auth
       .create({
         email: email,
         password: pass,
-        fullName:fullName,
-        photo: photo
+        fullName: fullName,
+        photo: photo,
       })
       .then((response) => {
         res.json({

@@ -1,5 +1,5 @@
-const router=require('express').Router();
-const ctrl= require('../controller/auth.controller');
+const router = require('express').Router();
+const ctrl = require('../controller/auth.controller');
 
 router.get('/', ctrl.GetAll);
 //Get by id

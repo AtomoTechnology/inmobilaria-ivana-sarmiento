@@ -3,9 +3,8 @@ import { Modal } from 'react-responsive-modal';
 import Box from './Box';
 
 
-const CreateModal = ({ show, setShow, children, className }: { children: any, show: boolean, setShow: any, className?: string }) => {
+const CreateModal = ({ show, closeModal, children, className }: { children: any, show: boolean, className?: string, closeModal: any }) => {
 
-  const closeModal = () => setShow(!show);
 
   return (
 

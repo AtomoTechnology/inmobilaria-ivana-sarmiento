@@ -1,5 +1,8 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import LoggedUser from './components/LoggedUser';
+import { AuthContext } from './context/authContext';
+import { useContext, useState } from 'react'
+import { InputSwitch } from 'primereact/inputswitch';
 
 const menuItems = [
   {
@@ -25,9 +28,25 @@ const menuItems = [
 ]
 
 const App = () => {
+
+  const { authState, signOut } = useContext(AuthContext)
+  const [darkTheme, setDarkTheme] = useState(localStorage.theme === 'dark');
+
+  const handleToggleTheme = (e: any) => {
+    if (localStorage.theme === 'dark') {
+      localStorage.theme = 'light'
+      document.documentElement.classList.remove('dark')
+      setDarkTheme(false)
+    } else {
+      localStorage.theme = 'dark'
+      setDarkTheme(true)
+      document.documentElement.classList.add('dark')
+    }
+  }
+  // console.log(authState)
   return (
-    <div className='App min-h-screen flex flex-col '>
-      <header className='header h-[80px] bg-white shadow border-b border-gray-200'>
+    <div className='App min-h-screen flex flex-col dark:bg-gray-900 '>
+      <header className='header h-[80px] bg-white dark:bg-gray-900 shadow border-b border-gray-200 dark:border-slate-700'>
         <nav className='flex justify-between px-4 items-center h-full'>
           <div className='logo-app'>
             <img
@@ -41,7 +60,7 @@ const App = () => {
               item.to !== null ? (
                 <NavLink to={item.to}
                   key={index}
-                  className={({ isActive, isPending }) => `relative text-brand2 hover:text-brand group p-1 ${isActive ? "underline !text-brand bg-gray-100 rounded-md " : isPending ? "pending" : ""}`}
+                  className={({ isActive, isPending }) => `relative text-brand2 dark:text-slate-500  dark:hover:text-brand hover:text-brand group p-1 ${isActive ? "underline !text-brand bg-gray-100 rounded-md " : isPending ? "pending" : ""}`}
                 >
                   {item.title}
                   {
@@ -64,7 +83,7 @@ const App = () => {
               ) : (
                 <li
                   key={index}
-                  className={`relative text-brand2 hover:text-brand group p-1`}
+                  className={`relative dark:text-slate-500  dark:hover:text-brand  text-brand2 hover:text-brand group p-1`}
                 >
                   {item.title}
                   {
@@ -90,13 +109,15 @@ const App = () => {
 
             ))}
           </ul>
-          <LoggedUser signOut={() => { }} />
+          <InputSwitch checked={darkTheme} onChange={handleToggleTheme} className='hidden sm:block' tooltip='changer de thème' tooltipOptions={{ position: 'bottom', mouseTrack: true, mouseTrackTop: 15 }} />
+
+          <LoggedUser signOut={signOut} authState={authState} />
         </nav>
       </header>
       <main className='my-6'>
         <Outlet />
       </main>
-      <footer className='mt-auto h-[150px]  p-6 bg-red-200'>
+      <footer className='mt-auto h-[150px] dark:bg-slate-900   p-6 bg-red-200'>
         <div className='container m-auto'>Footer</div>
       </footer>
     </div>

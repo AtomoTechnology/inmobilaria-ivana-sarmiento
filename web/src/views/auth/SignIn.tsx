@@ -1,5 +1,5 @@
-import React, { useContext } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import React, { useContext, useEffect } from 'react';
+import { Navigate, NavLink, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 
@@ -18,8 +18,10 @@ const SignIn = () => {
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  const { signIn } = useContext(AuthContext);
+  const { signIn, authState } = useContext(AuthContext);
   const { values, handleInputChange, email, password, reset } = useForm({ email: '', password: '' });
+
+
 
   const verifyForm = () => {
     let ok = true;
@@ -38,8 +40,6 @@ const SignIn = () => {
 
   const handleSubmitLogin = async (e: any) => {
     e.preventDefault();
-    console.log(values);
-
     if (verifyForm()) {
       setLoading(true);
       try {
@@ -54,6 +54,7 @@ const SignIn = () => {
           setLoginError(r.data.message);
         }
       } catch (error: any) {
+        console.log(error)
         if (error.response) {
           console.log(error.response.data)
           setLoginError(error.response.data.message);
@@ -67,6 +68,9 @@ const SignIn = () => {
     }
   };
 
+  if (!!authState.token) {
+    return <Navigate to='/' />
+  }
 
 
   return (

@@ -150,11 +150,16 @@ label {
   left: 50%;
   transform: translate(-50%, -50%);
 }
-
+/* 
 .p-datatable-header {
   background: #000 !important;
-}
+} */
 .p-datatable-thead tr th {
-  background: var(--PrimaryColor) !important;
+  /* background: var(--SecondaryColor) !important; */
+  background: rgb(51 65 85) !important;
   color: white !important;
+}
+
+.p-datatable-tbody tr:last-child {
+  background: transparent !important;
 }

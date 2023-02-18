@@ -1,5 +1,4 @@
 import React, { useContext, useRef, useState } from 'react';
-
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import Box from '../../components/Box';
@@ -16,61 +15,51 @@ import { MdAdd } from 'react-icons/md';
 import CustomInput from '../../components/CustomInput';
 import { useForm } from '../../hooks/useForm';
 import FormError from '../../components/FormError';
+import RequestError from '../../components/RequestError';
+import { Toast } from 'primereact/toast';
 
 const AllZones = () => {
+
   const { authState } = useContext(AuthContext);
   const [selectedProducts2, setSelectedProducts2] = useState<Izone[]>();
-  const [showDestroyModal, setShowDestroyModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [show, setShow] = useState(false);
-  const currentId = useRef<Izone>();
   const { name, values, handleInputChange, reset } = useForm({ name: '' })
   const [errors, setErrors] = useState<any>();
   const [editMode, setEditMode] = useState(false)
+  const toast = useRef<Toast>(null);
 
+  const currentZone = useRef<Izone | null>();
 
-  const { data, isError, isLoading, error, refetch, isFetching } = useZones();
+  const { data, isError, isLoading, error, refetch, isFetching, } = useZones();
 
   const edit = (data: Izone) => {
     handleInputChange(data.name, 'name');
     setShowCreateModal(true)
     setEditMode(true)
-    currentId.current = data;
-    console.log(data);
-  };
-  const destroy = (data: Izone) => {
-    setShow(!show);
-    currentId.current = data;
-    console.log(data);
+    currentZone.current = data;
   };
 
-  const destroyt = async (id: number) => {
+  const ConfirmDestroy = (data: Izone) => {
+    setShow(!show);
+    currentZone.current = data;
+  };
+
+  const destroy = async (id: number) => {
     try {
       const res = await http.delete('/zones/' + id);
       if (res.data.success) {
-        console.log('exito!!!');
         data?.data && (data.data! = data?.data.filter(z => z.id !== id));
         setShow(false);
-        // refetch();
+        toast?.current?.show({ closable: false, severity: 'success', summary: 'Borrado', detail: 'La zona se borró con éxito.', life: 3000 });
       } else {
-        console.log('somes wrong hapenn!');
-        console.log(res.data);
+        toast?.current?.show({ closable: false, severity: 'error', summary: 'Error', detail: 'Algo malo ocurrío.', life: 3000 });
       }
     } catch (error: any) {
       if (error.response) {
-        console.log(error.response.data);
+        toast?.current?.show({ closable: false, severity: 'error', summary: 'Error', detail: error.response.data?.message, life: 3000 });
       }
     }
-
-  };
-
-  const actionBodyTemplate = (rowData: any) => {
-    return (
-      <div className='flex gap-x-3 items-center justify-center'>
-        <EditIcon action={() => edit(rowData)} />
-        <DeleteIcon action={() => destroy(rowData)} />
-      </div>
-    );
   };
 
   const verifyForm = () => {
@@ -89,67 +78,82 @@ const AllZones = () => {
     if (verifyForm()) {
       if (editMode) {
         try {
-          const res = await http.put(`/zones/${currentId.current?.id}`, values);
+          const res = await http.put(`/zones/${currentZone.current?.id}`, values);
           if (res.data.success) {
             data?.data && (data.data = data?.data.map(z => {
-              if (z.id === currentId.current?.id) {
+              if (z.id === currentZone.current?.id) {
                 z.name = values.name
               }
               return z;
             }))
             reset();
-            console.log('exito!!!');
             setShowCreateModal(false);
+            toast?.current?.show({ severity: 'success', summary: 'Editado', detail: 'La zona se actualizó con éxito.', life: 3000 });
           } else {
-            console.log('somes wrong hapenn!');
-            console.log(res.data);
+            toast?.current?.show({ closable: false, severity: 'error', summary: 'Error', detail: 'Algo malo ocurrío.', life: 3000 });
           }
         } catch (error: any) {
           if (error.response) {
-            console.log(error.response.data);
+            toast?.current?.show({ closable: false, severity: 'error', summary: 'Error', detail: error.response.data?.message, life: 3000 });
           }
         }
-
       } else {
         try {
           const res = await http.post('/zones', values);
           if (res.data.success) {
             data?.data.push(res.data.data)
             reset();
-            console.log('exito!!!');
             setShowCreateModal(false);
+            toast?.current?.show({ severity: 'success', summary: 'Guardado', detail: 'La zona se guardó con éxito.', life: 3000 });
+
           } else {
-            console.log('somes wrong hapenn!');
-            console.log(res.data);
+            toast?.current?.show({ closable: false, severity: 'error', summary: 'Error', detail: 'Algo malo ocurrío.', life: 3000 });
           }
         } catch (error: any) {
           if (error.response) {
-            console.log(error.response.data);
+            toast?.current?.show({ closable: false, severity: 'error', summary: 'Error', detail: error.response.data?.message, life: 3000 });
           }
         }
       }
 
-    } else {
-
     }
   }
 
+  const closeCreateModal = () => {
+    reset();
+    setShowCreateModal(false);
+  }
+
+  const actionBodyTemplate = (rowData: any) => {
+    return (
+      <div className='flex gap-x-3 items-center justify-center'>
+        <EditIcon action={() => edit(rowData)} />
+        <DeleteIcon action={() => ConfirmDestroy(rowData)} />
+      </div>
+    );
+  };
+
   if (isLoading) return <Loading />;
+  if (isError) return <RequestError error={error} />;
+
 
   return (
     <div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
-      {/* <span>{authState.token}</span> */}
+
+      <Toast ref={toast} position='bottom-right' />
+
       <div className='flex gap-x-4 mb-4 mx-3  items-center'>
         <h3 className='title-form !text-slate-700 text-lg sm:text-4xl'>Zonas</h3>
-        <button onClick={() => setShowCreateModal(true)} className='btn !w-10 !h-10 !p-0 gradient !rounded-full'>
+        <button onClick={() => { setEditMode(false); currentZone.current = null; setShowCreateModal(true) }} className='btn !w-10 !h-10 !p-0 gradient !rounded-full'>
           <MdAdd size={50} />
         </button>
       </div>
-      <Box className='!p-0 overflow-hidden    sm:w-[500px] mb-4 '>
+
+      <Box className='!p-0 !overflow-hidden !border-none    sm:w-[500px] mb-4 '>
         <DataTable
           size='small'
           emptyMessage='Aún no hay zona'
-          className='overflow-hidden'
+          className='!overflow-hidden   !border-none'
           value={data?.data}
           selectionMode='checkbox'
           selection={selectedProducts2}
@@ -157,27 +161,30 @@ const AllZones = () => {
           dataKey='id'
           responsiveLayout='scroll'
         >
-          <Column selectionMode='multiple' style={{ width: 10 }} headerStyle={{ width: 10 }} />
-          <Column field='name' header='Nombre' />
-          <Column body={actionBodyTemplate} exportable={false} style={{ width: 90 }} />
+          {/* <Column selectionMode='multiple' style={{ width: 10 }} headerStyle={{ width: 10 }} /> */}
+          <Column field='name' header='Nombre' headerClassName='!border-none dark:!bg-gray-800' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' />
+          <Column body={actionBodyTemplate} headerClassName='!border-none dark:!bg-gray-800' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' exportable={false} style={{ width: 90 }} />
         </DataTable>
       </Box>
+
       {isFetching && (<Loading h={40} w={40} />)}
+
       <DeleteModal
         show={show}
         setShow={setShow}
-        destroy={() => destroyt(currentId.current?.id!)}
-        text={`${currentId.current?.name}`}
+        destroy={() => destroy(currentZone.current?.id!)}
+        text={`${currentZone.current?.name}`}
       />
+
       <CreateModal
         show={showCreateModal}
-        setShow={setShowCreateModal}
+        closeModal={closeCreateModal}
         className='max-w-[400px] w-[300px]'
       >
         <form action="" onSubmit={handleSave}>
 
           <div className=' flex justify-between'>
-            <h2 className='title-form'>Crear zona</h2>
+            <h2 className='title-form'>{editMode ? 'Editar' : 'Crear'} zona</h2>
           </div>
 
           <fieldset className=''>
@@ -185,7 +192,7 @@ const AllZones = () => {
             {errors?.name && <FormError text='El nombre es obligatorio.' />}
           </fieldset>
           <section className='action flex items-center gap-x-3 mt-4'>
-            <button className='btn !py-1' onClick={() => setShowCreateModal(false)} type='button'>
+            <button className='btn !py-1' onClick={closeCreateModal} type='button'>
               Cerrar
             </button>
             <button className='btn gradient  !py-1' type='submit'>

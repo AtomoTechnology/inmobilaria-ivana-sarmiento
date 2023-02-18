@@ -1,23 +1,18 @@
 import React from 'react';
-import { AiOutlineDashboard, AiOutlineLogout, AiOutlineMessage, AiOutlineUserAdd } from 'react-icons/ai';
+import { AiOutlineDashboard, AiOutlineLogout, AiOutlineUserAdd } from 'react-icons/ai';
 import { FaAngleDown } from 'react-icons/fa';
 import { NavLink } from 'react-router-dom';
 import { AuthState } from '../context/authContext';
 import DefaultAvatar from './DefaultAvatar';
 
 type Props = {
-  authState?: AuthState;
+  authState: AuthState;
   signOut: () => void;
 };
 
 const LoggedUser = ({ authState, signOut }: Props) => {
-  // const {
-  //   data: { user },
-  // } = authState;
-  let user: any = {}
-  const logoutUser = () => {
-    signOut();
-  };
+
+  const { user } = authState;
 
   return (
     <>
@@ -38,12 +33,12 @@ const LoggedUser = ({ authState, signOut }: Props) => {
               <img
                 src={user.photo}
                 className='!w-9 !h-9 rounded-full overflow-hidden object-cover'
-                alt={user?.name}
+                alt={user?.fullName}
               />
             ) : (
               <DefaultAvatar />
             )}
-            <span className='ml-1'>{user?.name?.split(' ')[0] || 'Ivana '}</span>
+            <span className='ml-1'>{user?.fullName?.split(' ')[0]}</span>
             <FaAngleDown size={20} />
           </button>
         </div>
@@ -58,19 +53,6 @@ const LoggedUser = ({ authState, signOut }: Props) => {
         >
           <div className='py-1 flex flex-col  gap-1' role='none'
           >
-            {user.role === 'admin' && (
-              <NavLink
-                to='/admin/messages'
-                className='hover:text-red-600 flex items-center gap-1 rounded-xl  hover:bg-gray-100 text-gray-700  px-2 py-2 '
-                role='menuitem'
-                tabIndex={-1}
-                id='menu-item-1'
-              >
-                <AiOutlineMessage />
-                <span>Messages</span>
-              </NavLink>
-            )}
-
             <NavLink
               to='/dashboard'
               className='hover:text-red-600 flex items-center gap-1 rounded-xl  hover:bg-gray-100 text-gray-700  px-2 py-2 '
@@ -93,7 +75,7 @@ const LoggedUser = ({ authState, signOut }: Props) => {
             </NavLink>
             <div className='border-b border-gray-200 rounded-full my-1 w-full'></div>
             <button
-              onClick={logoutUser}
+              onClick={signOut}
               type='button'
               className='text-red-700 hover:rounded-xl flex items-center gap-1 w-full text-left px-2 py-2 text-sm hover:text-pink-600'
               role='menuitem'
