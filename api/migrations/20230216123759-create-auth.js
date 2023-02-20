@@ -29,12 +29,9 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
-      restPassword: {
-        type: Sequelize.STRING
-      },
-      changePassword: {
-        type: Sequelize.STRING
-      },
+      passwordChangedAt: Sequelize.DATE,
+      passwordResetToken: Sequelize.STRING,
+      passwordResetExpires: Sequelize.DATE,
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

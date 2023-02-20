@@ -35,7 +35,7 @@ const SignIn = (req, res) => {
                 fullName: account.dataValues.fullName,
                 photo: account.dataValues.photo
               },
-              '6a698217-a233-40da-a643-72367ff09e89',
+              process.env.SECRET_TOKEN,
               {
                 expiresIn: 86400, // vence en un dia
               }
@@ -52,9 +52,11 @@ const SignIn = (req, res) => {
 };
 
 const GetAll = (req, res) => {
+  const {filter} = req.query;
+  // 'id', 'uuid', 'email', 'fullName', 'photo'
   auth
     .findAll({
-      attributes: ['id', 'uuid', 'email', 'fullName', 'photo'],
+      attributes: [filter],
       order: [['id', 'DESC']],
     })
     .then((result) => {

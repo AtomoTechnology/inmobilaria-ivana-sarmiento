@@ -35,11 +35,21 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    restPassword: DataTypes.STRING,
-    changePassword: DataTypes.STRING
+    passwordChangedAt: DataTypes.DATE,
+    passwordResetToken: DataTypes.STRING,
+    passwordResetExpires: DataTypes.DATE,
   }, {
     sequelize,
     modelName: 'auth',
   });
+  auth.prototype.changePasswordAfter = function (jwtIat) {
+    if (this.passwordChangedAt) {
+      const changePassword = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+      return jwtIat < changePassword;
+    }
+    return false;
+  };
+
+
   return auth;
 };

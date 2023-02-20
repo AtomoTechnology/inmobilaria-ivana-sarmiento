@@ -3,7 +3,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const routeconfig = require('./routeconfig/config');
 const rateLimit = require('express-rate-limit');
-// const { globalErrorHandler } = require('./controller/errorController');
+const { globalErrorHandler } = require('./Generic/errorGeneric');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -57,7 +57,7 @@ app.use(routeconfig);
 // });
 
 //Global error
-// app.use(globalErrorHandler);
+app.use(globalErrorHandler);
 //Starting
 app.listen(app.get('port'), () => {
   console.log('server on port', app.get('port'));

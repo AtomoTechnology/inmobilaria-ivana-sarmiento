@@ -1,5 +1,5 @@
 const router=require('express').Router();
-const ctrl= require('../controller/zone.controller');
+const ctrl= require('../controller/propertytype.controller');
 const validador = require('../../helpers/validador');
 
 router.use(validador.protect);

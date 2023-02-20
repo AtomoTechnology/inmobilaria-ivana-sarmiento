@@ -1,16 +1,18 @@
 const router=require('express').Router();
 const ctrl= require('../controller/paymentType.controller');
+const validador = require('../../helpers/validador');
 
+router.use(validador.protect);
 router.get('/', ctrl.GetAll);
 //Get by id
 router.get('/:id', ctrl.GetById);
 
 //Create
-router.post('/', ctrl.Post);
+router.post('/', ctrl.Create);
 
 //Update
-router.put('/:id', ctrl.Put);
+router.put('/:id',ctrl.Put);
 
 //Delete
-router.delete('/:id', ctrl.Delete);
+router.delete('/:id', ctrl.Destroy);
 module.exports = router;

@@ -3,7 +3,7 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class zone extends Model {
+  class propertyType extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -13,25 +13,16 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   }
-  zone.init({
-    uuid: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-    },
-    name: {
+  propertyType.init({
+    uuid: DataTypes.STRING,
+    description: {
       type: DataTypes.STRING,
-      unique:{
-          name: true,
-          msg: "El nombre debe ser único"
-        },
-      allowNull: false,
-      validate:{
-        
-      }
+      unique: true,
+      allowNull: false
     }
   }, {
     sequelize,
-    modelName: 'zone',
+    modelName: 'propertyType',
   });
-  return zone;
+  return propertyType;
 };
