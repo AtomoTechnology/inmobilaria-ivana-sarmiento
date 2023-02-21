@@ -1,9 +1,8 @@
 import axios from 'axios'
-import React from 'react'
 
 const RequestError = ({ error }: { error: any }) => {
   return (
-    <div className="request-error">{axios.isAxiosError(error) && error.message || 'Algo malo paso !'}</div>
+    <div className="request-error text-center text-red-400 font-semibold mx-3">{axios.isAxiosError(error) && error.response?.data.message || 'Algo malo paso !'}</div>
   )
 }
 

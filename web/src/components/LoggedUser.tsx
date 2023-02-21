@@ -24,7 +24,7 @@ const LoggedUser = ({ authState, signOut }: Props) => {
         >
           <button
             type='button'
-            className='flex justify-center items-center w-full gap-[1px] border border-gray-200  px-2  py-1 text-sm font-medium text-slate-700 rounded-xl transition-all  focus:outline-none'
+            className='flex justify-center items-center w-full gap-[1px] border border-gray-200 dark:border-slate-700  px-2  py-1 text-sm font-medium text-slate-700 dark:text-slate-400 rounded-xl transition-all  focus:outline-none'
             id='menu-button'
             aria-expanded='true'
             aria-haspopup='true'
@@ -45,7 +45,7 @@ const LoggedUser = ({ authState, signOut }: Props) => {
 
         <div
           style={{ zIndex: 900000 }}
-          className='dropdown-user-logged-box hidden ring-black ring-opacity-5 transition-fade rounded-md shadow p-1 origin-top-right absolute right-0 mt-2 w-56   bg-white ring-1  focus:outline-none'
+          className='dropdown-user-logged-box hidden ring-black ring-opacity-5 transition-fade rounded-md shadow p-1 origin-top-right absolute right-0 mt-2 w-56   bg-white dark:bg-slate-800  ring-1  focus:outline-none'
           role='menu'
           aria-orientation='vertical'
           aria-labelledby='menu-button'
@@ -55,7 +55,7 @@ const LoggedUser = ({ authState, signOut }: Props) => {
           >
             <NavLink
               to='/dashboard'
-              className='hover:text-red-600 flex items-center gap-1 rounded-xl  hover:bg-gray-100 text-gray-700  px-2 py-2 '
+              className='hover:text-red-600 flex items-center gap-1 rounded-xl  hover:bg-gray-100  text-gray-700  px-2 py-2 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-brand'
               role='menuitem'
               tabIndex={-1}
               id='menu-item-1'
@@ -63,21 +63,12 @@ const LoggedUser = ({ authState, signOut }: Props) => {
               <AiOutlineDashboard />
               <span>Dashboard</span>
             </NavLink>
-            <NavLink
-              to='/profile'
-              className='hover:text-red-600 flex items-center gap-1 rounded-xl  hover:bg-gray-100 text-gray-700  px-2 py-2 '
-              role='menuitem'
-              tabIndex={-1}
-              id='menu-item-2'
-            >
-              <AiOutlineUserAdd />
-              <span>Profile</span>
-            </NavLink>
-            <div className='border-b border-gray-200 rounded-full my-1 w-full'></div>
+
+            <div className='border-b border-gray-200 dark:border-slate-700 rounded-full my-1 w-full'></div>
             <button
               onClick={signOut}
               type='button'
-              className='text-red-700 hover:rounded-xl flex items-center gap-1 w-full text-left px-2 py-2 text-sm hover:text-pink-600'
+              className='text-red-700  hover:rounded-xl flex items-center gap-1 w-full text-left px-2 py-2 text-sm hover:text-pink-600 dark:text-red-500'
               role='menuitem'
               tabIndex={-1}
               id='menu-item-3'

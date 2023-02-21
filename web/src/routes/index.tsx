@@ -1,36 +1,58 @@
 import { createBrowserRouter } from "react-router-dom"
 import App from "../App";
 import SignIn from "../views/auth/SignIn";
+import SignUp from "../views/auth/signUp";
+import AllClients from "../views/clients/allClients";
 import Contracts from "../views/contracts/Contracts";
 import Home from "../views/Home";
-import AllPayment from "../views/payment/all";
+import AllPaymentTypes from "../views/payment/allPaymentTypes";
+import AllPropertyTypes from "../views/properties/allTypes";
 import AllZones from "../views/zones/allZones";
+import PrivateRoute from "./PrivateRoute";
+import PublicRoute from "./PublicRoute";
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
+    element: <PrivateRoute > <App /> </PrivateRoute>,
+    errorElement: <h1>error</h1>, // TODO: design this pages 
     children: [
       {
         path: '/home',
-        element: <Home />,
-      },
-      {
-        path: '/payment-methods',
-        element: <AllPayment />,
+        element: <PrivateRoute > <Home /> </PrivateRoute>,
       },
       {
         path: '/zones',
-        element: <AllZones />,
+        element: <PrivateRoute > <AllZones /> </PrivateRoute>,
+      },
+      {
+        path: '/payment-methods',
+        element: <PrivateRoute > <AllPaymentTypes /> </PrivateRoute>,
+      },
+      {
+        path: '/property-types',
+        element: <PrivateRoute ><AllPropertyTypes /></PrivateRoute>,
+      },
+      {
+        path: '/clients',
+        element: <PrivateRoute ><AllClients /></PrivateRoute>,
       },
       {
         path: '/contracts',
-        element: <Contracts />,
-      }
-    ]
+        element: <PrivateRoute ><Contracts /></PrivateRoute>,
+      },
+      {
+        path: '/signup',
+        element: <PrivateRoute ><SignUp /></PrivateRoute>,
+      },
+      {
+        path: '**',
+        element: <h1>Hello</h1>,
+      },
+    ],
   },
   {
     path: '/sign-in',
-    element: <SignIn />,
+    element: <PublicRoute> <SignIn /></PublicRoute>,
   },
 ]);

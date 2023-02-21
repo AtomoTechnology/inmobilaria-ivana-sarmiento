@@ -52,9 +52,10 @@ app.use(express.json());
 
 //Routes
 app.use(routeconfig);
-// app.all('*', (req: any, res: any, next: any) => {
-//   return res.json(next(new Error(`can´t find the url ${req.originalUrl} for this server...`)));
-// });
+
+app.all('*', (req, res, next) => {
+  return res.json(next(new Error(`can´t find the url ${req.originalUrl} for this server...`)));
+});
 
 //Global error
 app.use(globalErrorHandler);

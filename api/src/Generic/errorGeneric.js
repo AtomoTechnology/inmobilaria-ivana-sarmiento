@@ -48,7 +48,6 @@ const handleJsonWebTokenError = () => new Error(`Token invalido. Por favor inici
 const handleJWTExpiredToken = () => new Error('Su token ha caducado. Inicie sesión de nuevo por favor. ');
 
 exports.globalErrorHandler = (err, req, res, next) => {
-
   if (process.env.NODE_ENV === 'development') {
     sendErrorDev(err, res);
   } else if (process.env.NODE_ENV === 'production') {

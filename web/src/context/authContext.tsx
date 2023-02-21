@@ -6,23 +6,27 @@ import { authReducer } from '../reducer/authReducer';
 import jwt_decode from "jwt-decode";
 
 export interface Iuser { fullName: string; email: string; id: number, photo: string };
-
+export interface Ialert { title: string, message: string, show: boolean, color?: string };
 export interface AuthState {
   checking: Boolean;
   token: string | null;
-  user: Iuser | null
+  user: Iuser | null;
+  alert: Ialert | null
 }
 
 export const initialState = {
   checking: true,
   token: '',
   user: null,
+  alert: null
 
 };
 export interface AuthContextProps {
   authState: AuthState;
   signIn: (data: any) => void;
   signOut: () => void;
+  hideAlert: () => void;
+  showAlert: (data: Ialert) => void;
 }
 
 export const AuthContext = createContext({} as AuthContextProps);
@@ -70,6 +74,14 @@ export const AuthProvider = ({ children }: any) => {
     dispatch({ type: 'signOut' });
     localStorage.removeItem(import.meta.env.VITE_HASH_USER_LOCAL_HOST);
   };
+
+  const showAlert = (data: Ialert) => {
+    dispatch({ type: 'showAlert', payload: data })
+  }
+  const hideAlert = () => {
+    dispatch({ type: 'hideAlert' })
+  }
+  console.log(state)
   if (state.checking) return (
     <div className="flex gap-y-3 flex-col items-center justify-center mt-8 sm:mt-12 ">
       <Loading />
@@ -83,6 +95,8 @@ export const AuthProvider = ({ children }: any) => {
         authState: state,
         signIn,
         signOut,
+        showAlert,
+        hideAlert
       }}
     >
       {children}

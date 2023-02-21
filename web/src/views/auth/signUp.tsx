@@ -10,18 +10,17 @@ import Loading from '../../components/Loading';
 import Box from '../../components/Box';
 import CustomInput from '../../components/CustomInput';
 import FormError from '../../components/FormError';
+import CheckIcon from '../../components/icons/CheckIcon';
 
-const SignIn = () => {
+const SignUp = () => {
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<any>();
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  const { signIn } = useContext(AuthContext);
-  const { values, handleInputChange, email, password, reset } = useForm({ email: '', password: '' });
-
-
+  const { authState } = useContext(AuthContext);
+  const { values, handleInputChange, email, password, fullName, photo, reset } = useForm({ email: '', password: '', fullName: '', photo: '' });
 
   const verifyForm = () => {
     let ok = true;
@@ -30,7 +29,12 @@ const SignIn = () => {
       ok = false;
       error.email = true;
     }
-    if (!password) {
+    if (!fullName.trim().length) {
+      ok = false;
+      error.fullName = true;
+    }
+    // TODO: validate ifpassword have at least one minuscule and majuscule character
+    if (!password || password.trim().length < 6) {
       ok = false;
       error.password = true;
     }
@@ -43,10 +47,10 @@ const SignIn = () => {
     if (verifyForm()) {
       setLoading(true);
       try {
-        const r = await http.post('/auth/signin', values);
+        const r = await http.post('/auth/SignUp', values);
         if (r.data.status === 200) {
           console.log(r.data)
-          signIn(r.data);
+          // SignUp(r.data);
           reset();
           setLoading(false);
           navigate('/');
@@ -68,22 +72,22 @@ const SignIn = () => {
     }
   };
 
-  // if (!!authState.token) {
-  //   return <Navigate to='/' />
-  // }
-
-
   return (
-    <div className='flex h-screen w-screen dark:bg-gray-900 items-center justify-center'>
+    <div className='flex  dark:bg-gray-900 items-center justify-center'>
 
-      <Box className=' w-full max-w-[320px] mx-3 sm:mx-0 sm:w-80 '>
+      <Box className=' w-full sm:w-[360px] mx-3 sm:mx-0  '>
 
         <form onSubmit={handleSubmitLogin} className='flex items-center justify-between flex-col '>
 
-          <h3 className='title-form self-start mb-4 !text-xl sm:!text-3xl'>Inicia sesión</h3>
+          <h3 className='title-form self-start mb-4 !text-xl sm:!text-3xl'>Crear cuenta</h3>
 
           {loginError && (<FormError text={loginError} />)}
 
+          <fieldset>
+            <label> Nombre Completo</label>
+            <CustomInput placeholder='Juan Diego' onChange={(val) => handleInputChange(val, 'fullName')} />
+            {errors?.fullName && <FormError text='El nombre es obligatorio.' />}
+          </fieldset>
           <fieldset>
             <label> Email</label>
             <CustomInput type='email' placeholder='example@gmail.com' onChange={(val) => handleInputChange(val, 'email')} />
@@ -93,23 +97,14 @@ const SignIn = () => {
           <fieldset>
             <label>Contraseña</label>
             <CustomInput type='password' placeholder='.lk8Tx9W/' onChange={(val) => handleInputChange(val, 'password')} />
-            {errors?.password && <FormError text='Contraseña obligatoria .' />}
+            {errors?.password && <FormError text='Contraseña obligatoria.' />}
           </fieldset>
 
           <fieldset>
-            <button disabled={loading} className='btn gradient' type='submit'>{!loading ? ('Inicia sesión') : 'Espere...'}</button>
+            <button disabled={loading} className='btn gradient' type='submit'>{!loading ? ('Crear cuenta') : 'Espere...'}</button>
           </fieldset>
 
-          <div className='register-section text-sx my-2'>
-            <span className='text-sm'>
-              <NavLink
-                to='/forget-password'
-                className='text-pink-700 dark:text-slate-500 ml-1 hover:underline  p-1'
-              >
-                ¿Olvidaste tu contraseña ?
-              </NavLink>
-            </span>
-          </div>
+
 
         </form>
       </Box>
@@ -117,4 +112,4 @@ const SignIn = () => {
   );
 };
 
-export default SignIn;
+export default SignUp;
