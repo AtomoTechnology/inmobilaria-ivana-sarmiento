@@ -1,9 +1,11 @@
-import { AuthState } from '../context/authContext';
+import { AuthState, Ialert } from '../context/authContext';
 
 type types =
   | { type: 'signIn'; payload: any }
   | { type: 'finishChecking' }
+  | { type: 'hideAlert' }
   | { type: 'setfavouriteIcon'; payload: {} }
+  | { type: 'showAlert'; payload: Ialert }
   | { type: 'signOut' };
 
 export const authReducer = (state: AuthState, action: types): AuthState => {
@@ -26,6 +28,16 @@ export const authReducer = (state: AuthState, action: types): AuthState => {
       return {
         ...state,
         checking: false,
+      };
+    case 'showAlert':
+      return {
+        ...state,
+        alert: action.payload,
+      };
+    case 'hideAlert':
+      return {
+        ...state,
+        alert: null,
       };
     default:
       return state;

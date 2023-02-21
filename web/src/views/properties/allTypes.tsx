@@ -7,7 +7,6 @@ import DeleteIcon from '../../components/icons/DeleteIcon';
 import DeleteModal from '../../components/DeleteModal';
 import Loading from '../../components/Loading';
 import { useZones } from '../../hooks/useZones';
-import { Izone } from '../../interfaces/Izones';
 import http from '../../api/axios';
 import CreateModal from '../../components/CreateModal';
 import { AuthContext } from '../../context/authContext';
@@ -17,31 +16,33 @@ import { useForm } from '../../hooks/useForm';
 import FormError from '../../components/FormError';
 import RequestError from '../../components/RequestError';
 import { DelayAlertToHide } from '../../helpers/variableAndConstantes';
+import { Iproperty } from '../../interfaces/IPropertyType';
+import { usePropertyTypes } from '../../hooks/usePropertyTypes';
 
-const AllZones = () => {
+const AllPropertyTypes = () => {
 
   const { showAlert, hideAlert } = useContext(AuthContext);
-  const [selectedProducts2, setSelectedProducts2] = useState<Izone[]>();
+  const [selectedProducts2, setSelectedProducts2] = useState<Iproperty[]>();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [show, setShow] = useState(false);
-  const { name, values, handleInputChange, reset } = useForm({ name: '' })
+  const { description, values, handleInputChange, reset } = useForm({ description: '' })
   const [errors, setErrors] = useState<any>();
   const [editMode, setEditMode] = useState(false)
 
-  const currentZone = useRef<Izone | null>();
+  const currentPropertyType = useRef<Iproperty | null>();
 
-  const { data, isError, isLoading, error, isFetching, } = useZones();
+  const { data, isError, isLoading, error, isFetching, } = usePropertyTypes();
 
-  const edit = (data: Izone) => {
-    handleInputChange(data.name, 'name');
+  const edit = (data: Iproperty) => {
+    handleInputChange(data.description, 'description');
     setShowCreateModal(true)
     setEditMode(true)
-    currentZone.current = data;
+    currentPropertyType.current = data;
   };
 
-  const ConfirmDestroy = (data: Izone) => {
+  const ConfirmDestroy = (data: Iproperty) => {
     setShow(!show);
-    currentZone.current = data;
+    currentPropertyType.current = data;
   };
   const showAndHideModal = (title: string, message: string, color: string = 'green', delay: number = DelayAlertToHide) => {
     showAlert({ title, message, color, show: true })
@@ -50,7 +51,7 @@ const AllZones = () => {
 
   const destroy = async (id: number) => {
     try {
-      const res = await http.delete('/zones/' + id);
+      const res = await http.delete('/propertytypes/' + id);
       if (res.data.ok) {
         data?.data && (data.data! = data?.data.filter(z => z.id !== id));
         setShow(false);
@@ -66,9 +67,9 @@ const AllZones = () => {
   const verifyForm = () => {
     let ok = true;
     let error: any = {};
-    if (!name.trim().length) {
+    if (!description.trim().length) {
       ok = false;
-      error.name = true;
+      error.description = true;
     }
     setErrors(error);
     return ok;
@@ -79,11 +80,11 @@ const AllZones = () => {
     if (verifyForm()) {
       if (editMode) {
         try {
-          const res = await http.put(`/zones/${currentZone.current?.id}`, values);
+          const res = await http.put(`/propertytypes/${currentPropertyType.current?.id}`, values);
           if (res.data.ok) {
             data?.data && (data.data = data?.data.map(z => {
-              if (z.id === currentZone.current?.id) {
-                z.name = values.name
+              if (z.id === currentPropertyType.current?.id) {
+                z.description = values.description
               }
               return z;
             }))
@@ -98,7 +99,7 @@ const AllZones = () => {
         }
       } else {
         try {
-          const res = await http.post('/zones', values);
+          const res = await http.post('/propertytypes', values);
           if (res.data.ok) {
             data?.data.push(res.data.data)
             reset();
@@ -137,8 +138,8 @@ const AllZones = () => {
     <div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
 
       <div className='flex gap-x-4 mb-6 mx-3  items-center'>
-        <h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Zonas</h3>
-        <button onClick={() => { setEditMode(false); currentZone.current = null; setShowCreateModal(true) }} className='btn !w-10 !h-10 !p-0 gradient !rounded-full'>
+        <h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Tipos de propiedades</h3>
+        <button onClick={() => { setEditMode(false); currentPropertyType.current = null; setShowCreateModal(true) }} className='btn !w-10 !h-10 !p-0 gradient !rounded-full'>
           <MdAdd size={50} />
         </button>
       </div>
@@ -146,7 +147,7 @@ const AllZones = () => {
       <Box className='!p-0 !overflow-hidden !border-none    sm:w-[500px] mb-4 '>
         <DataTable
           size='small'
-          emptyMessage='Aún no hay zona'
+          emptyMessage='Aún no hay tipo de propiedad'
           className='!overflow-hidden   !border-none'
           value={data?.data}
           selectionMode='checkbox'
@@ -156,7 +157,7 @@ const AllZones = () => {
           responsiveLayout='scroll'
         >
           {/* <Column selectionMode='multiple' style={{ width: 10 }} headerStyle={{ width: 10 }} /> */}
-          <Column field='name' header='Nombre' headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' />
+          <Column field='description' header='Detalle' headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' />
           <Column body={actionBodyTemplate} headerClassName='!border-none dark:!bg-gray-800' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' exportable={false} style={{ width: 90 }} />
         </DataTable>
       </Box>
@@ -166,24 +167,24 @@ const AllZones = () => {
       <DeleteModal
         show={show}
         setShow={setShow}
-        destroy={() => destroy(currentZone.current?.id!)}
-        text={`${currentZone.current?.name}`}
+        destroy={() => destroy(currentPropertyType.current?.id!)}
+        text={`${currentPropertyType.current?.description}`}
       />
 
       <CreateModal
         show={showCreateModal}
         closeModal={closeCreateModal}
-        className='max-w-[400px] w-[300px]'
+        className='max-w-[400px] w-[400px]'
       >
         <form action="" onSubmit={handleSave}>
 
           <div className=' flex justify-between'>
-            <h2 className='title-form'>{editMode ? 'Editar' : 'Crear'} zona</h2>
+            <h2 className='title-form'>{editMode ? 'Editar' : 'Crear'} tipo de propiedad</h2>
           </div>
 
           <fieldset className=''>
-            <CustomInput placeholder='Sur,Este,Norte' initialValue={name} onChange={(value) => handleInputChange(value, 'name')} />
-            {errors?.name && <FormError text='El nombre es obligatorio.' />}
+            <CustomInput placeholder='Casa 2 dormitorios,Depto' initialValue={description} onChange={(value) => handleInputChange(value, 'description')} />
+            {errors?.description && <FormError text='La descripción es obligatorio.' />}
           </fieldset>
           <section className='action flex items-center gap-x-3 mt-4'>
             <button className='btn !py-1' onClick={closeCreateModal} type='button'>
@@ -200,4 +201,4 @@ const AllZones = () => {
   );
 };
 
-export default AllZones;
+export default AllPropertyTypes;

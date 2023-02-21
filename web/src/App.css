@@ -163,3 +163,19 @@ label {
 .p-datatable-tbody tr:last-child {
   background: transparent !important;
 }
+
+.bg-gradient-success {
+  background-color: #b1ffc8;
+  background-image: linear-gradient(83deg, #f9f9f9, #87f9ca);
+  color: white;
+}
+.bg-gradient-error {
+  /* background-color: #f7cfcd; */
+  background-image: linear-gradient(84deg, #f9f9f9, #ffada7);
+  color: white;
+}
+.bg-gradient-info {
+  background-color: #cdecf7;
+  background-image: linear-gradient(84deg, #f9f9f9, #82ccff);
+  color: white;
+}

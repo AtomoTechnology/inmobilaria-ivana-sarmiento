@@ -6,8 +6,6 @@ import EditIcon from '../../components/icons/EditIcon';
 import DeleteIcon from '../../components/icons/DeleteIcon';
 import DeleteModal from '../../components/DeleteModal';
 import Loading from '../../components/Loading';
-import { useZones } from '../../hooks/useZones';
-import { Izone } from '../../interfaces/Izones';
 import http from '../../api/axios';
 import CreateModal from '../../components/CreateModal';
 import { AuthContext } from '../../context/authContext';
@@ -16,51 +14,34 @@ import CustomInput from '../../components/CustomInput';
 import { useForm } from '../../hooks/useForm';
 import FormError from '../../components/FormError';
 import RequestError from '../../components/RequestError';
+import { usePaymentTypes } from '../../hooks/usePaymentTypes';
+import { IpaymentType } from '../../interfaces/IpaymentType';
 import { DelayAlertToHide } from '../../helpers/variableAndConstantes';
 
-const AllZones = () => {
+const AllPaymentTypes = () => {
 
   const { showAlert, hideAlert } = useContext(AuthContext);
-  const [selectedProducts2, setSelectedProducts2] = useState<Izone[]>();
+  // const [selectedProducts2, setSelectedProducts2] = useState<IpaymentType[]>();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [show, setShow] = useState(false);
   const { name, values, handleInputChange, reset } = useForm({ name: '' })
   const [errors, setErrors] = useState<any>();
   const [editMode, setEditMode] = useState(false)
 
-  const currentZone = useRef<Izone | null>();
+  const currentPaymentType = useRef<IpaymentType | null>();
 
-  const { data, isError, isLoading, error, isFetching, } = useZones();
+  const { data, isError, isLoading, error, isFetching, } = usePaymentTypes();
 
-  const edit = (data: Izone) => {
+  const edit = (data: IpaymentType) => {
     handleInputChange(data.name, 'name');
     setShowCreateModal(true)
     setEditMode(true)
-    currentZone.current = data;
+    currentPaymentType.current = data;
   };
 
-  const ConfirmDestroy = (data: Izone) => {
+  const ConfirmDestroy = (data: IpaymentType) => {
     setShow(!show);
-    currentZone.current = data;
-  };
-  const showAndHideModal = (title: string, message: string, color: string = 'green', delay: number = DelayAlertToHide) => {
-    showAlert({ title, message, color, show: true })
-    setTimeout(hideAlert, delay)
-  }
-
-  const destroy = async (id: number) => {
-    try {
-      const res = await http.delete('/zones/' + id);
-      if (res.data.ok) {
-        data?.data && (data.data! = data?.data.filter(z => z.id !== id));
-        setShow(false);
-        showAndHideModal('Borrado', res.data.message)
-      } else {
-        showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
-      }
-    } catch (error: any) {
-      if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
-    }
+    currentPaymentType.current = data;
   };
 
   const verifyForm = () => {
@@ -74,15 +55,20 @@ const AllZones = () => {
     return ok;
   };
 
+  const showAndHideModal = (title: string, message: string, color: string = 'green', delay: number = DelayAlertToHide) => {
+    showAlert({ title, message, color, show: true })
+    setTimeout(hideAlert, delay)
+  }
+
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (verifyForm()) {
       if (editMode) {
         try {
-          const res = await http.put(`/zones/${currentZone.current?.id}`, values);
+          const res = await http.put(`/paymenttypes/${currentPaymentType.current?.id}`, values);
           if (res.data.ok) {
             data?.data && (data.data = data?.data.map(z => {
-              if (z.id === currentZone.current?.id) {
+              if (z.id === currentPaymentType.current?.id) {
                 z.name = values.name
               }
               return z;
@@ -98,7 +84,7 @@ const AllZones = () => {
         }
       } else {
         try {
-          const res = await http.post('/zones', values);
+          const res = await http.post('/paymenttypes', values);
           if (res.data.ok) {
             data?.data.push(res.data.data)
             reset();
@@ -115,6 +101,20 @@ const AllZones = () => {
     }
   }
 
+  const destroy = async (id: number) => {
+    try {
+      const res = await http.delete('/paymenttypes/' + id);
+      if (res.data.ok) {
+        data?.data && (data.data! = data?.data.filter(z => z.id !== id));
+        setShow(false);
+        showAndHideModal('Borrado', res.data.message)
+      } else {
+        showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
+      }
+    } catch (error: any) {
+      if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+    }
+  };
   const closeCreateModal = () => {
     reset();
     setShowCreateModal(false);
@@ -136,9 +136,10 @@ const AllZones = () => {
   return (
     <div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
 
+
       <div className='flex gap-x-4 mb-6 mx-3  items-center'>
-        <h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Zonas</h3>
-        <button onClick={() => { setEditMode(false); currentZone.current = null; setShowCreateModal(true) }} className='btn !w-10 !h-10 !p-0 gradient !rounded-full'>
+        <h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Tipos de pagos</h3>
+        <button onClick={() => { setEditMode(false); currentPaymentType.current = null; setShowCreateModal(true) }} className='btn !w-10 !h-10 !p-0 gradient !rounded-full'>
           <MdAdd size={50} />
         </button>
       </div>
@@ -146,12 +147,12 @@ const AllZones = () => {
       <Box className='!p-0 !overflow-hidden !border-none    sm:w-[500px] mb-4 '>
         <DataTable
           size='small'
-          emptyMessage='Aún no hay zona'
+          emptyMessage='Aún no hay tipos de pago'
           className='!overflow-hidden   !border-none'
           value={data?.data}
-          selectionMode='checkbox'
-          selection={selectedProducts2}
-          onSelectionChange={(e: any) => setSelectedProducts2(e.value)}
+          // selectionMode='checkbox'
+          // selection={selectedProducts2}
+          // onSelectionChange={(e: any) => setSelectedProducts2(e.value)}
           dataKey='id'
           responsiveLayout='scroll'
         >
@@ -166,8 +167,8 @@ const AllZones = () => {
       <DeleteModal
         show={show}
         setShow={setShow}
-        destroy={() => destroy(currentZone.current?.id!)}
-        text={`${currentZone.current?.name}`}
+        destroy={() => destroy(currentPaymentType.current?.id!)}
+        text={`${currentPaymentType.current?.name}`}
       />
 
       <CreateModal
@@ -178,11 +179,11 @@ const AllZones = () => {
         <form action="" onSubmit={handleSave}>
 
           <div className=' flex justify-between'>
-            <h2 className='title-form'>{editMode ? 'Editar' : 'Crear'} zona</h2>
+            <h2 className='title-form'>{editMode ? 'Editar' : 'Crear'} tipo de pago</h2>
           </div>
 
           <fieldset className=''>
-            <CustomInput placeholder='Sur,Este,Norte' initialValue={name} onChange={(value) => handleInputChange(value, 'name')} />
+            <CustomInput placeholder='Débito,Crédito,Efectivo' initialValue={name} onChange={(value) => handleInputChange(value, 'name')} />
             {errors?.name && <FormError text='El nombre es obligatorio.' />}
           </fieldset>
           <section className='action flex items-center gap-x-3 mt-4'>
@@ -200,4 +201,4 @@ const AllZones = () => {
   );
 };
 
-export default AllZones;
+export default AllPaymentTypes;

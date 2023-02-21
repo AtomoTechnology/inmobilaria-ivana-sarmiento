@@ -1,4 +1,4 @@
-const {catchAsync} = require('../../helpers/catchAsync');
+const { catchAsync } = require('../../helpers/catchAsync');
 const { Op } = require('sequelize');
 
 const filterFields = (obj, allowedFields) => {
@@ -20,52 +20,51 @@ exports.all = (Model, opts = null) =>
     let options = { ...queryFiltered };
 
     Object.keys(queryFiltered).map((k) => {
-
       if (queryFiltered[k].toString().split(':').length > 1) {
         let val = queryFiltered[k].toString().split(':');
-        switch(val[1]){
-            case "like":
-                options[`${k}`] = { [Op.substring]: val[0] };
-                break;
-            case "eq":
-                options[`${k}`] = { [eq.eq]: val[0] };
-                break;
-            case "ne":
-                options[`${k}`] = { [Op.ne]: val[0] };
-                break;
-            case "gt":
-                options[`${k}`] = { [Op.gt]: Number(val[0]) };
-                break;
-            case "gte":
-                options[`${k}`] = { [Op.gte]: Number(val[0]) };
-                break;
-            case "lt":
-                options[`${k}`] = { [Op.lt]: Number(val[0]) };
-                break;
-            case "lte":
-                options[`${k}`] = { [Op.lte]: Number(val[0]) };
-                break;
-            case "between":
-                options[`${k}`] = { [Op.between]: val[0].split(',').map((i) => Number(i)) };
-                break;
-            case "or":
-                options[`${k}`] = { [Op.or]: val[0].split(',').map((i) => (typeof i === 'number' ? Number(i) : i)) };
-                break;
-            case "and":
-                options[`${k}`] = { [Op.and]: val[0].split(',').map((i) => (typeof i === 'number' ? Number(i) : i)) };
-                break;
-            case "notBetween":
-                options[`${k}`] = { [Op.notBetween]: val[0].split(',').map((i) => Number(i)) };
-                break;
-            case "in":
-                options[`${k}`] = { [Op.in]: val[0].split(',').map((i) => (typeof i === 'number' ? Number(i) : i)) };
-                break;
-            case "notIn":
-                options[`${k}`] = { [Op.notIn]: val[0].split(',').map((i) => (typeof i === 'number' ? Number(i) : i)) };
-                break;
-            default:
-                break;
-        }        
+        switch (val[1]) {
+          case 'like':
+            options[`${k}`] = { [Op.substring]: val[0] };
+            break;
+          case 'eq':
+            options[`${k}`] = { [eq.eq]: val[0] };
+            break;
+          case 'ne':
+            options[`${k}`] = { [Op.ne]: val[0] };
+            break;
+          case 'gt':
+            options[`${k}`] = { [Op.gt]: Number(val[0]) };
+            break;
+          case 'gte':
+            options[`${k}`] = { [Op.gte]: Number(val[0]) };
+            break;
+          case 'lt':
+            options[`${k}`] = { [Op.lt]: Number(val[0]) };
+            break;
+          case 'lte':
+            options[`${k}`] = { [Op.lte]: Number(val[0]) };
+            break;
+          case 'between':
+            options[`${k}`] = { [Op.between]: val[0].split(',').map((i) => Number(i)) };
+            break;
+          case 'or':
+            options[`${k}`] = { [Op.or]: val[0].split(',').map((i) => (typeof i === 'number' ? Number(i) : i)) };
+            break;
+          case 'and':
+            options[`${k}`] = { [Op.and]: val[0].split(',').map((i) => (typeof i === 'number' ? Number(i) : i)) };
+            break;
+          case 'notBetween':
+            options[`${k}`] = { [Op.notBetween]: val[0].split(',').map((i) => Number(i)) };
+            break;
+          case 'in':
+            options[`${k}`] = { [Op.in]: val[0].split(',').map((i) => (typeof i === 'number' ? Number(i) : i)) };
+            break;
+          case 'notIn':
+            options[`${k}`] = { [Op.notIn]: val[0].split(',').map((i) => (typeof i === 'number' ? Number(i) : i)) };
+            break;
+          default:
+            break;
+        }
       }
     });
 
@@ -181,7 +180,7 @@ exports.bulk = (Model) =>
       code: 200,
       status: 'success',
       ok: true,
-      message: 'El registro fue guardado con exito',
+      message: 'Los registros fueron guardados con exito',
       data: doc,
     });
   });
@@ -228,11 +227,11 @@ exports.destroy = (Model) =>
   catchAsync(async (req, res, next) => {
     const doc = await Model.destroy({ where: { id: req.params.id } });
     if (doc <= 0) return next(new Error('No hay registro con id : ' + req.params.id));
-    return res.status(204).json({
+    return res.status(200).json({
       code: 200,
       status: 'success',
       ok: true,
-      message: 'El registro fue actualizado con exito',
+      message: 'El registro fue borrado con exito',
       data: null,
     });
   });

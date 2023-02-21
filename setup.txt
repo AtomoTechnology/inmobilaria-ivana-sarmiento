@@ -55,3 +55,13 @@ visitas,recordtorio --> vacios
     estos es para saber si cobrar al usuario un mes determinadas cosas a la hora de cobrarle el mes 
 6 - propietarios --> varios propiedades
 7 - propiedades --> 1..1 (por ahora) -------- Puede llegar a ser mas de uno 
+
+
+QUESTIONS FOR PRADEL  
+
+- find return response when the id does not exist 
+- getAll allow to filters and get some specifics fileds, ORDER THE RESPONSE BY A SPECIFIC FIELD 
+- when i tried to update or delete an unexisting document i got a no updating response ,could we let the user know that the document does not exist instead ??
+- i can create two or more paymentype and zones with same name 
+- when i update a paymenttype i got a error response that it did not update
+- validate logged user toperform any action 
