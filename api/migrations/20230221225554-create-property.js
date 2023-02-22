@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('owners', {
+    await queryInterface.createTable('properties', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -12,31 +12,34 @@ module.exports = {
       uuid: {
         type: Sequelize.STRING
       },
-      fullName: {
+      zoneId: {
+        type: Sequelize.INTEGER
+      },
+      propertyTypeId: {
+        type: Sequelize.INTEGER
+      },
+      ownerId: {
+        type: Sequelize.INTEGER
+      },
+      street: {
         type: Sequelize.STRING
       },
-      address: {
+      number: {
         type: Sequelize.STRING
       },
-      phone: {
+      floor: {
         type: Sequelize.STRING
       },
-      email: {
+      dept: {
         type: Sequelize.STRING
       },
-      cuit: {
+      isFor: {
         type: Sequelize.STRING
       },
-      nroFax: {
+      status: {
         type: Sequelize.STRING
       },
-      country: {
-        type: Sequelize.STRING
-      },
-      city: {
-        type: Sequelize.STRING
-      },
-      obs: {
+      description: {
         type: Sequelize.STRING
       },
       createdAt: {
@@ -50,6 +53,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('owners');
+    await queryInterface.dropTable('properties');
   }
 };

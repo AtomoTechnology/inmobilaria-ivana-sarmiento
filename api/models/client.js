@@ -3,17 +3,17 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class owner extends Model {
+  class client extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      owner.hasMany(models.property);
+      // define association here
     }
   }
-  owner.init({
+  client.init({
     uuid:{
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
@@ -46,20 +46,19 @@ module.exports = (sequelize, DataTypes) => {
         msg: "Email requerido"
       }
     },
-    cuit:  {
+    cuit:{
       type: DataTypes.STRING ,
       allowNull:{
         name: false,
         msg: "C.U.I.T/C.U.I.L requerido"
       }
     },
-    nroFax: DataTypes.STRING,
     province: DataTypes.STRING,
     city: DataTypes.STRING,
     obs: DataTypes.STRING
   }, {
     sequelize,
-    modelName: 'owner',
+    modelName: 'client',
   });
-  return owner;
+  return client;
 };

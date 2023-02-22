@@ -1,4 +1,3 @@
-require('dotenv').config();
 const {propertyType} = require('../../models');
 
 const { all, paginate, create, findOne, update, destroy } = require('../Generic/FactoryGeneric');

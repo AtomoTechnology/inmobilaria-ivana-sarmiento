@@ -1,9 +1,10 @@
 const router=require('express').Router();
-const ctrl= require('../controller/property.controller');
+const ctrl= require('../controller/propertytype.controller');
 const validador = require('../../helpers/validador');
 
 router.use(validador.protect);
 router.get('/', ctrl.GetAll);
+router.get('/paginate', ctrl.Paginate);
 //Get by id
 router.get('/:id', ctrl.GetById);
 
