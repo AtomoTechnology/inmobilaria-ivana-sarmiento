@@ -3,80 +3,72 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class property extends Model {
+  class contract extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-       property.belongsTo(models.zone);
-       property.belongsTo(models.propertyType);
-       property.belongsTo(models.owner);
-
+      contract.belongsTo(models.property);
+      contract.belongsTo(models.client);
       //  Relation      
-      property.hasMany(models.contract);
+      contract.hasMany(models.eventuality);
     }
   }
-  property.init({
-    uuid:{
+  contract.init({
+    uuid: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
     },
-    ZoneId:{
+    PropertyId:{
       allowNull: false,
       type: DataTypes.INTEGER, 
       references: {
-        model: 'zone',
+        model: 'property',
         key: 'id'
       }
     },
-    PropertyTypeId:{
+    ClientId:{
       allowNull: false,
       type: DataTypes.INTEGER, 
       references: {
-        model: 'propertyType',
+        model: 'client',
         key: 'id'
       }
     },
-    OwnerId: {
+    startDate:{
       allowNull: false,
-      type: DataTypes.INTEGER, 
-      references: {
-        model: 'owner',
-        key: 'id'
-      }
+      type: DataTypes.DATE
     },
-    street:{
+    endDate:{
       allowNull: false,
-      type: DataTypes.STRING
+      type: DataTypes.DATE
     },
-    number:{
-      allowNull: false,
-      type: DataTypes.STRING
-    },
-    floor: {
+    nroPartWater: DataTypes.STRING,
+    nroPartMuni: DataTypes.STRING,
+    nroPartAPI: DataTypes.STRING,
+    commision:{
       allowNull: false,
       type: DataTypes.STRING
     },
-    dept: {
+    status: DataTypes.STRING,
+    description: DataTypes.STRING,
+    stamped:{
       allowNull: false,
       type: DataTypes.STRING
     },
-    isFor:{
+    fees:{
       allowNull: false,
-      type: DataTypes.STRING,
-      defaultValue:"Alquiler"
+      type: DataTypes.STRING
     },
-    status:{
+    warrantyInquiry:{
       allowNull: false,
-      type: DataTypes.STRING,
-      defaultValue:"Libre"
-    },
-    description: DataTypes.STRING
+      type: DataTypes.STRING
+    }
   }, {
     sequelize,
-    modelName: 'property',
+    modelName: 'contract',
   });
-  return property;
+  return contract;
 };
