@@ -3,7 +3,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const routeconfig = require('./routeconfig/config');
 const rateLimit = require('express-rate-limit');
-const { globalErrorHandler } = require('./Generic/errorGeneric');
+const { globalError } = require('./Generic/errorGeneric');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -58,10 +58,10 @@ app.all('*', (req, res, next) => {
 });
 
 //Global error
-app.use(globalErrorHandler);
+app.use(globalError);
 //Starting
 app.listen(app.get('port'), () => {
-  console.log('server on port', app.get('port'));
+  console.log(' server on port', app.get('port'), '  MODE : ', process.env.NODE_ENV);
 
   //Connection to bd
   sequelize

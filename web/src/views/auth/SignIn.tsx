@@ -1,12 +1,11 @@
-import React, { useContext, useEffect } from 'react';
-import { Navigate, NavLink, useNavigate } from 'react-router-dom';
+import { useContext } from 'react';
+import { NavLink } from 'react-router-dom';
 import { useState } from 'react';
 
 
 import http from './../../api/axios';
 import { useForm } from '../../hooks/useForm';
 import { AuthContext } from '../../context/authContext';
-import Loading from '../../components/Loading';
 import Box from '../../components/Box';
 import CustomInput from '../../components/CustomInput';
 import FormError from '../../components/FormError';
@@ -17,11 +16,8 @@ const SignIn = () => {
   const [errors, setErrors] = useState<any>();
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  const navigate = useNavigate();
   const { signIn } = useContext(AuthContext);
   const { values, handleInputChange, email, password, reset } = useForm({ email: '', password: '' });
-
-
 
   const verifyForm = () => {
     let ok = true;
@@ -45,18 +41,14 @@ const SignIn = () => {
       try {
         const r = await http.post('/auth/signin', values);
         if (r.data.status === 200) {
-          console.log(r.data)
           signIn(r.data);
           reset();
           setLoading(false);
-          navigate('/');
         } else {
           setLoginError(r.data.message);
         }
       } catch (error: any) {
-        console.log(error)
         if (error.response) {
-          console.log(error.response.data)
           setLoginError(error.response.data.message);
           setTimeout(() => {
             setLoginError(null);
@@ -67,11 +59,6 @@ const SignIn = () => {
       }
     }
   };
-
-  // if (!!authState.token) {
-  //   return <Navigate to='/' />
-  // }
-
 
   return (
     <div className='flex h-screen w-screen dark:bg-gray-900 items-center justify-center'>

@@ -3,6 +3,7 @@ import App from "../App";
 import SignIn from "../views/auth/SignIn";
 import SignUp from "../views/auth/signUp";
 import AllClients from "../views/clients/allClients";
+import Owners from "../views/clients/owners";
 import Contracts from "../views/contracts/Contracts";
 import Home from "../views/Home";
 import AllPaymentTypes from "../views/payment/allPaymentTypes";
@@ -38,6 +39,10 @@ export const router = createBrowserRouter([
         element: <PrivateRoute ><AllClients /></PrivateRoute>,
       },
       {
+        path: '/owners',
+        element: <PrivateRoute ><Owners /></PrivateRoute>,
+      },
+      {
         path: '/contracts',
         element: <PrivateRoute ><Contracts /></PrivateRoute>,
       },
@@ -46,7 +51,7 @@ export const router = createBrowserRouter([
         element: <PrivateRoute ><SignUp /></PrivateRoute>,
       },
       {
-        path: '**',
+        path: '/*',
         element: <h1>Hello</h1>,
       },
     ],

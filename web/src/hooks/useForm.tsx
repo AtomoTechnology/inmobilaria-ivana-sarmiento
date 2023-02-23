@@ -13,6 +13,9 @@ export const useForm = <T extends Object>(initialState: T) => {
       [name]: value,
     });
   };
+  const updateAll = (newValues: T) => {
+    setValues((prev) => ({ ...prev, ...newValues }))
+  }
 
-  return { values, handleInputChange, reset, ...values };
+  return { values, handleInputChange, reset, ...values, updateAll };
 };

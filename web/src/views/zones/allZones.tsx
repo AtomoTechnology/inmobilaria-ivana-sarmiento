@@ -108,6 +108,7 @@ const AllZones = () => {
             showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
           }
         } catch (error: any) {
+          console.log(error)
           if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
         }
       }
@@ -136,14 +137,14 @@ const AllZones = () => {
   return (
     <div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
 
-      <div className='flex gap-x-4 mb-6 mx-3  items-center'>
+      <div className='flex gap-x-4 mb-6 mx-4  items-center justify-between sm:justify-start'>
         <h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Zonas</h3>
         <button onClick={() => { setEditMode(false); currentZone.current = null; setShowCreateModal(true) }} className='btn !w-10 !h-10 !p-0 gradient !rounded-full'>
           <MdAdd size={50} />
         </button>
       </div>
 
-      <Box className='!p-0 !overflow-hidden !border-none    sm:w-[500px] mb-4 '>
+      <Box className='!p-0 !overflow-hidden !border-none !mx-4   sm:w-[500px] mb-4 '>
         <DataTable
           size='small'
           emptyMessage='Aún no hay zona'

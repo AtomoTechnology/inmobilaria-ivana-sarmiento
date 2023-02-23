@@ -1,22 +1,28 @@
 import React from 'react';
-import { AiOutlineDashboard, AiOutlineLogout, AiOutlineUserAdd } from 'react-icons/ai';
+import { AiOutlineDashboard, AiOutlineLogout } from 'react-icons/ai';
 import { FaAngleDown } from 'react-icons/fa';
 import { NavLink } from 'react-router-dom';
 import { AuthState } from '../context/authContext';
 import DefaultAvatar from './DefaultAvatar';
+import { BsSun, BsFillMoonFill } from 'react-icons/bs'
 
 type Props = {
   authState: AuthState;
   signOut: () => void;
+  handleToggleTheme: () => void;
+  darkTheme: boolean;
 };
 
-const LoggedUser = ({ authState, signOut }: Props) => {
+const LoggedUser = ({ authState, signOut, handleToggleTheme, darkTheme }: Props) => {
 
   const { user } = authState;
 
   return (
     <>
-      <div className='relative inline-block text-left'>
+      <div className='relative flex items-center justify-center text-left'>
+        <button className='btn gradient !p-0 !rounded-full !w-[35px] !h-[35px] !mr-4' onClick={handleToggleTheme} title="Tema negro/Blanco">
+          {darkTheme ? (<BsFillMoonFill color='white' size={25} />) : (<BsSun size={25} color='white' />)}
+        </button>
         <div
           onClick={() => {
             document.querySelector('.dropdown-user-logged-box')!.classList.toggle('hidden');
@@ -45,7 +51,7 @@ const LoggedUser = ({ authState, signOut }: Props) => {
 
         <div
           style={{ zIndex: 900000 }}
-          className='dropdown-user-logged-box hidden ring-black ring-opacity-5 transition-fade rounded-md shadow p-1 origin-top-right absolute right-0 mt-2 w-56   bg-white dark:bg-slate-800  ring-1  focus:outline-none'
+          className='dropdown-user-logged-box hidden ring-black ring-opacity-5 transition-fade rounded-md shadow p-1 origin-top-right absolute right-0 mt-2 w-56 top-[60px]   bg-white dark:bg-slate-800  ring-1  focus:outline-none'
           role='menu'
           aria-orientation='vertical'
           aria-labelledby='menu-button'

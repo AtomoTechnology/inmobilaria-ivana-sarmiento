@@ -94,7 +94,7 @@ label {
 
 .btn.gradient:hover,
 .btn.gradient:focus {
-  border-color: #f16fa1;
+  /* border-color: #f16fa1; */
   box-shadow: rgba(252, 249, 249, 0.1) 0 4px 12px;
   color: rgb(235, 240, 246);
 }
@@ -178,4 +178,8 @@ label {
   background-color: #cdecf7;
   background-image: linear-gradient(84deg, #f9f9f9, #82ccff);
   color: white;
+}
+
+.p-datatable .p-sortable-column .p-sortable-column-icon {
+  color: #dbb1d2 !important;
 }
