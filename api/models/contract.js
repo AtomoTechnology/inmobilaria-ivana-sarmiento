@@ -23,19 +23,11 @@ module.exports = (sequelize, DataTypes) => {
     },
     PropertyId:{
       allowNull: false,
-      type: DataTypes.INTEGER, 
-      references: {
-        model: 'property',
-        key: 'id'
-      }
+      type: DataTypes.INTEGER
     },
     ClientId:{
       allowNull: false,
-      type: DataTypes.INTEGER, 
-      references: {
-        model: 'client',
-        key: 'id'
-      }
+      type: DataTypes.INTEGER
     },
     startDate:{
       allowNull: false,

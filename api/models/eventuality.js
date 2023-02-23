@@ -21,11 +21,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     ContractId: {
       allowNull: false,
-      type: DataTypes.INTEGER, 
-      references: {
-        model: 'contract',
-        key: 'id'
-      }
+      type: DataTypes.INTEGER
     },
     amount: {
       allowNull: false,

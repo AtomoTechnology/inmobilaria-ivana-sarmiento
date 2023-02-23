@@ -25,27 +25,15 @@ module.exports = (sequelize, DataTypes) => {
     },
     ZoneId:{
       allowNull: false,
-      type: DataTypes.INTEGER, 
-      references: {
-        model: 'zone',
-        key: 'id'
-      }
+      type: DataTypes.INTEGER
     },
     PropertyTypeId:{
       allowNull: false,
-      type: DataTypes.INTEGER, 
-      references: {
-        model: 'propertyType',
-        key: 'id'
-      }
+      type: DataTypes.INTEGER
     },
     OwnerId: {
       allowNull: false,
-      type: DataTypes.INTEGER, 
-      references: {
-        model: 'owner',
-        key: 'id'
-      }
+      type: DataTypes.INTEGER
     },
     street:{
       allowNull: false,
