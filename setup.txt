@@ -65,3 +65,6 @@ QUESTIONS FOR PRADEL
 - i can create two or more paymentype and zones with same name 
 - when i update a paymenttype i got a error response that it did not update
 - validate logged user toperform any action 
+
+
+-- si caduce el token voy a necesitar renovarlo 

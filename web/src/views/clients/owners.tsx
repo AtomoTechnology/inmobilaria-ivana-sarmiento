@@ -238,9 +238,10 @@ const Owners = () => {
       <Box className='!p-0 !overflow-hidden !border-none    mb-4 '>
         <DataTable
           size='small'
-          emptyMessage='Aún no hay tipos de pago'
+          emptyMessage='Aún no hay propietario'
           className='!overflow-hidden   !border-none'
           value={data?.data}
+
           // selectionMode='checkbox'
           // selection={selectedProducts2}
           // onSelectionChange={(e: any) => setSelectedProducts2(e.value)}

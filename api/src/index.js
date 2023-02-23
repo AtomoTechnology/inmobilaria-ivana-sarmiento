@@ -64,13 +64,13 @@ app.listen(app.get('port'), () => {
   console.log(' server on port', app.get('port'), '  MODE : ', process.env.NODE_ENV);
 
   //Connection to bd
-  sequelize
-    .sync({ force: false })
-    .then(() => {
-      console.log('DB is conected');
-    })
-    .catch((err) => {
-      console.log(err);
-      return;
-    });
+  // sequelize
+  //   .sync({ force: true })
+  //   .then(() => {
+  //     console.log('DB is conected');
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //     return;
+  //   });
 });
