@@ -1,37 +1,37 @@
-'use strict';
-const {
-  Model
-} = require('sequelize');
-module.exports = (sequelize, DataTypes) => {
-  class zone extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
-    static associate(models) {
-      zone.hasMany(models.property);
-    }
-  }
-  zone.init({
-    uuid: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+const { DataTypes } = require('sequelize');
+const { dbConnect } = require('./index');
+
+const zona = dbConnect.define(
+  'zona',
+  {
+    id: {
+      primaryKey: true,
+      allowNull: false,
+      type: DataTypes.BIGINT,
+      autoIncrement: true,
     },
     name: {
-      type: DataTypes.STRING,
-      unique:{
-          name: true,
-          msg: "El nombre debe ser único"
-        },
+      type: DataTypes.STRING(50),
       allowNull: false,
-      validate:{
-        
-      }
-    }
-  }, {
-    sequelize,
-    modelName: 'zone',
-  });
-  return zone;
-};
+      unique: {
+        msg: 'Ya existe otra zona con ese nombre.',
+      },
+      validate: {
+        notNull: {
+          msg: 'El nombre no puede ser nulo.',
+        },
+        notEmpty: {
+          msg: 'El nombre no puede ser vacio.',
+        },
+        len: {
+          args: [2, 50],
+          msg: 'El nombre debe tener entre 3 a 50 caracteres.',
+        },
+      },
+    },
+  },
+  {
+    tableName: 'zones',
+  }
+);
+module.exports = zona;

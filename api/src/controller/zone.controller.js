@@ -1,4 +1,4 @@
-const { zone } = require('../../models');
+const { zone } = require('../../schemas/zone');
 const { all, paginate, create, findOne, update, destroy } = require('../Generic/FactoryGeneric');
 
 exports.GetAll = all(zone);
