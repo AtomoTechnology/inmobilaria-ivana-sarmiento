@@ -3,7 +3,7 @@ const ctrl = require('../controller/auth.controller');
 const validador = require('../../helpers/validador');
 
 router.post('/signin', ctrl.SignIn);
-router.use(validador.protect);
+// router.use(validador.protect);
 
 router.get('/', ctrl.GetAll);
 //Get by id

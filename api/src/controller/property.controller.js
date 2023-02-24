@@ -1,22 +1,22 @@
-const { property, zone, propertyType, owner } = require('../../models');
+const { Property, Zone, PropertyType, Owner } = require('../../models');
 
 const { all, paginate, create, findOne, update, destroy } = require('../Generic/FactoryGeneric');
 
-exports.GetAll = all(property, {
-  inclued: [
-    { model: zone, attributes: ['name'] },
-    { model: propertyType, attributes: ['description'] },
-    { model: owner, attributes: ['fullName', 'phone', 'email'] },
+exports.GetAll = all(Property, {
+  include: [
+    { model: Zone, attributes: ['name'] },
+    { model: PropertyType, attributes: ['description'] },
+    { model: Owner, attributes: ['fullName', 'phone', 'email'] },
   ],
 });
-exports.Paginate = paginate(property, {
-  inclued: [
-    { model: zone, attributes: ['name'] },
-    { model: propertyType, attributes: ['description'] },
-    { model: owner, attributes: ['fullName', 'phone', 'email'] },
+exports.Paginate = paginate(Property, {
+  include: [
+    { model: Zone, attributes: ['name'] },
+    { model: PropertyType, attributes: ['description'] },
+    { model: Owner, attributes: ['fullName', 'phone', 'email'] },
   ],
 });
-exports.Create = create(property, [
+exports.Create = create(Property, [
   'ZoneId',
   'PropertyTypeId',
   'OwnerId',
@@ -28,14 +28,14 @@ exports.Create = create(property, [
   'status',
   'description',
 ]);
-exports.GetById = findOne(property, {
-  inclued: [
-    { model: zone, attributes: ['name'] },
-    { model: propertyType, attributes: ['description'] },
-    { model: owner, attributes: ['fullName', 'phone', 'email'] },
+exports.GetById = findOne(Property, {
+  include: [
+    { model: Zone, attributes: ['name'] },
+    { model: PropertyType, attributes: ['description'] },
+    { model: Owner, attributes: ['fullName', 'phone', 'email'] },
   ],
 });
-exports.Put = update(property, [
+exports.Put = update(Property, [
   'ZoneId',
   'PropertyTypeId',
   'OwnerId',
@@ -47,4 +47,4 @@ exports.Put = update(property, [
   'status',
   'description',
 ]);
-exports.Destroy = destroy(property);
+exports.Destroy = destroy(Property);

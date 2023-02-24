@@ -1,10 +1,11 @@
 const jwt = require('jsonwebtoken');
+const AppError = require('../../helpers/AppError');
 const encripto = require('../../helpers/Cryptographies');
-const { auth } = require('../../models');
+const { Auth } = require('../../models');
 
 const SignIn = (req, res) => {
   const { email, password } = req.body;
-  auth
+  Auth
     .findOne({
       where: {
         email: email,
@@ -54,7 +55,7 @@ const SignIn = (req, res) => {
 const GetAll = (req, res) => {
   const {filter} = req.query;
   // 'id', 'uuid', 'email', 'fullName', 'photo'
-  auth
+  Auth
     .findAll({
       attributes: [filter],
       order: [['id', 'DESC']],
@@ -70,7 +71,7 @@ const GetAll = (req, res) => {
 };
 
 const GetById = (req, res) => {
-  auth
+  Auth
     .findOne({
       attributes: ['id', 'uuid', 'email', 'fullName', 'photo'],
       where: {
@@ -87,10 +88,14 @@ const GetById = (req, res) => {
     });
 };
 
-const Post = (req, res) => {
+const Post = (req, res, next) => {
   const { email, password, fullName, photo } = req.body;
+  if(!(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/.test(password))) {
+    return next(new AppError("La contraseña debe contener al menos 8 y máximo 20 caracteres, incluidos al menos 1 mayúscula, 1 minúscula, un número y un carácter especial.", 400));
+  }
+
   encripto.encryptPassword(password).then((pass) => {
-    auth
+    Auth
       .create({
         email: email,
         password: pass,
@@ -106,6 +111,7 @@ const Post = (req, res) => {
         });
       })
       .catch((err) => {
+        console.log(err)
         return res.json({
           status: 500,
           success: false,

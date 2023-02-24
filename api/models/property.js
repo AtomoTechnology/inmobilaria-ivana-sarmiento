@@ -1,65 +1,94 @@
 'use strict';
 const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class property extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
+  class Property extends Model {
     static associate(models) {
-      property.belongsTo(models.zone);
-      property.belongsTo(models.propertyType);
-      property.belongsTo(models.owner);
+      Property.belongsTo(models.Zone);
+      Property.belongsTo(models.PropertyType);
+      Property.belongsTo(models.Owner);
 
       //  Relation
-      property.hasMany(models.contract);
+      Property.hasMany(models.Contract);
     }
   }
-  property.init(
+  Property.init(
     {
+      id: {
+        primaryKey: true,
+        allowNull: false,
+        type: DataTypes.BIGINT,
+        autoIncrement: true,
+      },
       uuid: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
       },
-      // ZoneId: {
-      //   allowNull: false,
-      //   type: DataTypes.INTEGER,
-      //   references: {
-      //     model: 'zone',
-      //     key: 'id',
-      //   },
-      // },
-      // PropertyTypeId: {
-      //   allowNull: false,
-      //   type: DataTypes.INTEGER,
-      //   references: {
-      //     model: 'propertyType',
-      //     key: 'id',
-      //   },
-      // },
-      // OwnerId: {
-      //   allowNull: false,
-      //   type: DataTypes.INTEGER,
-      //   references: {
-      //     model: 'owner',
-      //     key: 'id'
-      //   }
-      // },
+      ZoneId: {
+        allowNull: false,
+        type: DataTypes.BIGINT,
+        validate: {
+          notNull: {
+            msg: 'La zona es obligatorio',
+          },
+          notEmpty: {
+            msg: 'La zona es obligatorio',
+          },
+        },
+      },
+      PropertyTypeId: {
+        allowNull: false,
+        type: DataTypes.BIGINT,
+        validate: {
+          notNull: {
+            msg: 'La zona es obligatoria',
+          },
+          notEmpty: {
+            msg: 'La zona es obligatoria',
+          },
+        },
+      },
+      OwnerId: {
+        allowNull: false,
+        type: DataTypes.BIGINT,
+        validate: {
+          notNull: {
+            msg: 'El dueño es obligatorio',
+          },
+          notEmpty: {
+            msg: 'El dueño es obligatorio',
+          },
+        },
+      },
       street: {
         allowNull: false,
         type: DataTypes.STRING,
+        validate: {
+          notNull: {
+            msg: 'La calle es obligatoria',
+          },
+          notEmpty: {
+            msg: 'La calle es obligatoria',
+          },
+        },
       },
       number: {
         allowNull: false,
         type: DataTypes.STRING,
+        validate: {
+          notNull: {
+            msg: 'El numero de la calle es obligatorio',
+          },
+          notEmpty: {
+            msg: 'El numero de la calle es obligatorio',
+          },
+        },
       },
       floor: {
-        allowNull: false,
+        allowNull: true,
         type: DataTypes.STRING,
       },
       dept: {
-        allowNull: false,
+        allowNull: true,
         type: DataTypes.STRING,
       },
       isFor: {
@@ -76,8 +105,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: 'property',
+      modelName: 'Property',
     }
   );
-  return property;
+  return Property;
 };

@@ -1,10 +1,10 @@
-const {client} = require('../../models');
+const {Client} = require('../../models');
 
 const { all, paginate, create, findOne, update, destroy } = require('../Generic/FactoryGeneric');
 
-exports.GetAll = all(client);
-exports.Paginate = paginate(client);
-exports.Create = create(client, ['fullName','address','phone','email','cuit','nroFax','province','city','obs']);
-exports.GetById = findOne(client);
-exports.Put = update(client, ['fullName','address','phone','email','cuit','nroFax','province','city','obs']);
-exports.Destroy = destroy(client);
+exports.GetAll = all(Client);
+exports.Paginate = paginate(Client);
+exports.Create = create(Client, ['fullName','address','phone','email','cuit','nroFax','province','city','obs']);
+exports.GetById = findOne(Client);
+exports.Put = update(Client, ['fullName','address','phone','email','cuit','nroFax','province','city','obs']);
+exports.Destroy = destroy(Client);

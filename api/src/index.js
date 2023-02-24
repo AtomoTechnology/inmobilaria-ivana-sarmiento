@@ -1,17 +1,19 @@
 const express = require('express');
 const helmet = require('helmet');
+const morgan = require('morgan');
 const cors = require('cors');
 const routeconfig = require('./routeconfig/config');
 const rateLimit = require('express-rate-limit');
 const { globalError } = require('./Generic/errorGeneric');
 const dotenv = require('dotenv');
 dotenv.config();
-
 const { sequelize } = require('../models');
 
 const bodyParser = require('body-parser');
 
 const app = express();
+
+app.use(morgan('dev'));
 
 const Port = 4000;
 app.set('port', process.env.PORT || Port);
@@ -56,7 +58,6 @@ app.use(routeconfig);
 app.all('*', (req, res, next) => {
   return res.json(next(new Error(`can´t find the url ${req.originalUrl} for this server...`)));
 });
-
 //Global error
 app.use(globalError);
 //Starting
@@ -64,8 +65,7 @@ app.listen(app.get('port'), () => {
   console.log(' server on port', app.get('port'), '  MODE : ', process.env.NODE_ENV);
 
   //Connection to bd
-  // sequelize
-  //   .sync({ force: true })
+  // sequelize.sync({ force: false })
   //   .then(() => {
   //     console.log('DB is conected');
   //   })
@@ -73,4 +73,4 @@ app.listen(app.get('port'), () => {
   //     console.log(err);
   //     return;
   //   });
-});
+ });

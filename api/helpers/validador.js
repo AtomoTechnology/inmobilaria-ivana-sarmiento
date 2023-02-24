@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { auth } = require('../models');
+const { Auth } = require('../models');
 const { catchAsync } = require('./catchAsync');
 const {promisify} = require('util');
 const AppError = require('./AppError');
@@ -16,7 +16,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     }
   
     const decoded = await promisify(jwt.verify)(token, process.env.SECRET_TOKEN);
-    const currentUser = await auth.findByPk(decoded.id);
+    const currentUser = await Auth.findByPk(decoded.id);
   
     if (!currentUser) {
       return next(new AppError('El usuario ya no existe', 401));

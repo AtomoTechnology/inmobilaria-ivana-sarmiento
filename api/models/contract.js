@@ -1,48 +1,73 @@
 'use strict';
 const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class contract extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
+  class Contract extends Model {
     static associate(models) {
-      contract.belongsTo(models.property);
-      contract.belongsTo(models.client);
+      Contract.belongsTo(models.Property);
+      Contract.belongsTo(models.Client);
       //  Relation
-      contract.hasMany(models.eventuality);
+      Contract.hasMany(models.Eventuality);
     }
   }
-  contract.init(
+  Contract.init(
     {
+      id: {
+        primaryKey: true,
+        allowNull: false,
+        type: DataTypes.BIGINT,
+        autoIncrement: true,
+      },
       uuid: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
       },
-      // PropertyId:{
-      //   allowNull: false,
-      //   type: DataTypes.INTEGER,
-      //   references: {
-      //     model: 'property',
-      //     key: 'id'
-      //   }
-      // },
-      // ClientId:{
-      //   allowNull: false,
-      //   type: DataTypes.INTEGER,
-      //   references: {
-      //     model: 'client',
-      //     key: 'id'
-      //   }
-      // },
+      PropertyId:{
+        allowNull: false,
+        type: DataTypes.BIGINT,
+        validate: {
+          notNull: {
+            msg: 'El propietario es obligatorio',
+          },
+          notEmpty: {
+            msg: 'El propietario es obligatorio',
+          },
+        },
+      },
+      ClientId:{
+        allowNull: false,
+        type: DataTypes.BIGINT,
+        validate: {
+          notNull: {
+            msg: 'El cliente es obligatorio',
+          },
+          notEmpty: {
+            msg: 'El cliente es obligatorio',
+          },
+        },
+      },
       startDate: {
         allowNull: false,
         type: DataTypes.DATE,
+        validate: {
+          notNull: {
+            msg: 'La fecha del comienzo es obligatoria',
+          },
+          notEmpty: {
+            msg: 'La fecha del comienzo es obligatoria',
+          },
+        },
       },
       endDate: {
         allowNull: false,
         type: DataTypes.DATE,
+        validate: {
+          notNull: {
+            msg: 'La fecha fin es obligatoria',
+          },
+          notEmpty: {
+            msg: 'La fecha fin es obligatoria',
+          },
+        },
       },
       nroPartWater: DataTypes.STRING,
       nroPartMuni: DataTypes.STRING,
@@ -50,26 +75,58 @@ module.exports = (sequelize, DataTypes) => {
       commision: {
         allowNull: false,
         type: DataTypes.STRING,
+        validate: {
+          notNull: {
+            msg: 'La comisión es obligatoria',
+          },
+          notEmpty: {
+            msg: 'La comisión es obligatoria',
+          },
+        },
       },
       status: DataTypes.STRING,
       description: DataTypes.STRING,
       stamped: {
         allowNull: false,
         type: DataTypes.STRING,
+        validate: {
+          notNull: {
+            msg: 'la sellada es obligatoria',
+          },
+          notEmpty: {
+            msg: 'La sellada es obligatoria',
+          },
+        },
       },
       fees: {
         allowNull: false,
         type: DataTypes.STRING,
+        validate: {
+          notNull: {
+            msg: 'El honorario es obligatorio',
+          },
+          notEmpty: {
+            msg: 'El honorario es obligatorio',
+          },
+        },
       },
       warrantyInquiry: {
         allowNull: false,
         type: DataTypes.STRING,
+        validate: {
+          notNull: {
+            msg: 'la consulta de garantía es obligatoria',
+          },
+          notEmpty: {
+            msg: 'La consulta de garantía es obligatoria',
+          },
+        },
       },
     },
     {
       sequelize,
-      modelName: 'contract',
+      modelName: 'Contract',
     }
   );
-  return contract;
+  return Contract;
 };
