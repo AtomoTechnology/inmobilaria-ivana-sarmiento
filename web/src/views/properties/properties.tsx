@@ -14,7 +14,6 @@ import CustomInput from '../../components/CustomInput';
 import { useForm } from '../../hooks/useForm';
 import FormError from '../../components/FormError';
 import RequestError from '../../components/RequestError';
-import { usePaymentTypes } from '../../hooks/usePaymentTypes';
 import { DelayAlertToHide } from '../../helpers/variableAndConstantes';
 import FieldsetGroup from '../../components/FieldsetGroup';
 import { IPerson } from '../../interfaces/Iowners';
@@ -25,23 +24,24 @@ import { Button } from 'primereact/button';
 import { FilterMatchMode, FilterOperator } from 'primereact/api';
 import { InputText } from 'primereact/inputtext';
 
-const Owners = () => {
+const Properties = () => {
   const { authState, showAlert, hideAlert } = useContext(AuthContext);
   // const [selectedProducts2, setSelectedProducts2] = useState<IPerson[]>();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [show, setShow] = useState(false);
   const { values, handleInputChange, reset, updateAll } = useForm({
-    fullName: '',
-    email: '',
-    phone: '',
-    cuit: '',
-    province: '',
-    city: '',
-    address: '',
-    nroFax: '',
-    obs: '',
+    ZoneId: '',
+    PropertyId: '',
+    OwnerId: '',
+    street: '',
+    number: '',
+    floor: '',
+    dept: '',
+    isFor: '',
+    state: '',
+    description: ''
   });
-  const { fullName, email, phone, cuit, province, city, address, nroFax, obs } = values;
+  const { ZoneId, OwnerId, street, number, floor, dept, description, isFor, state, PropertyId } = values;
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [errors, setErrors] = useState<any>();
   const [editMode, setEditMode] = useState(false);
@@ -59,15 +59,15 @@ const Owners = () => {
   const edit = (data: IPerson) => {
     // handleInputChange(data.fullName, 'fullName');
     updateAll({
-      fullName: data.fullName,
-      email: data.email,
-      phone: data.phone,
-      cuit: data.cuit,
-      province: data.province,
-      city: data.city,
-      address: data.address,
-      nroFax: data.nroFax,
-      obs: data.obs,
+      "ZoneId": "data.ZoneId",
+      "PropertyId": "data.PropertyId",
+      "OwnerId": "data.OwnerId",
+      "street": "data.street",
+      "number": "data.number",
+      "floor": "data.floor",
+      "isFor": "data.isFor",
+      "state": "data.state",
+      "description": "data.description"
     });
     getCitiesByProvinces(data.province)
     setShowCreateModal(true);
@@ -498,4 +498,4 @@ const Owners = () => {
   );
 };
 
-export default Owners;
+export default Properties;

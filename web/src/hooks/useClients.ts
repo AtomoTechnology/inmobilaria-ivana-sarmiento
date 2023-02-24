@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import http from '../api/axios';
-import { IzonesResponse } from '../interfaces/Izones';
+import { IownersResponse } from '../interfaces/Iowners';
 
 const getAllClients = async () => {
-  const { data } = await http.get<IzonesResponse>('/clients');
+  const { data } = await http.get<IownersResponse>('/clients');
   return data;
 };
 

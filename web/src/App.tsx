@@ -13,6 +13,7 @@ const menuItems = [
       { to: 'zones', title: 'Zonas' },
       { to: 'payment-methods', title: 'Tipo de pago' },
       { to: 'property-types', title: 'Tipo de propiedades' },
+      { to: 'properties', title: 'Propiedades' },
     ],
   },
 

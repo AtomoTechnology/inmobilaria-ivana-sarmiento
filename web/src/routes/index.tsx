@@ -2,7 +2,7 @@ import { createBrowserRouter } from "react-router-dom"
 import App from "../App";
 import SignIn from "../views/auth/SignIn";
 import SignUp from "../views/auth/signUp";
-import AllClients from "../views/clients/allClients";
+import Clients from "../views/clients/allClients";
 import Owners from "../views/clients/owners";
 import Contracts from "../views/contracts/Contracts";
 import Home from "../views/Home";
@@ -36,7 +36,7 @@ export const router = createBrowserRouter([
       },
       {
         path: '/clients',
-        element: <PrivateRoute ><AllClients /></PrivateRoute>,
+        element: <PrivateRoute ><Clients /></PrivateRoute>,
       },
       {
         path: '/owners',

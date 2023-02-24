@@ -1,3 +1,11 @@
+html {
+  --placeholder-color: #229300;
+}
+
+html[class='dark'] {
+  --placeholder-color: #930093;
+}
+
 .title-form {
   /* font-size: 2rem; */
   /* margin-bottom: 1rem; */
@@ -183,3 +191,48 @@ label {
 .p-datatable .p-sortable-column .p-sortable-column-icon {
   color: #dbb1d2 !important;
 }
+
+/* input::-webkit-input-placeholder {
+  color: #f90000 !important;
+}
+
+::-moz-placeholder {
+  color: #f01919;
+} */
+
+:-ms-input-placeholder {
+  /** notice that ie has only a single colon) */
+  color: #e20c0c;
+}
+/* 
+::-webkit-input-placeholder {
+  color: #ef1212;
+} */
+
+::placeholder {
+  color: --placeholder-color;
+  opacity: 0.5 !important;
+}
+
+/* @media (prefers-color-scheme: dark) {
+  ::placeholder {
+    color: --placeholderColor !important;
+    opacity: 0.5 !important;
+  }
+}
+@media (prefers-color-scheme: light) {
+  ::placeholder {
+    color: --placeholderColor;
+    opacity: 0.5 !important;
+  }
+} */
+
+.p-dropdown-filter-container input {
+  height: 40px;
+}
+.p-dropdown-panel {
+  width: 200px;
+}
+/* .p-dropdown-panel .p-dropdown-items-wrapper {
+  width: 160px;
+} */
