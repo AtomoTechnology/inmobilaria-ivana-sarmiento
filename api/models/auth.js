@@ -3,17 +3,17 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class auth extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
+  class Auth extends Model {
     static associate(models) {
-      // define association here
     }
   }
-  auth.init({
+  Auth.init({
+    id: {
+      primaryKey: true,
+      allowNull: false,
+      type: DataTypes.BIGINT,
+      autoIncrement: true,
+    },
     uuid: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
@@ -21,11 +21,27 @@ module.exports = (sequelize, DataTypes) => {
     email:{
       type: DataTypes.STRING,
       unique: true,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'El email no puede ser nulo.',
+        },
+        notEmpty: {
+          msg: 'El email no puede ser vacio.',
+        },
+      }
     },
     fullName: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'El nombre completo no puede ser nulo.',
+        },
+        notEmpty: {
+          msg: 'El nombre completo no puede ser vacio.',
+        },
+      }
     },
     photo: {
       type: DataTypes.STRING,
@@ -33,23 +49,52 @@ module.exports = (sequelize, DataTypes) => {
     },
     password:{
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'La contraseña no puede estar nula.',
+        },
+        notEmpty: {
+          msg: 'La contraseña no puede estar vacia.',
+        },
+      }
     },
     passwordChangedAt: DataTypes.DATE,
     passwordResetToken: DataTypes.STRING,
     passwordResetExpires: DataTypes.DATE,
   }, {
     sequelize,
-    modelName: 'auth',
+    modelName: 'Auth',
   });
-  auth.prototype.changePasswordAfter = function (jwtIat) {
+  Auth.prototype.changePasswordAfter = function (jwtIat) {
     if (this.passwordChangedAt) {
       const changePassword = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
       return jwtIat < changePassword;
     }
     return false;
   };
+  // Auth.beforeCreate(async (user, options) => {
+  //   user.password = await bcrypt.hash(user.password, 12);
+  // });
+  
+  // Auth.prototype.checkPassword = async function (userPassword, hash) {
+  //   return await bcrypt.compare(userPassword, hash);
+  // };
+  // Auth.prototype.hashPassword = async function (password) {
+  //   return await bcrypt.hash(password, 12);
+  // };
+  
+  Auth.prototype.createPasswordResetToken = function () {
+    //create token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    //encrypt the token and save to the database
+    this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  
+    //store the time plus 10 mns to the satabase
+    this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+    //return the token without encrypt
+    return resetToken;
+  };
 
-
-  return auth;
+  return Auth;
 };

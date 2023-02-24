@@ -3,17 +3,18 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class propertyType extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
+  class PropertyType extends Model {
     static associate(models) {
-      propertyType.hasMany(models.property);
+      PropertyType.hasMany(models.Property);
     }
   }
-  propertyType.init({
+  PropertyType.init({
+    id: {
+      primaryKey: true,
+      allowNull: false,
+      type: DataTypes.BIGINT,
+      autoIncrement: true,
+    },
     uuid: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
@@ -21,11 +22,19 @@ module.exports = (sequelize, DataTypes) => {
     description: {
       type: DataTypes.STRING,
       unique: true,
-      allowNull: false
+      allowNull: false, 
+      validate: {
+        notNull: {
+          msg: 'La descripcion no puede ser nula.',
+        },
+        notEmpty: {
+          msg: 'La descripcion no puede ser vacia.'
+        }
+      }
     }
   }, {
     sequelize,
-    modelName: 'propertyType',
+    modelName: 'PropertyType',
   });
-  return propertyType;
+  return PropertyType;
 };

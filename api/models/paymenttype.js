@@ -4,16 +4,17 @@ const {
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class PaymentType extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
       // define association here
     }
   }
   PaymentType.init({
+    id: {
+      primaryKey: true,
+      allowNull: false,
+      type: DataTypes.BIGINT,
+      autoIncrement: true,
+    },
     uuid: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
@@ -21,7 +22,15 @@ module.exports = (sequelize, DataTypes) => {
     name: {
       type: DataTypes.STRING,
       unique: true,
-      allowNull: false
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'El nombre de tipo de pago es obligatorio',
+        },
+        notEmpty: {
+          msg: 'El nombre de tipo de pago es obligatorio',
+        },
+      },
     }
   }, {
     sequelize,

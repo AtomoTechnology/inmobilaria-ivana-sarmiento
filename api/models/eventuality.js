@@ -1,34 +1,47 @@
 'use strict';
 const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class eventuality extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
+  class Eventuality extends Model {
     static associate(models) {
       //  Relation
-      eventuality.belongsTo(models.contract);
+      Eventuality.belongsTo(models.Contract);
     }
   }
-  eventuality.init(
+  Eventuality.init(
     {
+      id: {
+        primaryKey: true,
+        allowNull: false,
+        type: DataTypes.BIGINT,
+        autoIncrement: true,
+      },
       uuid: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
       },
-      // ContractId: {
-      //   allowNull: false,
-      //   type: DataTypes.INTEGER,
-      //   references: {
-      //     model: 'contract',
-      //     key: 'id'
-      //   }
-      // },
+      ContractId: {
+        allowNull: false,
+        type: DataTypes.BIGINT,
+        validate: {
+          notNull: {
+            msg: 'El contrato es obligatorio',
+          },
+          notEmpty: {
+            msg: 'El contrato es obligatorio',
+          },
+        },
+      },
       amount: {
         allowNull: false,
         type: DataTypes.DECIMAL,
+        validate: {
+          notNull: {
+            msg: 'La cantidad es obligatoria',
+          },
+          notEmpty: {
+            msg: 'El cantidad es obligatoria',
+          },
+        },
       },
       description: {
         allowNull: true,
@@ -41,8 +54,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: 'eventuality',
+      modelName: 'Eventuality',
     }
   );
-  return eventuality;
+  return Eventuality;
 };
