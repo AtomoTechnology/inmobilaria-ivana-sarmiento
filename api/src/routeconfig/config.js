@@ -9,6 +9,6 @@ router.use('/api/v1/clients', require('../Route/client.router'));
 router.use('/api/v1/properties', require('../Route/property.router'));
 router.use('/api/v1/contracts', require('../Route/contract.router'));
 router.use('/api/v1/eventualities', require('../Route/eventuality.router'));
-// router.use('/api/v1/contacts', require('../Route/contact.router'));
+router.use('/api/v1/assurances', require('../Route/assurance.route'));
 
 module.exports = router;
