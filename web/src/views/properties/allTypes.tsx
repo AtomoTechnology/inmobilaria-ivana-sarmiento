@@ -16,31 +16,31 @@ import { useForm } from '../../hooks/useForm';
 import FormError from '../../components/FormError';
 import RequestError from '../../components/RequestError';
 import { DelayAlertToHide } from '../../helpers/variableAndConstantes';
-import { Iproperty } from '../../interfaces/IPropertyType';
+import { IpropertyType } from '../../interfaces/IPropertyType';
 import { usePropertyTypes } from '../../hooks/usePropertyTypes';
 
 const AllPropertyTypes = () => {
 
   const { showAlert, hideAlert } = useContext(AuthContext);
-  const [selectedProducts2, setSelectedProducts2] = useState<Iproperty[]>();
+  const [selectedProducts2, setSelectedProducts2] = useState<IpropertyType[]>();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [show, setShow] = useState(false);
   const { description, values, handleInputChange, reset } = useForm({ description: '' })
   const [errors, setErrors] = useState<any>();
   const [editMode, setEditMode] = useState(false)
 
-  const currentPropertyType = useRef<Iproperty | null>();
+  const currentPropertyType = useRef<IpropertyType | null>();
 
   const { data, isError, isLoading, error, isFetching, } = usePropertyTypes();
 
-  const edit = (data: Iproperty) => {
+  const edit = (data: IpropertyType) => {
     handleInputChange(data.description, 'description');
     setShowCreateModal(true)
     setEditMode(true)
     currentPropertyType.current = data;
   };
 
-  const ConfirmDestroy = (data: Iproperty) => {
+  const ConfirmDestroy = (data: IpropertyType) => {
     setShow(!show);
     currentPropertyType.current = data;
   };

@@ -3,10 +3,10 @@ export interface IpropertyResponse {
   status: string;
   code: number;
   ok: boolean;
-  data: Iproperty[];
+  data: IpropertyType[];
 }
 
-export interface Iproperty {
+export interface IpropertyType {
   id: number;
   uuid?: string;
   description: string;

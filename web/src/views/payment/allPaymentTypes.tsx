@@ -144,6 +144,7 @@ const AllPaymentTypes = () => {
         </button>
       </div>
 
+
       <Box className='!p-0 !overflow-hidden !border-none    sm:w-[500px] mb-4 '>
         <DataTable
           size='small'

@@ -8,6 +8,7 @@ import Contracts from "../views/contracts/Contracts";
 import Home from "../views/Home";
 import AllPaymentTypes from "../views/payment/allPaymentTypes";
 import AllPropertyTypes from "../views/properties/allTypes";
+import Properties from "../views/properties/properties";
 import AllZones from "../views/zones/allZones";
 import PrivateRoute from "./PrivateRoute";
 import PublicRoute from "./PublicRoute";
@@ -41,6 +42,10 @@ export const router = createBrowserRouter([
       {
         path: '/owners',
         element: <PrivateRoute ><Owners /></PrivateRoute>,
+      },
+      {
+        path: '/properties',
+        element: <PrivateRoute ><Properties /></PrivateRoute>,
       },
       {
         path: '/contracts',

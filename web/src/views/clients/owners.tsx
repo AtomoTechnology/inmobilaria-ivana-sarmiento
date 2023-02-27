@@ -253,7 +253,7 @@ const Owners = () => {
 
       <input
         onChange={onGlobalFilterChange}
-        className={`dark:!bg-gray-900 dark:text-slate-400 border dark:!border-slate-700 m-auto w-[92%] !mx-3 sm:mx-0 sm:w-96 ml-0 sm:ml-[10px] mb-4`}
+        className={`dark:!bg-gray-900 dark:text-slate-400 border dark:!border-slate-700 m-auto w-[92%] !mx-[10px] sm:mx-0 sm:w-96 ml-0 sm:ml-[10px] mb-4`}
         value={globalFilterValue}
         placeholder='Buscar propietario por nombre o cuit'
         type='search'

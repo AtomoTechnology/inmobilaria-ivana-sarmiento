@@ -16,23 +16,27 @@ import FormError from '../../components/FormError';
 import RequestError from '../../components/RequestError';
 import { DelayAlertToHide } from '../../helpers/variableAndConstantes';
 import FieldsetGroup from '../../components/FieldsetGroup';
-import { IPerson } from '../../interfaces/Iowners';
 import { useOwners } from '../../hooks/useOwners';
 import { Dropdown } from 'primereact/dropdown';
 import { provinces } from '../../api/provinces';
 import { Button } from 'primereact/button';
 import { FilterMatchMode, FilterOperator } from 'primereact/api';
 import { InputText } from 'primereact/inputtext';
+import { Iproperty } from '../../interfaces/Iproperties';
+import { useProperties } from '../../hooks/useProperties';
+import CustomTextArea from '../../components/CustomTextArea';
+import { useZones } from '../../hooks/useZones';
+import { usePropertyTypes } from '../../hooks/usePropertyTypes';
 
 const Properties = () => {
   const { authState, showAlert, hideAlert } = useContext(AuthContext);
-  // const [selectedProducts2, setSelectedProducts2] = useState<IPerson[]>();
+  // const [selectedProducts2, setSelectedProducts2] = useState<Iproperty[]>();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [show, setShow] = useState(false);
   const { values, handleInputChange, reset, updateAll } = useForm({
-    ZoneId: '',
-    PropertyId: '',
-    OwnerId: '',
+    ZoneId: 0,
+    PropertyTypeId: 0,
+    OwnerId: 0,
     street: '',
     number: '',
     floor: '',
@@ -41,68 +45,85 @@ const Properties = () => {
     state: '',
     description: ''
   });
-  const { ZoneId, OwnerId, street, number, floor, dept, description, isFor, state, PropertyId } = values;
+  const { ZoneId, OwnerId, street, number, floor, dept, description, isFor, state, PropertyTypeId } = values;
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [errors, setErrors] = useState<any>();
   const [editMode, setEditMode] = useState(false);
-  const [cities, setCities] = useState([])
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    fullName: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    cuit: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'Owner.fullName': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'PropertyType.description': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    'Zone.name': { value: null, matchMode: FilterMatchMode.CONTAINS },
+    street: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
 
-  const currentOwner = useRef<IPerson | null>();
+  const currentProperty = useRef<Iproperty | null>();
 
-  const { data, isError, isLoading, error, isFetching, refetch } = useOwners();
+  const { data, isError, isLoading, error, isFetching, refetch } = useProperties();
+  const zoneQuery = useZones();
+  const propietyType = usePropertyTypes()
+  const ownerQuery = useOwners()
 
-  const edit = (data: IPerson) => {
-    // handleInputChange(data.fullName, 'fullName');
+  const edit = (data: Iproperty) => {
+    console.log(data)
     updateAll({
-      "ZoneId": "data.ZoneId",
-      "PropertyId": "data.PropertyId",
-      "OwnerId": "data.OwnerId",
-      "street": "data.street",
-      "number": "data.number",
-      "floor": "data.floor",
-      "isFor": "data.isFor",
-      "state": "data.state",
-      "description": "data.description"
+      ZoneId: data.ZoneId,
+      PropertyTypeId: data.PropertyTypeId,
+      OwnerId: data.OwnerId,
+      street: data.street,
+      number: data.number,
+      floor: data.floor,
+      dept: data.dept,
+      isFor: data.isFor,
+      state: data.state,
+      description: data.description
     });
-    getCitiesByProvinces(data.province)
     setShowCreateModal(true);
     setEditMode(true);
-    currentOwner.current = data;
+    currentProperty.current = data;
   };
 
-  const ConfirmDestroy = (data: IPerson) => {
+  const ConfirmDestroy = (data: Iproperty) => {
     setShow(!show);
-    currentOwner.current = data;
+    currentProperty.current = data;
   };
 
   const verifyForm = () => {
     let ok = true;
     let error: any = {};
-    if (!fullName?.trim().length) {
+    console.log(!ZoneId)
+    if (!ZoneId) {
       ok = false;
-      error.fullName = true;
+      error.ZoneId = true;
     }
-    if (!email?.trim().length) {
+    if (!PropertyTypeId) {
       ok = false;
-      error.email = true;
+      error.PropertyTypeId = true;
+    }
+    if (!OwnerId) {
+      ok = false;
+      error.OwnerId = true;
     }
 
-    if (!cuit?.trim().length) {
+    if (!street?.trim().length) {
       ok = false;
-      error.cuit = true;
+      error.street = true;
     }
-    if (!phone.trim().length) {
+    if (!number.trim().length) {
       ok = false;
-      error.phone = true;
+      error.number = true;
     }
-    if (!address?.trim().length) {
+    // if (!floor?.trim().length) {
+    //   ok = false;
+    //   error.floor = true;
+    // }
+    // if (!dept?.trim().length) {
+    //   ok = false;
+    //   error.dept = true;
+    // }
+    if (!isFor?.trim().length) {
       ok = false;
-      error.address = true;
+      error.isFor = true;
     }
     setErrors(error);
     return ok;
@@ -123,32 +144,35 @@ const Properties = () => {
     if (verifyForm()) {
       if (editMode) {
         try {
-          const res = await http.put(`/owners/${currentOwner.current?.id}`, values);
+          const res = await http.put(`/properties/${currentProperty.current?.id}`, values);
           if (res.data.ok) {
-            data?.data &&
-              (data.data = data?.data.map((z) => {
-                if (z.id === currentOwner.current?.id) {
-                  // alert('hello')
-                  // console.log(z, { ...values })
-                  z =
-                  {
-                    fullName: values.fullName,
-                    email: values.email,
-                    phone: values.phone,
-                    cuit: values.cuit,
-                    province: values.province,
-                    city: values.city,
-                    address: values.address,
-                    nroFax: values.nroFax,
-                    obs: values.obs,
-                    id: currentOwner.current.id,
-                    uuid: currentOwner.current.uuid,
-                    createdAt: currentOwner.current.createdAt,
-                    updatedAt: currentOwner.current.updatedAt
-                  };
-                }
-                return z;
-              }));
+            refetch();
+            // data?.data &&
+            //   (data.data = data?.data.map((z) => {
+            //     if (z.id === currentProperty.current?.id) {
+            //       // alert('hello')
+            //       // console.log(z, { ...values })
+            //       z =
+            //       {
+            //         ZoneId: values.ZoneId!,
+            //         Zone: { name: values.ZoneId! },
+            //         PropertyTypeId: values.PropertyTypeId!,
+            //         number: values.number,
+            //         street: values.street,
+            //         OwnerId: values.OwnerId!,
+            //         isFor: values.isFor,
+            //         floor: values.floor,
+            //         dept: values.dept,
+            //         state: values.state,
+            //         description: values.description,
+            //         id: currentProperty.current.id,
+            //         uuid: currentProperty.current.uuid,
+            //         createdAt: currentProperty.current.createdAt,
+            //         updatedAt: currentProperty.current.updatedAt
+            //       };
+            //     }
+            //     return z;
+            //   }));
             reset();
             setShowCreateModal(false);
             showAndHideModal('Editado', res.data.message);
@@ -160,9 +184,10 @@ const Properties = () => {
         }
       } else {
         try {
-          const res = await http.post('/owners', values);
+          const res = await http.post('/properties', values);
           if (res.data.ok) {
-            data?.data.push(res.data.data);
+            refetch();
+            // data?.data.push(res.data.data);
             reset();
             setShowCreateModal(false);
             showAndHideModal('Guardado', res.data.message);
@@ -178,7 +203,7 @@ const Properties = () => {
 
   const destroy = async (id: number) => {
     try {
-      const res = await http.delete('/owners/' + id);
+      const res = await http.delete('/properties/' + id);
       if (res.data.ok) {
         data?.data && (data.data! = data?.data.filter((z) => z.id !== id));
         setShow(false);
@@ -213,36 +238,19 @@ const Properties = () => {
     );
   };
 
-  const getCitiesByProvinces = async (prov: string) => {
-    const resp = await fetch(
-      `https://apis.datos.gob.ar/georef/api/localidades?provincia=${prov}&campos=nombre&max=1000`
-    );
-    const c = await resp.json();
-    setCities(c.localidades);
-  };
-
   const paginatorLeft = <Button onClick={() => refetch()} type="button" icon="pi pi-refresh" text />;
-  const renderHeader = () => {
-    return (
-      <div className="flex justify-content-end ">
-        <span className="p-input-icon-left">
-          <i className="pi pi-search" />
-          <InputText className='w-full sm:!w-96 h-[50px] !border-gray-200 shadow-lg' value={globalFilterValue} onChange={onGlobalFilterChange} placeholder="Buscar propietario por nombre o cuit" />
-        </span>
-      </div>
-    );
-  };
+
   if (isLoading) return <Loading />;
   if (isError) return <RequestError error={error} />;
 
   return (
     <div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
       <div className='flex gap-x-4 mb-6 mx-3  items-center'>
-        <h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Propietarios</h3>
+        <h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Propiedades</h3>
         <button
           onClick={() => {
             setEditMode(false);
-            currentOwner.current = null;
+            currentProperty.current = null;
             setShowCreateModal(true);
           }}
           className='btn !w-10 !h-10 !p-0 gradient !rounded-full'
@@ -253,77 +261,84 @@ const Properties = () => {
 
       <input
         onChange={onGlobalFilterChange}
-        className={`dark:!bg-gray-900 dark:text-slate-400 border dark:!border-slate-700 m-auto w-[92%] !mx-3 sm:mx-0 sm:w-96 ml-0 sm:ml-[10px] mb-4`}
+        className={`dark:!bg-gray-900 dark:text-slate-400 border dark:!border-slate-700 m-auto w-[92%] !mx-[10px] sm:mx-0 sm:w-96 ml-0 sm:ml-[10px] mb-4`}
         value={globalFilterValue}
-        placeholder='Buscar propietario por nombre o cuit'
+        placeholder='Buscar propiedad'
         type='search'
       />
-      {/* <div className="flex mx-[10px] mb-4 justify-content-end ">
-        <span className="p-input-icon-left">
-          <i className="pi pi-search" />
-
-          <InputText className='w-full sm:!w-96 h-[50px] outline-none ring-0 dark:text-slate-400 dark:bg-slate-700 dark:!border-slate-800 !border-gray-200 shadow-lg'
-            value={} onChange={onGlobalFilterChange}
-            placeholder="Buscar propietario por nombre o cuit" />
-        </span>
-      </div> */}
       <Box className='!p-0 !overflow-hidden !border-none    mb-4 '>
         <DataTable
           size='small'
-          emptyMessage='Aún no hay propietario'
+          emptyMessage='Aún no hay propiedad'
           className='!overflow-hidden   !border-none'
           value={data?.data}
           paginator rows={10}
-          // header={renderHeader}
           filters={filters}
-          globalFilterFields={['fullName', 'cuit']}
+          globalFilterFields={['PropertyType.description', 'Owner.fullName', 'Zone.name', 'street']}
           // rowsPerPageOptions={[5, 10, 25, 50]}
           paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
           currentPageReportTemplate="{first} al {last} de {totalRecords}"
           paginatorLeft={paginatorLeft}
-          // paginatorRight={paginatorRight}
-
-          // paginator
-          // selectionMode='checkbox'
-          // selection={selectedProducts2}
-          // onSelectionChange={(e: any) => setSelectedProducts2(e.value)}
           dataKey='id'
           responsiveLayout='scroll'
         >
-          {/* <Column selectionMode='multiple' style={{ width: 10 }} headerStyle={{ width: 10 }} /> */}
           <Column
-            field='fullName'
-            header='Nombre'
+            field='PropertyType.description'
+            header='Tipo Propiedad'
             headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
             className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
             sortable
           />
           <Column
-            field='cuit'
-            header='Cuit/Cuil'
+            field='Owner.fullName'
+            header='Propietario'
             headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
             className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
             sortable
           />
           <Column
-            field='email'
-            header='Correo'
+            field='street'
+            header='Detalle'
+            body={(data) => <span> {data.street}  {data.number} {data.floor} {data.dept} </span>}
+            headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+            className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+            sortable
+          />
+          <Column
+            field='Zone.name'
+            header='Zona'
+            sortable
             headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
             className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
           />
           <Column
-            field='phone'
-            header='Celular'
+            // field='status'
+            header='Estado'
+            sortable
+            body={(data) => <span className={`font-bold ${data.status === 'Libre' ? 'text-green-500' : 'text-red-500'}`}>{data.status} </span>}
             headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
             className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
           />
           <Column
-            field='address'
-            body={(data) => <span> {data.city}  {data.province} ,  {data.address} </span>}
-            header='Dirección'
+            field='isFor'
+            header='Para'
             headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
             className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
           />
+          {/* <Column
+            field='floor'
+            // body={(data) => <span> {data.city}  {data.province} ,  {data.floor} </span>}
+            header='Piso'
+            headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+            className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+          /> */}
+          {/* <Column
+            field='dept'
+            // body={(data) => <span> {data.city}  {data.province} ,  {data.floor} </span>}
+            header='Depto'
+            headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+            className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+          /> */}
 
           <Column
             body={actionBodyTemplate}
@@ -345,135 +360,133 @@ const Properties = () => {
       <DeleteModal
         show={show}
         setShow={setShow}
-        destroy={() => destroy(currentOwner.current?.id!)}
-        text={`${currentOwner.current?.fullName}`}
+        destroy={() => destroy(currentProperty.current?.id!)}
+        text={`${currentProperty.current?.street} ${currentProperty.current?.number} ${currentProperty.current?.floor} ${currentProperty.current?.dept} de ${currentProperty.current?.Owner?.fullName} `}
       />
 
       <CreateModal
         show={showCreateModal}
         closeModal={closeCreateModal}
         overlayClick={false}
+        className=' max-w-[650px]'
       >
         <form onSubmit={handleSave}>
           <div className=' flex justify-between'>
-            <h2 className='title-form text-2xl sm:text-4xl'>{editMode ? 'Editar' : 'Crear'} propietario</h2>
+            <h2 className='title-form text-2xl sm:text-4xl'>{editMode ? 'Editar' : 'Crear'} propiedad</h2>
           </div>
 
           <FieldsetGroup>
             <fieldset className=''>
-              <label htmlFor='fullname'>Nombre Completo </label>
+              <label htmlFor='street'>Calle</label>
               <CustomInput
-                placeholder='Juan Jose'
-                initialValue={fullName || ''}
-                onChange={(value) => handleInputChange(value, 'fullName')}
+                placeholder='Sarmiento'
+                initialValue={street || ''}
+                onChange={(value) => handleInputChange(value, 'street')}
               />
-              {errors?.fullName && <FormError text='El nombre es obligatorio.' />}
+              {errors?.street && <FormError text='La calle  es obligatoria.' />}
             </fieldset>
             <fieldset className=''>
-              <label htmlFor='email'>Email </label>
+              <label htmlFor='number'>Número </label>
               <CustomInput
-                placeholder='example@gmail.com'
-                initialValue={email || ''}
-                type="email"
-                onChange={(value) => handleInputChange(value, 'email')}
+                placeholder='1247'
+                initialValue={number || ''}
+                type="number"
+                onChange={(value) => handleInputChange(value, 'number')}
               />
-              {errors?.email && <FormError text='El correo es obligatorio.' />}
+              {errors?.number && <FormError text='El número es obligatorio.' />}
+            </fieldset>
+          </FieldsetGroup>
+
+          <FieldsetGroup className=''>
+            <FieldsetGroup className='w-full sm:w-[50%]' >
+              <fieldset className=''>
+                <label htmlFor='floor'>Piso <span className='text-xs opacity-50'>(opcional)</span></label>
+                <CustomInput
+                  placeholder='10'
+                  initialValue={floor || ''}
+                  onChange={(value) => handleInputChange(value, 'floor')}
+                />
+              </fieldset>
+              <fieldset className=''>
+                <label htmlFor='dept'>Depto <span className='text-xs opacity-50'>(opcional)</span> </label>
+                <CustomInput
+                  placeholder='02'
+                  initialValue={dept || ''}
+                  onChange={(value) => handleInputChange(value, 'dept')}
+                />
+              </fieldset>
+            </FieldsetGroup>
+            <fieldset className='w-full sm:w-[50%]'>
+              <label htmlFor='isFor'>Para</label>
+              <Dropdown
+                value={isFor}
+                onChange={(e) => handleInputChange(e.value, 'isFor')}
+                options={['Alquiler', 'Venta']}
+                placeholder="elije una opción"
+                className="h-[42px] items-center !border-gray-200 shadow " />
+              {errors?.isFor && <FormError text='Este campo es obligatorio.' />}
             </fieldset>
           </FieldsetGroup>
 
           <FieldsetGroup>
             <fieldset className=''>
-              <label htmlFor='cuit'>Cuit/Cuil </label>
-              <CustomInput
-                placeholder='20909239120'
-                initialValue={cuit || ''}
-                onChange={(value) => handleInputChange(value, 'cuit')}
-              />
-              {errors?.cuit && <FormError text='El cuit es obligatorio.' />}
-            </fieldset>
-            <fieldset className=''>
-              <label htmlFor='phone'>Teléfono </label>
-              <CustomInput
-                placeholder='3417207882'
-                initialValue={phone || ''}
-                onChange={(value) => handleInputChange(value, 'phone')}
-              />
-              {errors?.phone && <FormError text='El teléfono es obligatorio.' />}
-            </fieldset>
-          </FieldsetGroup>
-
-          <FieldsetGroup>
-            <fieldset className=''>
-              <label htmlFor='province'>Provincia</label>
-              {/* <CustomInput
-                placeholder='Santa fe'
-                initialValue={province || ''}
-                onChange={(value) => handleInputChange(value, 'province')}
-              /> */}
+              <label htmlFor='ZoneId'>Tipo de propiedad </label>
               <Dropdown
-                value={province}
-                onChange={(e) => {
-                  console.log(e.value)
-                  handleInputChange(e.value, 'province')
-                  getCitiesByProvinces(e.value)
-                }}
-                // onInput={(e) => handleInputChange(e.value.nombre, 'province')}
-                options={provinces}
-                optionValue='nombre'
-                optionLabel="nombre"
-                placeholder="elije una provincia"
-                // filter
-                // valueTemplate={selectedCountryTemplate}
-                //  itemTemplate={countryOptionTemplate} 
-                className="h-[42px] items-center" />
-            </fieldset>
-            <fieldset className=''>
-              <label htmlFor='city'>Ciudad </label>
-              {/* <CustomInput
-                placeholder='Rosario'
-                initialValue={city || ''}
-                onChange={(value) => handleInputChange(value, 'city')}
-              /> */}
-              <Dropdown
-                value={city}
-                onChange={(e) => handleInputChange(e.value, 'city')}
-                options={cities}
-                optionLabel="nombre"
-                optionValue='nombre'
-                placeholder="elije una ciudad"
+                value={PropertyTypeId}
+                onChange={(e) => handleInputChange(e.value, 'PropertyTypeId')}
+                options={propietyType.data?.data}
+                optionLabel="description"
+                filterPlaceholder='Busca tipo de propiedad'
+                optionValue='id'
+                placeholder="elije un tipo de propiedad"
                 filter
                 // valueTemplate={selectedCountryTemplate}
                 //  itemTemplate={countryOptionTemplate} 
-                className="h-[42px] items-center" />
+                className="h-[42px] items-center !border-gray-200 shadow " />
+              {errors?.PropertyTypeId && <FormError text='El tipo de propiedad es obligatorio.' />}
+            </fieldset>
+
+            <fieldset className=''>
+              <label htmlFor='ZoneId'>Zona </label>
+              <Dropdown
+                value={ZoneId}
+                onChange={(e) => handleInputChange(e.value, 'ZoneId')}
+                options={zoneQuery.data?.data}
+                optionLabel="name"
+                filterPlaceholder='Busca zona'
+                optionValue='id'
+                placeholder="elije una zona"
+                filter
+                className="h-[42px] items-center !border-gray-200 shadow" />
+              {errors?.ZoneId && <FormError text='La zona es obligatoria.' />}
+
             </fieldset>
           </FieldsetGroup>
-
           <FieldsetGroup>
             <fieldset className=''>
-              <label htmlFor='address'>Dirección</label>
-              <CustomInput
-                placeholder='Sarmiento 1247'
-                initialValue={address || ''}
-                onChange={(value) => handleInputChange(value, 'address')}
-              />
-              {errors?.address && <FormError text='La dirección es obligatoria.' />}
+              <label htmlFor='OwnerId'>Propietario</label>
+              <Dropdown
+                value={OwnerId}
+                onChange={(e) => handleInputChange(e.value, 'OwnerId')}
+                options={ownerQuery.data?.data}
+                optionLabel="fullName"
+                filterPlaceholder='Busca propietario'
+                optionValue='id'
+                placeholder="elije un propietario"
+                filter
+                className="h-[42px] items-center !border-gray-200 shadow " />
+              {errors?.OwnerId && <FormError text='El propietario es obligatoria.' />}
+
             </fieldset>
-            <fieldset className=''>
-              <label htmlFor='nroFax'>Número Fax </label>
-              <CustomInput
-                placeholder='1232421241212'
-                initialValue={nroFax || ''}
-                onChange={(value) => handleInputChange(value, 'nroFax')}
-              />
-            </fieldset>
+
           </FieldsetGroup>
 
-          <fieldset className=''>
-            <label htmlFor='obs'>Observación </label>
-            <CustomInput
-              placeholder='escribe una observación o nota de algo...'
-              initialValue={obs || ''}
-              onChange={(value) => handleInputChange(value, 'obs')}
+          <fieldset>
+            <label htmlFor='description'>Descripción <span className='text-xs opacity-50'>(opcional)</span> </label>
+            <CustomTextArea
+              placeholder='Escribe una descripción para esa propiedad'
+              initialValue={description || ''}
+              onChange={(value) => handleInputChange(value, 'description')}
             />
           </fieldset>
 
