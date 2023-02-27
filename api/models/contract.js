@@ -74,7 +74,7 @@ module.exports = (sequelize, DataTypes) => {
       nroPartAPI: DataTypes.STRING,
       commision: {
         allowNull: false,
-        type: DataTypes.STRING,
+        type: DataTypes.FLOAT,
         validate: {
           notNull: {
             msg: 'La comisión es obligatoria',
@@ -84,11 +84,11 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
-      status: DataTypes.STRING,
+      state: DataTypes.STRING,
       description: DataTypes.STRING,
       stamped: {
         allowNull: false,
-        type: DataTypes.STRING,
+        type: DataTypes.FLOAT,
         validate: {
           notNull: {
             msg: 'la sellada es obligatoria',
@@ -100,7 +100,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       fees: {
         allowNull: false,
-        type: DataTypes.STRING,
+        type: DataTypes.FLOAT,
         validate: {
           notNull: {
             msg: 'El honorario es obligatorio',
@@ -112,13 +112,13 @@ module.exports = (sequelize, DataTypes) => {
       },
       warrantyInquiry: {
         allowNull: false,
-        type: DataTypes.STRING,
+        type: DataTypes.FLOAT,
         validate: {
           notNull: {
-            msg: 'la consulta de garantía es obligatoria',
+            msg: 'La averiguaciones de garantía es obligatoria',
           },
           notEmpty: {
-            msg: 'La consulta de garantía es obligatoria',
+            msg: 'La averiguaciones de garantía es obligatoria',
           },
         },
       },

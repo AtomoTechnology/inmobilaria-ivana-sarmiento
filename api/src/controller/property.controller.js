@@ -25,7 +25,7 @@ exports.Create = create(Property, [
   'floor',
   'dept',
   'isFor',
-  'status',
+  'state',
   'description',
 ]);
 exports.GetById = findOne(Property, {
@@ -44,7 +44,7 @@ exports.Put = update(Property, [
   'floor',
   'dept',
   'isFor',
-  'status',
+  'state',
   'description',
 ]);
 exports.Destroy = destroy(Property);

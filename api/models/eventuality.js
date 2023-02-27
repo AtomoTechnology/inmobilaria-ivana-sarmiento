@@ -33,7 +33,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       amount: {
         allowNull: false,
-        type: DataTypes.DECIMAL,
+        type: DataTypes.FLOAT,
         validate: {
           notNull: {
             msg: 'La cantidad es obligatoria',

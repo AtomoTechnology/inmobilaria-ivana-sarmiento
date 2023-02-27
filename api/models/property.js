@@ -40,10 +40,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BIGINT,
         validate: {
           notNull: {
-            msg: 'La zona es obligatoria',
+            msg: 'El tipo de propiedad es obligatorio',
           },
           notEmpty: {
-            msg: 'La zona es obligatoria',
+            msg: 'El tipo de propiedad es obligatorio',
           },
         },
       },
@@ -96,7 +96,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         defaultValue: 'Alquiler',
       },
-      status: {
+      state: {
         allowNull: false,
         type: DataTypes.STRING,
         defaultValue: 'Libre',

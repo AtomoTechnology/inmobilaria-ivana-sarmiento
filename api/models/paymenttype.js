@@ -20,8 +20,11 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: DataTypes.UUIDV4,
     },
     name: {
-      type: DataTypes.STRING,
-      unique: true,
+      type: DataTypes.STRING,      
+      unique:  {
+        name:true,
+        msg: 'Ya existe un tipo de pago con ese nombre.',
+      },
       allowNull: false,
       validate: {
         notNull: {

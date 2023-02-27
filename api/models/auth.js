@@ -20,7 +20,10 @@ module.exports = (sequelize, DataTypes) => {
     },
     email:{
       type: DataTypes.STRING,
-      unique: true,
+      unique:  {
+        name:true,
+        msg: 'Ya existe un usuario con ese email.',
+      },
       allowNull: false,
       validate: {
         notNull: {
@@ -29,6 +32,7 @@ module.exports = (sequelize, DataTypes) => {
         notEmpty: {
           msg: 'El email no puede ser vacio.',
         },
+
       }
     },
     fullName: {

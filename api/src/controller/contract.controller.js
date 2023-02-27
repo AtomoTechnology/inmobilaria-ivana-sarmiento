@@ -18,29 +18,25 @@ exports.Paginate = paginate(Contact,
             { model: Client, attributes : ['fullName','address','phone','email']  }
         ]
     });
-exports.Create = create(Contact, ['PropertyId','ClientId','startDate','endDate','nroPartWater','nroPartMuni','nroPartAPI','commision','status','description','stamped','fees','warrantyInquiry']);
+exports.Create = create(Contact, ['PropertyId','ClientId','startDate','endDate','nroPartWater','nroPartMuni','nroPartAPI','commision','state','description','stamped','fees','warrantyInquiry']);
 
 exports.Post = async (req, res, next) =>{
     const transact = await sequelize.transaction();
-    const {PropertyId,ClientId,startDate,endDate,nroPartWater,nroPartMuni,nroPartAPI,commision,status,description,stamped,fees,warrantyInquiry,assurance} = req.body;
+    const {PropertyId,ClientId,startDate,endDate,nroPartWater,nroPartMuni,nroPartAPI,commision,state,description,stamped,fees,warrantyInquiry,assurance} = req.body;
     try 
-    {      
-        const cont = await Contact.create({
-            PropertyId: PropertyId,ClientId: ClientId,startDate: startDate,
-            endDate: endDate,nroPartWater: nroPartWater,nroPartMuni: nroPartMuni,
-            nroPartAPI: nroPartAPI,
-            commision: commision,
-            status: status,
-            description: description,
-            stamped: stamped,
-            fees: fees,
-            ClientId: warrantyInquiry
-        }, { transaction: transact });
+    {  
 
         if(assurance.length === 0){
             await transact.rollback();
             return next(new AppError("No se puede insertar un contrato sin sus garantes", 400));
         }
+            
+        const cont = await Contact.create({
+            PropertyId: PropertyId,ClientId: ClientId,startDate: startDate,
+            endDate: endDate,nroPartWater: nroPartWater,nroPartMuni: nroPartMuni,
+            nroPartAPI: nroPartAPI,commision: commision,state: state,
+            description: description,stamped: stamped,fees: fees, warrantyInquiry: warrantyInquiry
+        }, { transaction: transact });
 
         assurance.forEach(function (value) {
             value.ContactId = cont.id;
@@ -62,5 +58,5 @@ exports.GetById = findOne(Contact,
             { model: Client, attributes : ['fullName','address','phone','email']  }
         ]
     });
-exports.Put = update(Contact, ['PropertyId','ClientId','startDate','endDate','nroPartWater','nroPartMuni','nroPartAPI','commision','status','description','stamped','fees','warrantyInquiry']);
+exports.Put = update(Contact, ['PropertyId','ClientId','startDate','endDate','nroPartWater','nroPartMuni','nroPartAPI','commision','state','description','stamped','fees','warrantyInquiry']);
 exports.Destroy = destroy(Contact);
