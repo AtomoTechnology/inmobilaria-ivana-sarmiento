@@ -1,28 +1,28 @@
-const {Contact,Client,Assurance} = require('../../models');
+const {Contract,Client,Assurance} = require('../../models');
 const { Sequelize } = require('sequelize');
 
 const { all, paginate, create, findOne, update, destroy } = require('../Generic/FactoryGeneric');
 const AppError = require('../../helpers/AppError');
 
-exports.GetAll = all(Contact,
+exports.GetAll = all(Contract,
     {
         include : 
         [ 
             { model: Client, attributes : ['fullName','address','phone','email']  }
         ]
     });
-exports.Paginate = paginate(Contact,
+exports.Paginate = paginate(Contract,
     {
         include : 
         [ 
             { model: Client, attributes : ['fullName','address','phone','email']  }
         ]
     });
-exports.Create = create(Contact, ['PropertyId','ClientId','startDate','endDate','nroPartWater','nroPartMuni','nroPartAPI','commision','state','description','stamped','fees','warrantyInquiry']);
+exports.Create = create(Contract, ['PropertyId','ClientId','startDate','endDate','nroPartWater','nroPartMuni','nroPartAPI','commission','state','description','stamped','fees','warrantyInquiry']);
 
 exports.Post = async (req, res, next) =>{
     const transact = await sequelize.transaction();
-    const {PropertyId,ClientId,startDate,endDate,nroPartWater,nroPartMuni,nroPartAPI,commision,state,description,stamped,fees,warrantyInquiry,assurance} = req.body;
+    const {PropertyId,ClientId,startDate,endDate,nroPartWater,nroPartMuni,nroPartAPI,commission,state,description,stamped,fees,warrantyInquiry,assurance} = req.body;
     try 
     {  
 
@@ -31,15 +31,15 @@ exports.Post = async (req, res, next) =>{
             return next(new AppError("No se puede insertar un contrato sin sus garantes", 400));
         }
             
-        const cont = await Contact.create({
+        const cont = await Contract.create({
             PropertyId: PropertyId,ClientId: ClientId,startDate: startDate,
             endDate: endDate,nroPartWater: nroPartWater,nroPartMuni: nroPartMuni,
-            nroPartAPI: nroPartAPI,commision: commision,state: state,
+            nroPartAPI: nroPartAPI,commission: commission,state: state,
             description: description,stamped: stamped,fees: fees, warrantyInquiry: warrantyInquiry
         }, { transaction: transact });
 
         assurance.forEach(function (value) {
-            value.ContactId = cont.id;
+            value.ContractId = cont.id;
             Assurance.create({value}, { transaction: transact });
         });         
         await transact.commit();      
@@ -51,12 +51,12 @@ exports.Post = async (req, res, next) =>{
     }
 }
 
-exports.GetById = findOne(Contact,
+exports.GetById = findOne(Contract,
     {
         include : 
         [ 
             { model: Client, attributes : ['fullName','address','phone','email']  }
         ]
     });
-exports.Put = update(Contact, ['PropertyId','ClientId','startDate','endDate','nroPartWater','nroPartMuni','nroPartAPI','commision','state','description','stamped','fees','warrantyInquiry']);
-exports.Destroy = destroy(Contact);
+exports.Put = update(Contract, ['PropertyId','ClientId','startDate','endDate','nroPartWater','nroPartMuni','nroPartAPI','commission','state','description','stamped','fees','warrantyInquiry']);
+exports.Destroy = destroy(Contract);

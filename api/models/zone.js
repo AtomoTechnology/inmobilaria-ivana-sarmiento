@@ -33,10 +33,6 @@ module.exports = (sequelize, DataTypes) => {
         notEmpty: {
           msg: 'El nombre no puede ser vacio.',
         },
-        len: {
-          args: [2, 50],
-          msg: 'El nombre debe tener entre 3 a 50 caracteres.',
-        },
       },
     }
   }, {

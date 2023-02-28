@@ -39,7 +39,7 @@ module.exports = (sequelize, DataTypes) => {
             msg: 'La cantidad es obligatoria',
           },
           notEmpty: {
-            msg: 'El cantidad es obligatoria',
+            msg: 'La cantidad es obligatoria',
           },
         },
       },

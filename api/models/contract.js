@@ -72,7 +72,7 @@ module.exports = (sequelize, DataTypes) => {
       nroPartWater: DataTypes.STRING,
       nroPartMuni: DataTypes.STRING,
       nroPartAPI: DataTypes.STRING,
-      commision: {
+      commission: {
         allowNull: false,
         type: DataTypes.FLOAT,
         validate: {
@@ -115,10 +115,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.FLOAT,
         validate: {
           notNull: {
-            msg: 'La averiguaciones de garantía es obligatoria',
+            msg: 'La averiguacion de garantía es obligatoria',
           },
           notEmpty: {
-            msg: 'La averiguaciones de garantía es obligatoria',
+            msg: 'La averiguacion de garantía es obligatoria',
           },
         },
       },

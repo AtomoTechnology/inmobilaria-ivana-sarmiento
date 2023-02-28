@@ -3,6 +3,8 @@ const AppError = require('../../helpers/AppError');
 const encripto = require('../../helpers/Cryptographies');
 const { Auth } = require('../../models');
 
+const { all, paginate, create, findOne, update, destroy } = require('../Generic/FactoryGeneric');
+
 const SignIn = (req, res) => {
   const { email, password } = req.body;
   Auth
@@ -52,41 +54,8 @@ const SignIn = (req, res) => {
     });
 };
 
-const GetAll = (req, res) => {
-  const {filter} = req.query;
-  // 'id', 'uuid', 'email', 'fullName', 'photo'
-  Auth
-    .findAll({
-      attributes: [filter],
-      order: [['id', 'DESC']],
-    })
-    .then((result) => {
-      return res.json({
-        status: 200,
-        success: true,
-        message: '',
-        data: result,
-      });
-    });
-};
-
-const GetById = (req, res) => {
-  Auth
-    .findOne({
-      attributes: ['id', 'uuid', 'email', 'fullName', 'photo'],
-      where: {
-        id: req.params.id,
-      },
-    })
-    .then((result) => {
-      return res.json({
-        status: 200,
-        success: true,
-        message: '',
-        data: result,
-      });
-    });
-};
+const GetAll = all(Auth);
+const GetById = findOne(Auth)
 
 const Post = (req, res, next) => {
   const { email, password, fullName, photo } = req.body;
