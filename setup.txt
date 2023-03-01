@@ -68,3 +68,6 @@ QUESTIONS FOR PRADEL
 
 
 -- si caduce el token voy a necesitar renovarlo 
+
+
+TODO: show cntracts which will expire in the three months

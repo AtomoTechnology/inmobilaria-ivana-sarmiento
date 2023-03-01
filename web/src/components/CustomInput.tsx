@@ -6,9 +6,10 @@ type Props = {
   onChange: (val: string) => void;
   className?: string;
   initialValue?: string | number;
+  disabled?: boolean;
 };
 
-const CustomInput = ({ initialValue = '', placeholder, type = 'text', onChange, className = '' }: Props) => {
+const CustomInput = ({ initialValue = '', placeholder, type = 'text', onChange, className = '', disabled = false }: Props) => {
   const [value, setValue] = useState<string | number>(initialValue);
 
   return (
@@ -21,6 +22,7 @@ const CustomInput = ({ initialValue = '', placeholder, type = 'text', onChange, 
       value={value}
       placeholder={placeholder}
       type={type}
+      disabled={disabled}
     />
   );
 };
