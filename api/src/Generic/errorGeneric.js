@@ -8,6 +8,8 @@ const handleSequelizeForeignKeyConstraintError = (error) =>
     }. Asegúrese de enviar los datos correctamente.`,
     400
   );
+  const handleSequelizeUniqueConstraintErrorContract = (error) =>
+  new AppError("Ese inquilino ya tiene un contracto vigente para esa propiedad dentro de ese mismo rango de fecha.", 400);
 const handleSequelizeUniqueConstraintError = (error) =>
   new AppError(error.errors.map((e) => e.message).join(',,'), 400);
 const handleJsonWebTokenError = () => new AppError(`Token  no valido. Inicia sesión de nuevo.`, 401);
@@ -56,6 +58,9 @@ exports.globalError = (err, req, res, next) => {
   if (error.name === 'TokenExpiredError') error = handleJWTExpiredToken();
   if (error.name === 'SequelizeValidationError') error = handleSequelizeValidationError(error);
   if (error.name === 'SequelizeUniqueConstraintError') error = handleSequelizeUniqueConstraintError(error);
+  if(error?.errors !== undefined){
+    if (error?.errors[0]?.message === 'contracts__property_id__client_id_start_date_end_date must be unique') error = handleSequelizeUniqueConstraintErrorContract(error);
+  }
   if (error.name === 'SequelizeForeignKeyConstraintError') error = handleSequelizeForeignKeyConstraintError(error);
 
   sendError(error, res);

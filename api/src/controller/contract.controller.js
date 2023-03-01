@@ -1,4 +1,4 @@
-const {Contract,Client,Assurance,Property,sequelize} = require('../../models');
+const {Contract,Client,Assurance,Property,sequelize,PriceHistorial} = require('../../models');
 const { Op } = require('sequelize');
 
 const { all, paginate, create, findOne, update, destroy } = require('../Generic/FactoryGeneric');
@@ -59,7 +59,14 @@ catchAsync(async (req, res, next) => {
                     await Assurance.create(assurances[index], { transaction: transact });
                 }      
             } 
-        }      
+        }   
+
+        //Para insertar el historial
+        const history = await PriceHistorial.create({
+            ContractId: cont.id,amount: amount,year: 1,
+            porcent: 0
+        }, { transaction: transact });
+        
         await transact.commit();  
         return res.json({
             code: 200,
