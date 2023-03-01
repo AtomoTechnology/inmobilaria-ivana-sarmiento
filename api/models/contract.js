@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
       Contract.belongsTo(models.Client);
       //  Relation
       Contract.hasMany(models.Eventuality);
+      Contract.hasMany(models.Assurance);
     }
   }
   Contract.init(
@@ -84,7 +85,10 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
-      state: DataTypes.STRING,
+      state: {
+       type: DataTypes.STRING,
+       defaultValue:'En curso'
+      },
       description: DataTypes.STRING,
       stamped: {
         allowNull: false,
@@ -123,7 +127,13 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
     },
-    {
+    { 
+      indexes: [
+        {
+            unique:true,
+            fields: ['PropertyId', 'ClientId', 'startDate','endDate']
+        }
+      ],
       sequelize,
       modelName: 'Contract',
     }

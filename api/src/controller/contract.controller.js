@@ -1,36 +1,50 @@
-const {Contract,Client,Assurance} = require('../../models');
-const { Sequelize } = require('sequelize');
+const {Contract,Client,Assurance,Property,sequelize} = require('../../models');
+const { Op } = require('sequelize');
 
 const { all, paginate, create, findOne, update, destroy } = require('../Generic/FactoryGeneric');
 const AppError = require('../../helpers/AppError');
+const { catchAsync } = require('../../helpers/catchAsync');
 
 exports.GetAll = all(Contract,
     {
         include : 
         [ 
-            { model: Client, attributes : ['fullName','address','phone','email']  }
+            { model: Client},
+            { model: Property}
         ]
     });
 exports.Paginate = paginate(Contract,
     {
         include : 
         [ 
-            { model: Client, attributes : ['fullName','address','phone','email']  }
+            { model: Client},
+            { model: Property}
         ]
     });
 exports.Create = create(Contract, ['PropertyId','ClientId','startDate','endDate','nroPartWater','nroPartMuni','nroPartAPI','commission','state','description','stamped','fees','warrantyInquiry']);
 
-exports.Post = async (req, res, next) =>{
+exports.Post = 
+catchAsync(async (req, res, next) => {
+    console.log("Ingreso")
     const transact = await sequelize.transaction();
-    const {PropertyId,ClientId,startDate,endDate,nroPartWater,nroPartMuni,nroPartAPI,commission,state,description,stamped,fees,warrantyInquiry,assurance} = req.body;
     try 
     {  
+         console.log(req.body)
+        const {PropertyId,ClientId,startDate,endDate,nroPartWater,nroPartMuni,nroPartAPI,commission,state,description,stamped,fees,warrantyInquiry,assurances} = req.body;          
+                 
+        const isExist = await Contract.findOne({
+            where: {
+                [Op.and]: [
+                    {  PropertyId: PropertyId },
+                    {  state: "Finalizado" }
+                ]
+            }
+        });
 
-        if(assurance.length === 0){
-            await transact.rollback();
-            return next(new AppError("No se puede insertar un contrato sin sus garantes", 400));
+        if(isExist !== null){            
+            return next(new AppError("Existe un contrato vigente para este inmueble", 400));
         }
-            
+        
         const cont = await Contract.create({
             PropertyId: PropertyId,ClientId: ClientId,startDate: startDate,
             endDate: endDate,nroPartWater: nroPartWater,nroPartMuni: nroPartMuni,
@@ -38,24 +52,51 @@ exports.Post = async (req, res, next) =>{
             description: description,stamped: stamped,fees: fees, warrantyInquiry: warrantyInquiry
         }, { transaction: transact });
 
-        assurance.forEach(function (value) {
-            value.ContractId = cont.id;
-            Assurance.create({value}, { transaction: transact });
-        });         
-        await transact.commit();      
+        if(assurances !== undefined){
+            if(assurances.length > 0){
+                // await transact.rollback();
+                // return next(new AppError("No se puede insertar un contrato sin sus garantes", 400));
+            //    try {
+                // assurances.forEach(async function (value) {
+                //     value.ContractId = cont.id;
+                //     console.log("cont.id", cont.id)
+                //     console.log(value)
+                //     await Assurance.create(value, { transaction: transact });
+                // }); 
+
+                for (let index = 0; index < assurances.length; index++) {
+                    assurances[index].ContractId = cont.id
+                    await Assurance.create(assurances[index], { transaction: transact });
+                }
+            //    } catch (error) {                                
+            //     await transact.rollback(); 
+            //     throw error;
+            //    }        
+            } 
+        }      
+        await transact.commit();  
+        return res.json({
+            code: 200,
+            status: 'success',
+            ok: true,
+            message: 'El registro fue guardado con exito',
+            data: cont,
+        });    
     } 
     catch (error) 
     {
         await transact.rollback(); 
-        return next(new AppError(error.message, 400));
+        throw error;
     }
-}
+  });
 
 exports.GetById = findOne(Contract,
     {
         include : 
         [ 
-            { model: Client, attributes : ['fullName','address','phone','email']  }
+            { model: Client },
+            { model: Property},            
+            { model: Assurance}
         ]
     });
 exports.Put = update(Contract, ['PropertyId','ClientId','startDate','endDate','nroPartWater','nroPartMuni','nroPartAPI','commission','state','description','stamped','fees','warrantyInquiry']);
