@@ -17,6 +17,7 @@ app.use(morgan('dev'));
 
 const Port = 4000;
 app.set('port', process.env.PORT || Port);
+app.use(express.static(__dirname + '/uploads'));
 
 // Limit
 app.use(
@@ -65,12 +66,13 @@ app.listen(app.get('port'), () => {
   console.log(' server on port', app.get('port'), '  MODE : ', process.env.NODE_ENV);
 
   //Connection to bd
-  sequelize.sync({ force: false })
-    .then(() => {
-      console.log('DB is conected');
-    })
-    .catch((err) => {
-      console.log(err);
-      return;
-    });
- });
+  // sequelize
+  //   .sync({ alter: true })
+  //   .then(() => {
+  //     console.log('DB is conected');
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //     return;
+  //   });
+});

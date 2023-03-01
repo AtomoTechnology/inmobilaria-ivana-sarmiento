@@ -54,24 +54,10 @@ catchAsync(async (req, res, next) => {
 
         if(assurances !== undefined){
             if(assurances.length > 0){
-                // await transact.rollback();
-                // return next(new AppError("No se puede insertar un contrato sin sus garantes", 400));
-            //    try {
-                // assurances.forEach(async function (value) {
-                //     value.ContractId = cont.id;
-                //     console.log("cont.id", cont.id)
-                //     console.log(value)
-                //     await Assurance.create(value, { transaction: transact });
-                // }); 
-
                 for (let index = 0; index < assurances.length; index++) {
                     assurances[index].ContractId = cont.id
                     await Assurance.create(assurances[index], { transaction: transact });
-                }
-            //    } catch (error) {                                
-            //     await transact.rollback(); 
-            //     throw error;
-            //    }        
+                }      
             } 
         }      
         await transact.commit();  
@@ -90,14 +76,27 @@ catchAsync(async (req, res, next) => {
     }
   });
 
-exports.GetById = findOne(Contract,
-    {
-        include : 
-        [ 
-            { model: Client },
-            { model: Property},            
-            { model: Assurance}
-        ]
-    });
-exports.Put = update(Contract, ['PropertyId','ClientId','startDate','endDate','nroPartWater','nroPartMuni','nroPartAPI','commission','state','description','stamped','fees','warrantyInquiry']);
+
+
+exports.GetById = findOne(Contract, {
+  include: [ 
+    { model: Client },
+    { model: Property},            
+    { model: Assurance}],
+});
+exports.Put = update(Contract, [
+  'PropertyId',
+  'ClientId',
+  'startDate',
+  'endDate',
+  'nroPartWater',
+  'nroPartMuni',
+  'nroPartAPI',
+  'commission',
+  'state',
+  'description',
+  'stamped',
+  'fees',
+  'warrantyInquiry',
+]);
 exports.Destroy = destroy(Contract);

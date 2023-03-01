@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import http from '../api/axios';
-import { IpropertyResponse } from '../interfaces/Iproperties';
+import { IcontractsResponse } from '../interfaces/Icontracts';
 
 const GetAllContract = async () => {
-  const { data } = await http.get<any>('/contracts');
+  const { data } = await http.get<IcontractsResponse>('/contracts');
   return data;
 };
 
