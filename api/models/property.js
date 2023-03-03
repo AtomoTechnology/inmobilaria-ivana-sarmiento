@@ -61,7 +61,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       street: {
         allowNull: false,
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(100),
         validate: {
           notNull: {
             msg: 'La calle es obligatoria',
@@ -73,7 +73,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       number: {
         allowNull: false,
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(5),
         validate: {
           notNull: {
             msg: 'El numero de la calle es obligatorio',
@@ -85,11 +85,11 @@ module.exports = (sequelize, DataTypes) => {
       },
       floor: {
         allowNull: true,
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(2),
       },
       dept: {
         allowNull: true,
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(2),
       },
       isFor: {
         allowNull: false,
@@ -104,6 +104,13 @@ module.exports = (sequelize, DataTypes) => {
       description: DataTypes.STRING,
     },
     {
+      indexes: [
+      {
+          unique:true,
+          fields: ['street','number','floor','dept'],
+          name:'uniqueKeyProperty'
+      }
+    ],
       sequelize,
       modelName: 'Property',
     }

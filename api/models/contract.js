@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
       Contract.belongsTo(models.Client);
       //  Relation
       Contract.hasMany(models.Eventuality);
+      Contract.hasMany(models.PriceHistorial);
       Contract.hasMany(models.Assurance);
     }
   }
@@ -88,6 +89,10 @@ module.exports = (sequelize, DataTypes) => {
       state: {
        type: DataTypes.STRING,
        defaultValue:'En curso'
+      },
+      amount: {
+       type: DataTypes.FLOAT,
+       allowNull:false
       },
       description: DataTypes.STRING,
       stamped: {

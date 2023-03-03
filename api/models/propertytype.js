@@ -22,7 +22,6 @@ module.exports = (sequelize, DataTypes) => {
     description: {
       type: DataTypes.STRING,      
       unique:  {
-        name:true,
         msg: 'Ya existe una descripción con esas caracteristica.',
       },
       allowNull: false, 

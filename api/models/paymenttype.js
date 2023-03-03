@@ -22,7 +22,6 @@ module.exports = (sequelize, DataTypes) => {
     name: {
       type: DataTypes.STRING,      
       unique:  {
-        name:true,
         msg: 'Ya existe un tipo de pago con ese nombre.',
       },
       allowNull: false,

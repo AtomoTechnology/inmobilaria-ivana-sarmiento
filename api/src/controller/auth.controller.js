@@ -40,7 +40,7 @@ const SignIn = (req, res) => {
               },
               process.env.SECRET_TOKEN,
               {
-                expiresIn: 86400, // vence en un dia
+                expiresIn: '120d', // vence en un dia
               }
             );
             return res.json({
