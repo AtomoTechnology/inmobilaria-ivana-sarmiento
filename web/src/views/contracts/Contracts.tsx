@@ -32,6 +32,8 @@ import CloseIcon from '../../components/icons/CloseIcon';
 import AddGuarantee from '../../components/icons/AddGuarantee';
 import SeeIcon from '../../components/icons/SeeIcon';
 import { Contract } from '../../interfaces/Icontracts';
+import { useNavigate } from 'react-router-dom';
+import { TbReportMoney } from 'react-icons/tb'
 
 export interface Iassurance {
   fullName: string;
@@ -48,24 +50,26 @@ const Contracts = () => {
   // const [selectedProducts2, setSelectedProducts2] = useState<Contract[]>();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAddGuaranteeModal, setShowAddGuaranteeModal] = useState(false)
+  const [showAddEventualityModal, setShowAddEventualityModal] = useState(false)
   const [show, setShow] = useState(false);
   const [assurances, setAssurances] = useState<Iassurance[]>([])
   const [assuranceItem, setAssuranceItem] = useState<any>();
   const [editing, setEditing] = useState(false)
   const { values, handleInputChange, reset, updateAll } = useForm({
-    ClientId: 0,
-    PropertyId: 0,
+    ClientId: null,
+    PropertyId: null,
     startDate: '',
     endDate: '',
     nroPartWater: '',
     nroPartMuni: '',
     nroPartAPI: '',
-    commission: '',
+    commission: 0,
     state: '',
     description: '',
     stamped: 0,
     warrantyInquiry: 0,
-    fees: 0
+    fees: 0,
+    amount: 0,
   });
   const { ClientId, PropertyId,
     startDate,
@@ -78,6 +82,7 @@ const Contracts = () => {
     description,
     stamped,
     warrantyInquiry,
+    amount,
     fees, } = values;
   const { values: Gvalues, handleInputChange: GhandleInputChange, reset: Greset, updateAll: GupdateAll } = useForm({
     fullName: '',
@@ -91,6 +96,13 @@ const Contracts = () => {
   });
 
   const { fullName, email, phone, cuit, address, obs } = Gvalues;
+
+  const { amount: amountEvent, description: descEvent, expiredDate, values: Evalues, handleInputChange: EhandleInputChange, reset: Ereset } = useForm({
+    ContractId: null,
+    amount: 0.00,
+    expiredDate: null,
+    description: ''
+  })
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [errors, setErrors] = useState<any>();
   const [editMode, setEditMode] = useState(false);
@@ -99,7 +111,7 @@ const Contracts = () => {
     'Client.fullName': { value: null, matchMode: FilterMatchMode.CONTAINS },
     'PropertyType.description': { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
-
+  const navigate = useNavigate()
   const currentContract = useRef<Contract | null>();
 
   const { data, isError, isLoading, error, isFetching, refetch } = useContracts();
@@ -136,7 +148,6 @@ const Contracts = () => {
   const verifyForm = () => {
     let ok = true;
     let error: any = {};
-    console.log(!PropertyId)
     if (!PropertyId) {
       ok = false;
       error.PropertyId = true;
@@ -145,8 +156,6 @@ const Contracts = () => {
       ok = false;
       error.ClientId = true;
     }
-
-
     if (!startDate?.trim().length) {
       ok = false;
       error.startDate = true;
@@ -159,14 +168,10 @@ const Contracts = () => {
       ok = false;
       error.endDate = true;
     }
-    // if (!floor?.trim().length) {
-    //   ok = false;
-    //   error.floor = true;
-    // }
-    // if (!dept?.trim().length) {
-    //   ok = false;
-    //   error.dept = true;
-    // }
+    if (!amount) {
+      ok = false;
+      error.amount = true;
+    }
     if (!commission) {
       ok = false;
       error.commission = true;
@@ -186,6 +191,25 @@ const Contracts = () => {
     setErrors(error);
     return ok;
   };
+  const verifyFormEventuality = () => {
+    let ok = true;
+    let error: any = {};
+    if (!amountEvent) {
+      ok = false;
+      error.amountEvent = true;
+    }
+    if (!expiredDate) {
+      ok = false;
+      error.expiredDate = true;
+    }
+    if (!descEvent?.trim().length) {
+      ok = false;
+      error.descEvent = true;
+    }
+
+    setErrors(error);
+    return ok;
+  };
   const showAndHideModal = (
     title: string,
     message: string,
@@ -199,39 +223,17 @@ const Contracts = () => {
     e.preventDefault();
     // console.log(values)
     console.log({ ...values, assurances })
-    return;
+    // return;
     if (verifyForm()) {
       if (editMode) {
         try {
+          values.PropertyId = values.PropertyId?.id!;
+          console.log({ ...values, assurances })
+          // return;
           const res = await http.put(`/contracts/${currentContract.current?.id}`, { ...values, assurances });
           if (res.data.ok) {
             refetch();
-            // data?.data &&
-            //   (data.data = data?.data.map((z) => {
-            //     if (z.id === currentContract.current?.id) {
-            //       // alert('hello')
-            //       // console.log(z, { ...values })
-            //       z =
-            //       {
-            //         PropertyId: values.PropertyId!,
-            //         Zone: { name: values.PropertyId! },
-            //         ClientId: values.ClientId!,
-            //         number: values.number,
-            //         street: values.street,
-            //         OwnerId: values.OwnerId!,
-            //         isFor: values.isFor,
-            //         floor: values.floor,
-            //         dept: values.dept,
-            //         state: values.state,
-            //         description: values.description,
-            //         id: currentContract.current.id,
-            //         uuid: currentContract.current.uuid,
-            //         createdAt: currentContract.current.createdAt,
-            //         updatedAt: currentContract.current.updatedAt
-            //       };
-            //     }
-            //     return z;
-            //   }));
+            setAssurances([])
             reset();
             setShowCreateModal(false);
             showAndHideModal('Editado', res.data.message);
@@ -243,10 +245,13 @@ const Contracts = () => {
         }
       } else {
         try {
-          const res = await http.post('/contracts', values);
+          values.PropertyId = values.PropertyId?.id!;
+          console.log({ ...values, assurances })
+          const res = await http.post('/contracts', { ...values, assurances });
           if (res.data.ok) {
             refetch();
             // data?.data.push(res.data.data);
+            setAssurances([])
             reset();
             setShowCreateModal(false);
             showAndHideModal('Guardado', res.data.message);
@@ -300,6 +305,12 @@ const Contracts = () => {
     setShowAddGuaranteeModal(false);
     setErrors({});
   };
+  const closeAddEventualitiesModal = () => {
+    Ereset();
+    setShowAddEventualityModal(false);
+
+    // setErrors({});
+  };
   const onGlobalFilterChange = (e: any) => {
     const value = e.target.value;
     let _filters = { ...filters };
@@ -309,12 +320,19 @@ const Contracts = () => {
     setFilters(_filters);
     setGlobalFilterValue(value);
   };
+  const openModalAddEvent = (data: any) => {
+    Ereset();
+    currentContract.current = data;
+    EhandleInputChange(data.id, 'ContractId');
+    setShowAddEventualityModal(true)
+  }
   const actionBodyTemplate = (rowData: any) => {
     return (
-      <div className='flex gap-x-3 items-center justify-center'>
-        <SeeIcon action={() => ConfirmDestroy(rowData)} color='blue' />
-        <AddGuarantee action={() => showAddGuarantee(rowData)} color='#2B3467' />
-        <EditIcon action={() => edit(rowData)} color='#FFB84C' />
+      <div className='flex gap-x-3 items-center justify-start'>
+        <SeeIcon action={() => navigate(`/contracts/${rowData.id}/${rowData.uuid}`)} color='' />
+        {rowData.state !== 'Finalizado' && (<AddGuarantee action={() => showAddGuarantee(rowData)} color='' />)}
+        <TbReportMoney size={25} color='' onClick={() => openModalAddEvent(rowData)} />
+        <EditIcon action={() => edit(rowData)} color='' />
         <DeleteIcon action={() => ConfirmDestroy(rowData)} color='#F48484' />
       </div>
     );
@@ -347,7 +365,25 @@ const Contracts = () => {
   const removeAssurance = (item: Iassurance) => {
     setAssurances(assurances.filter(a => a.id !== item.id))
   }
-
+  const handleAddEventualities = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log(Evalues)
+    // return;
+    if (verifyFormEventuality()) {
+      try {
+        const res = await http.post('/eventualities', Evalues);
+        if (res.data.ok) {
+          // data?.data && (data.data! = data?.data.filter((z: any) => z.id !== id));
+          setShowAddEventualityModal(false);
+          showAndHideModal('Guardado', res.data.message);
+        } else {
+          showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red');
+        }
+      } catch (error: any) {
+        if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red');
+      }
+    }
+  }
   const paginatorLeft = <Button onClick={() => refetch()} type="button" icon="pi pi-refresh" text />;
 
   if (isLoading) return <Loading />;
@@ -443,12 +479,7 @@ const Contracts = () => {
         </DataTable>
       </Box>
 
-      {isFetching && (
-        <Loading
-          h={40}
-          w={40}
-        />
-      )}
+      {isFetching && (<Loading h={40} w={40} />)}
 
       <DeleteModal
         show={show}
@@ -457,6 +488,7 @@ const Contracts = () => {
         text={`${currentContract.current?.Client?.fullName} de la calle ${currentContract.current?.Property.street} ${currentContract.current?.Property.number}  ${currentContract.current?.Property.floor} ${currentContract.current?.Property.dept}`}
       />
 
+      {/* Create modal */}
       <CreateModal
         show={showCreateModal}
         closeModal={closeCreateModal}
@@ -466,6 +498,7 @@ const Contracts = () => {
       >
         <button
           onClick={closeCreateModal}
+          type='button'
           className='fixed bg-white right-8 sm:right-[4rem] top-12 w-10 h-10 rounded-full shadow-lg flex items-center justify-center border border-gray-200'>
           <CloseIcon />
         </button>
@@ -484,10 +517,24 @@ const Contracts = () => {
                 optionLabel="fullName"
                 filterPlaceholder='Busca  inquilino...'
                 optionValue='id'
+                showClear
                 placeholder="elije un inquilino"
                 filter
-                // valueTemplate={selectedCountryTemplate}
-                //  itemTemplate={countryOptionTemplate} 
+                valueTemplate={(data, props) => {
+                  if (!data) return props.placeholder;
+                  return (
+                    <span>
+                      {data.fullName} - {data.cuit}
+                    </span>
+                  )
+                }}
+                itemTemplate={(data) => {
+                  return (
+                    <span>
+                      {data.fullName} - {data.cuit}
+                    </span>
+                  )
+                }}
                 className="h-[42px] items-center !border-gray-200 dark:!border-gray-700 shadow dark:bg-slate-900 dark:!text-slate-400 " />
               {errors?.ClientId && <FormError text='El inquilino es obligatorio.' />}
             </fieldset>
@@ -499,11 +546,29 @@ const Contracts = () => {
                 onChange={(e) => handleInputChange(e.value, 'PropertyId')}
                 options={propertyQuery.data?.data}
                 optionLabel="street"
+                showClear
                 filterPlaceholder='Busca propiedad'
-                optionValue='id'
+                // optionValue='id'
                 placeholder="elije una propiedad"
                 filter
+                valueTemplate={(data, props) => {
+                  if (!data) return props.placeholder;
+                  return (
+                    <span>
+                      {data.street}  {data.number}  {data.floor}-{data.dept}
+                    </span>
+                  )
+                }}
+                itemTemplate={(data) => {
+                  return (
+                    <span>
+                      {data.street}  {data.number}  {data.floor}-{data.dept}
+                    </span>
+                  )
+                }}
                 className="h-[42px] items-center !border-gray-200 shadow" />
+              {/* typescript-ignore */}
+              {PropertyId?.Owner && <span> {PropertyId.Owner?.fullName} - {PropertyId.Owner?.phone} </span>}
               {errors?.PropertyId && <FormError text='La propiedad es obligatoria.' />}
 
             </fieldset>
@@ -533,26 +598,56 @@ const Contracts = () => {
           </FieldsetGroup>
 
           <FieldsetGroup>
-            <fieldset className=''>
-              <label htmlFor='commission'>Comisión</label>
-              <CustomInput
-                placeholder='2'
-                type='number'
-                initialValue={commission || ''}
-                onChange={(value) => handleInputChange(value, 'commission')}
-              />
-              {errors?.commission && <FormError text='La comisión  es obligatoria.' />}
-            </fieldset>
-            <fieldset className=''>
-              <label htmlFor='fees'>Honorarios </label>
-              <CustomInput
-                placeholder='10000.00'
-                initialValue={fees || ''}
-                type="number"
-                onChange={(value) => handleInputChange(value, 'fees')}
-              />
-              {errors?.fees && <FormError text='El hononario es obligatorio.' />}
-            </fieldset>
+            <FieldsetGroup className='w-full sm:w-[50%]' >
+              <fieldset className=''>
+                <label htmlFor='amount'>Valor contrato</label>
+                <CustomInput
+                  placeholder='46000.00'
+                  type='number'
+                  initialValue={amount || ''}
+                  onChange={(value) => handleInputChange(value, 'amount')}
+                />
+                {errors?.amount && <FormError text='El valor del contrato es obligatorio.' />}
+              </fieldset>
+              <fieldset className=''>
+                <label htmlFor='commission'>% Comisión</label>
+                <CustomInput
+                  placeholder='10'
+                  type='number'
+                  initialValue={commission || ''}
+                  onChange={(value) => handleInputChange(value, 'commission')}
+                />
+                {errors?.commission && <FormError text='La comisión  es obligatoria.' />}
+              </fieldset>
+            </FieldsetGroup>
+
+            <FieldsetGroup className='w-full sm:w-[50%]' >
+
+              <fieldset className='w-full sm:w-[50%]'>
+                <label htmlFor='fees'>Total a abonar </label>
+                <input
+                  placeholder='10000.00'
+                  min={0}
+                  value={(values.amount - ((values.commission / 100) * values.amount)).toFixed(2)?.toString()}
+                  disabled={true}
+                  type="number"
+                  onChange={(value) => handleInputChange(value, 'fees')}
+                />
+              </fieldset>
+
+              <fieldset className='w-full sm:w-[50%]'>
+                <label htmlFor='fees'>Honorarios </label>
+                <CustomInput
+                  placeholder='10000.00'
+                  initialValue={fees || ''}
+                  type="number"
+                  onChange={(value) => handleInputChange(value, 'fees')}
+                />
+                {errors?.fees && <FormError text='El hononario es obligatorio.' />}
+              </fieldset>
+
+            </FieldsetGroup>
+
           </FieldsetGroup>
 
           <FieldsetGroup className=''>
@@ -561,6 +656,7 @@ const Contracts = () => {
                 <label htmlFor='warrantyInquiry'>Ave. de Gtía</label>
                 <CustomInput
                   placeholder='1000.99'
+                  type='number'
                   initialValue={warrantyInquiry || ''}
                   onChange={(value) => handleInputChange(value, 'warrantyInquiry')}
                 />
@@ -570,6 +666,7 @@ const Contracts = () => {
                 <label htmlFor='stamped'>Sellado </label>
                 <CustomInput
                   placeholder='500.00'
+                  type='number'
                   initialValue={stamped || ''}
                   onChange={(value) => handleInputChange(value, 'stamped')}
                 />
@@ -620,8 +717,6 @@ const Contracts = () => {
               onChange={(value) => handleInputChange(value, 'description')}
             />
           </fieldset>
-
-
 
           <h1 className='text-lg mb-4 title-form'>Agregar garante(s)</h1>
 
@@ -749,7 +844,7 @@ const Contracts = () => {
         </form>
       </CreateModal>
 
-
+      {/* Guarantee modal  */}
       <CreateModal
         show={showAddGuaranteeModal}
         closeModal={closeGuaranteeModal}
@@ -761,6 +856,7 @@ const Contracts = () => {
         <form onSubmit={handleAddGuarantee} className='!relative'>
           <button
             onClick={closeGuaranteeModal}
+            type='button'
             className='absolute bg-white right-0 top-1 w-10 h-10 rounded-full shadow-lg flex items-center justify-center border border-gray-200'>
             <CloseIcon />
           </button>
@@ -864,6 +960,92 @@ const Contracts = () => {
           </section>
         </form>
       </CreateModal>
+
+      {/* modal eventuality */}
+      <CreateModal
+        show={showAddEventualityModal}
+        closeModal={closeAddEventualitiesModal}
+        overlayClick={false}
+        className='shadow-none border-0'
+      // overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
+      >
+
+        <form onSubmit={handleAddEventualities} className='!relative'>
+
+          <div className=' flex justify-between'>
+            <h2 className='title-form text-2xl sm:text-3xl'> Agregar  eventualidad</h2>
+          </div>
+
+          <FieldsetGroup>
+            <fieldset className=''>
+              <label htmlFor='ContractId'>Contrato : <span className='text-brand'>#</span>{
+                currentContract.current?.Client.fullName + ' - ' +
+                currentContract.current?.Client.cuit + '  | ' +
+                currentContract.current?.Property.street + ' ' +
+                currentContract.current?.Property.number + ' '
+              }</label>
+              <CustomInput
+                disabled={true}
+                initialValue={currentContract.current?.id}
+                onChange={(val) => { }}
+                placeholder=''
+              />
+            </fieldset>
+
+          </FieldsetGroup>
+          <FieldsetGroup>
+            <fieldset className=''>
+              <label htmlFor='amountEvent'>Monto </label>
+              <CustomInput
+                placeholder='Juan Jose'
+                type='number'
+                initialValue={amountEvent || ''}
+                onChange={(value) => EhandleInputChange(value, 'amount')}
+              />
+              {errors?.amountEvent && <FormError text='El monto es obligatorio.' />}
+            </fieldset>
+            <fieldset className=''>
+              <label htmlFor='expiredDate'>Fecha Vencimiento </label>
+              <CustomInput
+                placeholder='example@gmail.com'
+                initialValue={expiredDate || ''}
+                type="date"
+                onChange={(value) => EhandleInputChange(value, 'expiredDate')}
+              />
+              {errors?.expiredDate && <FormError text='La fecha de vencimiento es obligatorio.' />}
+            </fieldset>
+          </FieldsetGroup>
+
+
+          <fieldset className=''>
+            <label htmlFor='descEvent'>Descripción </label>
+            <CustomTextArea
+              placeholder='Escribe una descripción...'
+              initialValue={descEvent || ''}
+              onChange={(value) => EhandleInputChange(value, 'description')}
+            />
+            {errors?.descEvent && <FormError text='La descripción es obligatoria.' />}
+
+          </fieldset>
+
+          <section className='action flex items-center gap-x-3 mt-4'>
+            <button
+              className='btn !py-1'
+              onClick={closeAddEventualitiesModal}
+              type='button'
+            >
+              Cerrar
+            </button>
+            <button
+              className='btn gradient  !py-1'
+              type='submit'
+            >
+              Guardar
+            </button>
+          </section>
+        </form>
+      </CreateModal>
+
     </div>
   );
 };

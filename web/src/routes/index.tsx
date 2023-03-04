@@ -4,6 +4,7 @@ import SignIn from "../views/auth/SignIn";
 import SignUp from "../views/auth/signUp";
 import Clients from "../views/clients/allClients";
 import Owners from "../views/clients/owners";
+import ContractDetail from "../views/contracts/ContractDetail";
 import Contracts from "../views/contracts/Contracts";
 import Home from "../views/Home";
 import AllPaymentTypes from "../views/payment/allPaymentTypes";
@@ -50,6 +51,10 @@ export const router = createBrowserRouter([
       {
         path: '/contracts',
         element: <PrivateRoute ><Contracts /></PrivateRoute>,
+      },
+      {
+        path: '/contracts/:id/:uuid',
+        element: <PrivateRoute ><ContractDetail /></PrivateRoute>,
       },
       {
         path: '/signup',

@@ -299,7 +299,7 @@ const Properties = () => {
           <Column
             field='street'
             header='Detalle'
-            body={(data) => <span> {data.street}  {data.number} {data.floor} {data.dept} </span>}
+            body={(data) => <span> {data.street}  {data.number} {data.floor}-{data.dept} </span>}
             headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
             className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
             sortable
