@@ -1,4 +1,4 @@
-const {Contact,Eventuality} = require('../../models');
+const {Contract,Eventuality} = require('../../models');
 
 const { all, paginate, create, findOne, update, destroy } = require('../Generic/FactoryGeneric');
 
@@ -6,14 +6,14 @@ exports.GetAll = all(Eventuality,
     {
         include : 
         [ 
-            { model: Contact, attributes : ['PropertyId','ClientId','startDate','endDate','nroPartWater','nroPartMuni','nroPartAPI','commision','state','description','stamped','fees','warrantyInquiry']  }
+            { model: Contract }
         ]
     });
 exports.Paginate = paginate(Eventuality,
     {
         include : 
         [ 
-            { model: Contact, attributes : ['PropertyId','ClientId','startDate','endDate','nroPartWater','nroPartMuni','nroPartAPI','commision','state','description','stamped','fees','warrantyInquiry']  }
+            { model: Contract }
         ]
     });
 exports.Create = create(Eventuality, ['ContractId','amount','description','expiredDate']);
@@ -21,7 +21,7 @@ exports.GetById = findOne(Eventuality,
     {
         include : 
         [ 
-            { model: Contact, attributes : ['PropertyId','ClientId','startDate','endDate','nroPartWater','nroPartMuni','nroPartAPI','commision','state','description','stamped','fees','warrantyInquiry']  }
+            { model: Contract }
         ]
     });
 exports.Put = update(Eventuality, ['ContractId','amount','description','expiredDate']);

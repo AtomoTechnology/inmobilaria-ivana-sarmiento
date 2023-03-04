@@ -44,7 +44,7 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
       description: {
-        allowNull: true,
+        allowNull: false,
         type: DataTypes.STRING,
       },
       expiredDate: {

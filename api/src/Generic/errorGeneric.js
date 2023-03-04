@@ -12,6 +12,7 @@ const handleSequelizeForeignKeyConstraintError = (error) =>
   new AppError("Ese inquilino ya tiene un contracto vigente para esa propiedad dentro de ese mismo rango de fecha.", 400);
 const handleSequelizeUniqueConstraintError = (error) =>
   new AppError(error.errors.map((e) => e.message).join(',,'), 400);
+  
 const handleJsonWebTokenError = () => new AppError(`Token  no valido. Inicia sesión de nuevo.`, 401);
 const handleJWTExpiredToken = () => new AppError('Su token ha caducado. Vuelva a iniciar sesión, por favor.', 401);
 const handleSequelizeAccessDeniedError = () =>
@@ -51,6 +52,7 @@ exports.globalError = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
   let error = Object.assign(err);
+  console.log("error.errors",error.errors)
   console.log(error.name);
 
   if (error.name === 'SequelizeAccessDeniedError') error = handleSequelizeAccessDeniedError();
@@ -62,6 +64,5 @@ exports.globalError = (err, req, res, next) => {
     if (error?.errors[0]?.message === 'contracts__property_id__client_id_start_date_end_date must be unique') error = handleSequelizeUniqueConstraintErrorContract(error);
   }
   if (error.name === 'SequelizeForeignKeyConstraintError') error = handleSequelizeForeignKeyConstraintError(error);
-
   sendError(error, res);
 };

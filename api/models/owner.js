@@ -46,7 +46,6 @@ module.exports = (sequelize, DataTypes) => {
     phone: {
       type: DataTypes.STRING,
       unique:  {
-        name:true,
         msg: 'Ya existe un propietario con ese telefóno.',
       } ,
       allowNull: false,
@@ -62,7 +61,6 @@ module.exports = (sequelize, DataTypes) => {
     email: {
       type: DataTypes.STRING ,
       unique:  {
-        name:true,
         msg: 'Ya existe un propietario con ese email.',
       },
       allowNull: false,
@@ -78,7 +76,6 @@ module.exports = (sequelize, DataTypes) => {
     cuit:  {
       type: DataTypes.STRING ,
       unique:  {
-        name:true,
         msg: 'Ya existe un propietario con ese C.U.I.T/C.U.I.L.',
       },
       allowNull: false,

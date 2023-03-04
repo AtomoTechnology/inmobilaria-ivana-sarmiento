@@ -1,4 +1,4 @@
-const {Contract,Client,Assurance,Property,sequelize,PriceHistorial} = require('../../models');
+const {Contract,Client,Assurance,Property,sequelize,PriceHistorial,Eventuality} = require('../../models');
 const { Op } = require('sequelize');
 
 const { all, paginate, create, findOne, update, destroy } = require('../Generic/FactoryGeneric');
@@ -21,16 +21,13 @@ exports.Paginate = paginate(Contract,
             { model: Property}
         ]
     });
-exports.Create = create(Contract, ['PropertyId','ClientId','startDate','endDate','nroPartWater','nroPartMuni','nroPartAPI','commission','state','description','stamped','fees','warrantyInquiry']);
 
 exports.Post = 
 catchAsync(async (req, res, next) => {
-    console.log("Ingreso")
     const transact = await sequelize.transaction();
     try 
     {  
-         console.log(req.body)
-        const {PropertyId,ClientId,startDate,endDate,nroPartWater,nroPartMuni,nroPartAPI,commission,state,description,stamped,fees,warrantyInquiry,assurances} = req.body;          
+        const {PropertyId,ClientId,startDate,endDate,nroPartWater,nroPartMuni,nroPartAPI,commission,amount,description,stamped,fees,warrantyInquiry,assurances} = req.body;          
                  
         const isExist = await Contract.findOne({
             where: {
@@ -44,11 +41,20 @@ catchAsync(async (req, res, next) => {
         if(isExist !== null){            
             return next(new AppError("Existe un contrato vigente para este inmueble", 400));
         }
-        
+
+         //Update property
+         const propert = await Property.update(
+            {
+                state:process.env.Rent
+            }, 
+            { where: { id: PropertyId } }, 
+            { transaction: transact }
+         );
+
         const cont = await Contract.create({
             PropertyId: PropertyId,ClientId: ClientId,startDate: startDate,
             endDate: endDate,nroPartWater: nroPartWater,nroPartMuni: nroPartMuni,
-            nroPartAPI: nroPartAPI,commission: commission,state: state,
+            nroPartAPI: nroPartAPI,commission: commission,amount: amount,state:process.env.In_progress,
             description: description,stamped: stamped,fees: fees, warrantyInquiry: warrantyInquiry
         }, { transaction: transact });
 
@@ -65,8 +71,9 @@ catchAsync(async (req, res, next) => {
         const history = await PriceHistorial.create({
             ContractId: cont.id,amount: amount,year: 1,
             porcent: 0
-        }, { transaction: transact });
-        
+        }, { transaction: transact });  
+
+         
         await transact.commit();  
         return res.json({
             code: 200,
@@ -86,10 +93,14 @@ catchAsync(async (req, res, next) => {
 
 
 exports.GetById = findOne(Contract, {
-  include: [ 
-    { model: Client },
-    { model: Property},            
-    { model: Assurance}],
+  include: 
+  [ 
+        { model: Client },
+        { model: Property},            
+        { model: Assurance},            
+        { model: PriceHistorial},            
+        { model: Eventuality}
+    ],
 });
 exports.Put = update(Contract, [
   'PropertyId',
@@ -104,6 +115,6 @@ exports.Put = update(Contract, [
   'description',
   'stamped',
   'fees',
-  'warrantyInquiry',
+  'warrantyInquiry'
 ]);
 exports.Destroy = destroy(Contract);
