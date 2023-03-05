@@ -40,7 +40,7 @@ const SignIn = () => {
       setLoading(true);
       try {
         const r = await http.post('/auth/signin', values);
-        if (r.data.status === 200) {
+        if (r.data.ok) {
           signIn(r.data);
           reset();
           setLoading(false);

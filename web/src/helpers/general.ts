@@ -30,7 +30,7 @@ export const getColorBox = (text: string): string => {
 
   return color;
 };
-export  async function copyToClipboard(text: string) {
+export async function copyToClipboard(text: string) {
   try {
     await navigator.clipboard.writeText(text);
     console.log('Text copied to clipboard');
@@ -38,3 +38,7 @@ export  async function copyToClipboard(text: string) {
     console.error('Failed to copy text: ', err);
   }
 }
+
+export const validateMail = (mail: string): boolean => {
+  return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(mail);
+};

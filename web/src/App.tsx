@@ -64,8 +64,8 @@ export const ShowModal = ({ title, message, color = 'green' }: { title: string, 
     <div style={{ zIndex: 1010 }} className={`alert-app ${gradient} sign-success  fixed w-[400px] bottom-10 right-6 flex items-center gap-x-4 dark:text-white from-white   shadow-xl p-4 rounded-md border border-gray-100 `}>
       <CheckIcon color={color} />
       <div className="sign-description">
-        <h4 className='text-lg text-slate-600 font-bold  '>{title}</h4>
-        <span className='text-sm text-gray-500 relative -top-1'>{message}</span>
+        {/* <h4 className='text-lg text-slate-600 font-bold  '>{title}</h4> */}
+        <span className='text-sm text-gray-500 relative '>{message}</span>
       </div>
       <button
         className='absolute top-2 right-3'
@@ -78,16 +78,18 @@ export const ShowModal = ({ title, message, color = 'green' }: { title: string, 
 
 const App = () => {
 
-  const { authState, signOut } = useContext(AuthContext)
+  const { authState, signOut, toggleTheme } = useContext(AuthContext)
   const [darkTheme, setDarkTheme] = useState(localStorage.theme === 'dark');
 
   const handleToggleTheme = () => {
     if (localStorage.theme === 'dark') {
       localStorage.theme = 'light'
       document.documentElement.classList.remove('dark')
+      toggleTheme('light')
       setDarkTheme(false)
     } else {
       localStorage.theme = 'dark'
+      toggleTheme('dark')
       setDarkTheme(true)
       document.documentElement.classList.add('dark')
     }

@@ -67,7 +67,7 @@ app.listen(app.get('port'), () => {
 
   //Connection to bd
   // sequelize
-  //   .sync({ alter: true })
+  //   .sync({ force: true })
   //   .then(() => {
   //     console.log('DB is conected');
   //   })

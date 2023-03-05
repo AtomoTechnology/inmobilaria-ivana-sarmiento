@@ -21,12 +21,15 @@ import { Dropdown } from 'primereact/dropdown';
 import { provinces } from '../../api/provinces';
 import { Button } from 'primereact/button';
 import { FilterMatchMode } from 'primereact/api';
+import CloseOnClick from '../../components/CloseOnClick';
+import { validateMail } from '../../helpers/general';
 import { useClients } from '../../hooks/useClients';
 
 const Clients = () => {
-  const { showAlert, hideAlert } = useContext(AuthContext);
+  const { showAlert, hideAlert, authState } = useContext(AuthContext);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [show, setShow] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { values, handleInputChange, reset, updateAll } = useForm({
     fullName: '',
     email: '',
@@ -43,54 +46,53 @@ const Clients = () => {
   const [errors, setErrors] = useState<any>();
   const [editMode, setEditMode] = useState(false);
   const [cities, setCities] = useState([])
-
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     fullName: { value: null, matchMode: FilterMatchMode.CONTAINS },
     cuit: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
+  const [to, setTo] = useState<any>()
 
-  const currentClient = useRef<IPerson | null>();
-
+  const currentOwner = useRef<IPerson | null>();
   const { data, isError, isLoading, error, isFetching, refetch } = useClients();
 
   const edit = (data: IPerson) => {
-    updateAll({
-      fullName: data.fullName,
-      email: data.email,
-      phone: data.phone,
-      cuit: data.cuit,
-      province: data.province,
-      city: data.city,
-      address: data.address,
-      nroFax: data.nroFax,
-      obs: data.obs,
-    });
+    // updateAll({
+    //   fullName: data.fullName,
+    //   email: data.email,
+    //   phone: data.phone,
+    //   cuit: data.cuit,
+    //   province: data.province,
+    //   city: data.city,
+    //   address: data.address,
+    //   nroFax: data.nroFax,
+    //   obs: data.obs,
+    // });
+    updateAll(data)
     getCitiesByProvinces(data.province)
     setShowCreateModal(true);
     setEditMode(true);
-    currentClient.current = data;
+    currentOwner.current = data;
   };
 
   const ConfirmDestroy = (data: IPerson) => {
     setShow(!show);
-    currentClient.current = data;
+    currentOwner.current = data;
   };
 
   const verifyForm = () => {
-
     let ok = true;
     let error: any = {};
-    if (!fullName?.trim().length) {
+    if (!fullName.trim().length) {
       ok = false;
       error.fullName = true;
     }
-    if (!email?.trim().length) {
+    if (!email.trim().length || !validateMail(email.trim())) {
       ok = false;
       error.email = true;
     }
 
-    if (!cuit?.trim().length) {
+    if (!cuit.trim().length) {
       ok = false;
       error.cuit = true;
     }
@@ -98,7 +100,7 @@ const Clients = () => {
       ok = false;
       error.phone = true;
     }
-    if (!address?.trim().length) {
+    if (!address.trim().length) {
       ok = false;
       error.address = true;
     }
@@ -112,20 +114,24 @@ const Clients = () => {
     color: string = 'green',
     delay: number = DelayAlertToHide
   ) => {
-    showAlert({ title, message, color, show: true });
-    setTimeout(hideAlert, delay);
+
+
+    clearTimeout(to)
+    showAlert({ title, message, color, show: true })
+    setTo(setTimeout(hideAlert, delay));
   };
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (verifyForm()) {
+      setIsSaving(true)
       if (editMode) {
         try {
-          const res = await http.put(`/clients/${currentClient.current?.id}`, values);
+          const res = await http.put(`/clients/${currentOwner.current?.id}`, values);
           if (res.data.ok) {
             data?.data &&
               (data.data = data?.data.map((z) => {
-                if (z.id === currentClient.current?.id) {
+                if (z.id === currentOwner.current?.id) {
                   z =
                   {
                     fullName: values.fullName,
@@ -137,10 +143,10 @@ const Clients = () => {
                     address: values.address,
                     nroFax: values.nroFax,
                     obs: values.obs,
-                    id: currentClient.current.id,
-                    uuid: currentClient.current.uuid,
-                    createdAt: currentClient.current.createdAt,
-                    updatedAt: currentClient.current.updatedAt
+                    id: currentOwner.current.id,
+                    uuid: currentOwner.current.uuid,
+                    createdAt: currentOwner.current.createdAt,
+                    updatedAt: currentOwner.current.updatedAt
                   };
                 }
                 return z;
@@ -158,7 +164,7 @@ const Clients = () => {
         try {
           const res = await http.post('/clients', values);
           if (res.data.ok) {
-            data?.data.push(res.data.data);
+            data?.data.unshift(res.data.data);
             reset();
             setShowCreateModal(false);
             showAndHideModal('Guardado', res.data.message);
@@ -169,6 +175,7 @@ const Clients = () => {
           if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red');
         }
       }
+      setIsSaving(false)
     }
   };
 
@@ -218,7 +225,6 @@ const Clients = () => {
   };
 
   const paginatorLeft = <Button onClick={() => refetch()} type="button" icon="pi pi-refresh" text />;
-
   if (isLoading) return <Loading />;
   if (isError) return <RequestError error={error} />;
 
@@ -229,7 +235,7 @@ const Clients = () => {
         <button
           onClick={() => {
             setEditMode(false);
-            currentClient.current = null;
+            currentOwner.current = null;
             setShowCreateModal(true);
           }}
           className='btn !w-10 !h-10 !p-0 gradient !rounded-full'
@@ -237,98 +243,103 @@ const Clients = () => {
           <MdAdd size={50} />
         </button>
       </div>
+      {
+        data.data.length > 0 ? (
+          <>
+            <input
+              onChange={onGlobalFilterChange}
+              className={`dark:!bg-gray-900 dark:text-slate-400 border dark:!border-slate-700 m-auto w-[92%] !mx-[10px] sm:mx-0 sm:w-96 ml-0 sm:ml-[10px] mb-4`}
+              value={globalFilterValue}
+              placeholder='Buscar inquilino por nombre o cuit'
+              type='search'
+            />
+            <Box className={`!p-0 !overflow-hidden !border-none  mb-4 `}>
+              <DataTable
+                size='small'
+                emptyMessage='Aún no hay inquilino'
+                className='!overflow-hidden !border-none'
+                value={data?.data}
+                paginator rows={10}
+                // header={renderHeader}
+                filters={filters}
+                globalFilterFields={['fullName', 'cuit']}
+                // rowsPerPageOptions={[5, 10, 25, 50]}
+                paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+                currentPageReportTemplate="{first} al {last} de {totalRecords}"
+                paginatorLeft={paginatorLeft}
+                // paginatorRight={paginatorRight}
+                // paginator
+                // selectionMode='checkbox'
+                // selection={selectedProducts2}
+                // onSelectionChange={(e: any) => setSelectedProducts2(e.value)}
+                dataKey='id'
+                responsiveLayout='scroll'
+              >
+                <Column
+                  field='fullName'
+                  header='Nombre'
+                  headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+                  className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+                  sortable
+                />
+                <Column
+                  field='cuit'
+                  header='Cuit/Cuil'
+                  headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+                  className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+                  sortable
+                />
+                <Column
+                  field='email'
+                  header='Correo'
+                  headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+                  className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+                />
+                <Column
+                  field='phone'
+                  header='Celular'
+                  headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+                  className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+                />
+                <Column
+                  field='address'
+                  body={(data) => <span> {data.city || '-'}  {data.province || '-'} ,  {data.address} </span>}
+                  header='Dirección'
+                  headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+                  className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+                />
 
-      <input
-        onChange={onGlobalFilterChange}
-        className={`dark:!bg-gray-900 dark:text-slate-400 border dark:!border-slate-700 m-auto w-[92%] !mx-[10px] sm:mx-0 sm:w-96 ml-0 sm:ml-[10px] mb-4`}
-        value={globalFilterValue}
-        placeholder='Buscar inquilino por nombre o cuit'
-        type='search'
-      />
+                <Column
+                  body={actionBodyTemplate}
+                  headerClassName='!border-none dark:!bg-gray-800'
+                  className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+                  exportable={false}
+                  style={{ width: 90 }}
+                />
+              </DataTable>
+            </Box>
+          </>
+        ) : (
+          <div className='text-slate-400 mx-3 text-center'>Aún no hay inquilino.</div>
+        )
+      }
 
-      <Box className='!p-0 !overflow-hidden !border-none    mb-4 '>
-        <DataTable
-          size='small'
-          emptyMessage='Aún no hay inquilino'
-          className='!overflow-hidden   !border-none'
-          value={data?.data}
-          paginator rows={10}
-          filters={filters}
-          globalFilterFields={['fullName', 'cuit']}
-          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-          currentPageReportTemplate="{first} al {last} de {totalRecords}"
-          paginatorLeft={paginatorLeft}
-          dataKey='id'
-          responsiveLayout='scroll'
-        >
-          <Column
-            field='fullName'
-            header='Nombre'
-            headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-            className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-            sortable
-          />
-          <Column
-            field='cuit'
-            header='Cuit/Cuil'
-            headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-            className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-            sortable
-          />
-          <Column
-            field='email'
-            header='Correo'
-            headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-            className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-          />
-          <Column
-            field='phone'
-            header='Celular'
-            headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-            className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-          />
-          <Column
-            field='address'
-            body={(data) => <span> {data.city}  {data.province} ,  {data.address} </span>}
-            header='Dirección'
-            headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-            className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-          />
-
-          <Column
-            body={actionBodyTemplate}
-            headerClassName='!border-none dark:!bg-gray-800'
-            className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-            exportable={false}
-          // style={{ width: 90 }}
-          />
-        </DataTable>
-      </Box>
-
-      {isFetching && (
-        <Loading
-          h={40}
-          w={40}
-        />
-      )}
+      {isFetching && (<Loading h={40} w={40} />)}
 
       <DeleteModal
         show={show}
         setShow={setShow}
-        destroy={() => destroy(currentClient.current?.id!)}
-        text={`${currentClient.current?.fullName}`}
+        destroy={() => destroy(currentOwner.current?.id!)}
+        text={`${currentOwner.current?.fullName} | ${currentOwner.current?.cuit}`}
       />
 
       <CreateModal
         show={showCreateModal}
         closeModal={closeCreateModal}
-        overlayClick={false}
+        titleText={`${editMode ? 'Editar' : 'Crear'} inquilino`}
       >
-        <form onSubmit={handleSave}>
-          <div className=' flex justify-between'>
-            <h2 className='title-form text-2xl sm:text-4xl'>{editMode ? 'Editar' : 'Crear'} inquilino</h2>
-          </div>
-
+        <form onSubmit={handleSave} className={`${isSaving && 'disabled-all'}`}   >
+          <CloseOnClick action={closeCreateModal} />
           <FieldsetGroup>
             <fieldset className=''>
               <label htmlFor='fullname'>Nombre Completo </label>
@@ -374,25 +385,28 @@ const Clients = () => {
 
           <FieldsetGroup>
             <fieldset className=''>
-              <label htmlFor='province'>Provincia</label>
+              <label htmlFor='province'>Provincia <span className='text-xs opacity-50'>(opcional)</span> </label>
               <Dropdown
                 value={province}
                 onChange={(e) => {
                   handleInputChange(e.value, 'province')
                   getCitiesByProvinces(e.value)
                 }}
+                filterPlaceholder='santa fe'
                 options={provinces}
                 optionValue='nombre'
                 optionLabel="nombre"
                 placeholder="elije una provincia"
+                filter
                 className="h-[42px] items-center" />
             </fieldset>
             <fieldset className=''>
-              <label htmlFor='city'>Ciudad </label>
+              <label htmlFor='city'>Ciudad <span className='text-xs opacity-50'>(opcional)</span>  </label>
               <Dropdown
                 value={city}
                 onChange={(e) => handleInputChange(e.value, 'city')}
                 options={cities}
+                filterPlaceholder='rosario'
                 optionLabel="nombre"
                 optionValue='nombre'
                 placeholder="elije una ciudad"
@@ -412,7 +426,7 @@ const Clients = () => {
               {errors?.address && <FormError text='La dirección es obligatoria.' />}
             </fieldset>
             <fieldset className=''>
-              <label htmlFor='nroFax'>Número Fax </label>
+              <label htmlFor='nroFax'>Número Fax <span className='text-xs opacity-50'>(opcional)</span>  </label>
               <CustomInput
                 placeholder='1232421241212'
                 initialValue={nroFax || ''}
@@ -422,27 +436,29 @@ const Clients = () => {
           </FieldsetGroup>
 
           <fieldset className=''>
-            <label htmlFor='obs'>Observación </label>
+            <label htmlFor='obs'>Observación <span className='text-xs opacity-50'>(opcional)</span>  </label>
             <CustomInput
-              placeholder='Escribe una observación o nota de algo...'
+              placeholder='escribe una observación o nota de algo...'
               initialValue={obs || ''}
               onChange={(value) => handleInputChange(value, 'obs')}
             />
           </fieldset>
 
-          <section className='action flex items-center gap-x-3 mt-4'>
+          <section className='action flex items-center gap-x-3 mt-8'>
             <button
-              className='btn !py-1'
+              className='btn sec !py-1'
               onClick={closeCreateModal}
+              disabled={isSaving}
               type='button'
             >
               Cerrar
             </button>
             <button
               className='btn gradient  !py-1'
+              disabled={isSaving}
               type='submit'
             >
-              Guardar
+              {isSaving && ('....')} Guardar
             </button>
           </section>
         </form>

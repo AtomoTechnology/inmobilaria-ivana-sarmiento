@@ -27,6 +27,8 @@ import { useProperties } from '../../hooks/useProperties';
 import CustomTextArea from '../../components/CustomTextArea';
 import { useZones } from '../../hooks/useZones';
 import { usePropertyTypes } from '../../hooks/usePropertyTypes';
+import CloseOnClick from '../../components/CloseOnClick';
+import SeeIcon from '../../components/icons/SeeIcon';
 
 const Properties = () => {
   const { authState, showAlert, hideAlert } = useContext(AuthContext);
@@ -49,6 +51,7 @@ const Properties = () => {
   const [globalFilterValue, setGlobalFilterValue] = useState('');
   const [errors, setErrors] = useState<any>();
   const [editMode, setEditMode] = useState(false);
+  const [viewMode, setViewMode] = useState(false)
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     'Owner.fullName': { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -56,6 +59,7 @@ const Properties = () => {
     'Zone.name': { value: null, matchMode: FilterMatchMode.CONTAINS },
     street: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
+  const [to, setTo] = useState<any>()
 
   const currentProperty = useRef<Iproperty | null>();
 
@@ -65,7 +69,6 @@ const Properties = () => {
   const ownerQuery = useOwners()
 
   const edit = (data: Iproperty) => {
-    console.log(data)
     updateAll({
       ZoneId: data.ZoneId,
       PropertyTypeId: data.PropertyTypeId,
@@ -78,12 +81,14 @@ const Properties = () => {
       state: data.state,
       description: data.description
     });
+    setViewMode(false)
     setShowCreateModal(true);
     setEditMode(true);
     currentProperty.current = data;
   };
 
   const ConfirmDestroy = (data: Iproperty) => {
+    setViewMode(false)
     setShow(!show);
     currentProperty.current = data;
   };
@@ -135,8 +140,9 @@ const Properties = () => {
     color: string = 'green',
     delay: number = DelayAlertToHide
   ) => {
-    showAlert({ title, message, color, show: true });
-    setTimeout(hideAlert, delay);
+    clearTimeout(to)
+    showAlert({ title, message, color, show: true })
+    setTo(setTimeout(hideAlert, delay));
   };
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -229,9 +235,16 @@ const Properties = () => {
     setFilters(_filters);
     setGlobalFilterValue(value);
   };
+  const ViewItem = (data: Iproperty) => {
+    updateAll(data)
+    setViewMode(true);
+    currentProperty.current = data;
+    setShowCreateModal(true);
+  }
   const actionBodyTemplate = (rowData: any) => {
     return (
       <div className='flex gap-x-3 items-center justify-center'>
+        <SeeIcon action={() => ViewItem(rowData)} />
         <EditIcon action={() => edit(rowData)} />
         <DeleteIcon action={() => ConfirmDestroy(rowData)} />
       </div>
@@ -250,6 +263,7 @@ const Properties = () => {
         <button
           onClick={() => {
             setEditMode(false);
+            setViewMode(false)
             currentProperty.current = null;
             setShowCreateModal(true);
           }}
@@ -259,80 +273,84 @@ const Properties = () => {
         </button>
       </div>
 
-      <input
-        onChange={onGlobalFilterChange}
-        className={`dark:!bg-gray-900 dark:text-slate-400 border dark:!border-slate-700 m-auto w-[92%] !mx-[10px] sm:mx-0 sm:w-96 ml-0 sm:ml-[10px] mb-4`}
-        value={globalFilterValue}
-        placeholder='Buscar propiedad'
-        type='search'
-      />
-      <Box className='!p-0 !overflow-hidden !border-none    mb-4 '>
-        <DataTable
-          size='small'
-          emptyMessage='Aún no hay propiedad'
-          className='!overflow-hidden   !border-none'
-          value={data?.data}
-          paginator rows={10}
-          filters={filters}
-          globalFilterFields={['PropertyType.description', 'Owner.fullName', 'Zone.name', 'street']}
-          // rowsPerPageOptions={[5, 10, 25, 50]}
-          paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-          currentPageReportTemplate="{first} al {last} de {totalRecords}"
-          paginatorLeft={paginatorLeft}
-          dataKey='id'
-          responsiveLayout='scroll'
-        >
-          <Column
-            field='PropertyType.description'
-            header='Tipo Propiedad'
-            headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-            className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-            sortable
-          />
-          <Column
-            field='Owner.fullName'
-            header='Propietario'
-            headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-            className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-            sortable
-          />
-          <Column
-            field='street'
-            header='Detalle'
-            body={(data) => <span> {data.street}  {data.number} {data.floor}-{data.dept} </span>}
-            headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-            className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-            sortable
-          />
-          <Column
-            field='Zone.name'
-            header='Zona'
-            sortable
-            headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-            className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-          />
-          <Column
-            // field='status'
-            header='Estado'
-            sortable
-            body={(data) => <span className={`font-bold ${data.status === 'Libre' ? 'text-green-500' : 'text-red-500'}`}>{data.status} </span>}
-            headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-            className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-          />
-          <Column
-            field='isFor'
-            header='Para'
-            headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-            className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-          />
-          {/* <Column
+      {
+        data.data.length > 0 ? (
+          <>
+
+            <input
+              onChange={onGlobalFilterChange}
+              className={`dark:!bg-gray-900 dark:text-slate-400 border dark:!border-slate-700 m-auto w-[92%] !mx-[10px] sm:mx-0 sm:w-96 ml-0 sm:ml-[10px] mb-4`}
+              value={globalFilterValue}
+              placeholder='Buscar propiedad'
+              type='search'
+            />
+            <Box className='!p-0 !overflow-hidden !border-none    mb-4 '>
+              <DataTable
+                size='small'
+                emptyMessage='Aún no hay propiedad'
+                className='!overflow-hidden   !border-none'
+                value={data?.data}
+                paginator rows={10}
+                filters={filters}
+                globalFilterFields={['PropertyType.description', 'Owner.fullName', 'Zone.name', 'street']}
+                // rowsPerPageOptions={[5, 10, 25, 50]}
+                paginatorTemplate="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+                currentPageReportTemplate="{first} al {last} de {totalRecords}"
+                paginatorLeft={paginatorLeft}
+                dataKey='id'
+                responsiveLayout='scroll'
+              >
+                <Column
+                  field='PropertyType.description'
+                  header='Tipo Propiedad'
+                  headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+                  className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+                  sortable
+                />
+                <Column
+                  field='Owner.fullName'
+                  header='Propietario'
+                  headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+                  className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+                  sortable
+                />
+                <Column
+                  field='street'
+                  header='Detalle'
+                  body={(data) => <span> {data.street}  {data.number} {data.floor}-{data.dept} </span>}
+                  headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+                  className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+                  sortable
+                />
+                <Column
+                  field='Zone.name'
+                  header='Zona'
+                  sortable
+                  headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+                  className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+                />
+                <Column
+                  field='state'
+                  header='Estado'
+                  sortable
+                  body={(data) => <span className={`font-bold ${data.state === 'Libre' ? 'text-green-500' : 'text-red-500'}`}>{data.state} </span>}
+                  headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+                  className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+                />
+                <Column
+                  field='isFor'
+                  header='Para'
+                  headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+                  className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+                />
+                {/* <Column
             field='floor'
             // body={(data) => <span> {data.city}  {data.province} ,  {data.floor} </span>}
             header='Piso'
             headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
             className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
           /> */}
-          {/* <Column
+                {/* <Column
             field='dept'
             // body={(data) => <span> {data.city}  {data.province} ,  {data.floor} </span>}
             header='Depto'
@@ -340,22 +358,22 @@ const Properties = () => {
             className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
           /> */}
 
-          <Column
-            body={actionBodyTemplate}
-            headerClassName='!border-none dark:!bg-gray-800'
-            className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-            exportable={false}
-            style={{ width: 90 }}
-          />
-        </DataTable>
-      </Box>
+                <Column
+                  body={actionBodyTemplate}
+                  headerClassName='!border-none dark:!bg-gray-800'
+                  className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+                  exportable={false}
+                  style={{ width: 90 }}
+                />
+              </DataTable>
+            </Box>
+          </>
+        ) : (
+          <div className='text-slate-400 mx-3 text-center'>Aún no hay propiedad.</div>
+        )
+      }
 
-      {isFetching && (
-        <Loading
-          h={40}
-          w={40}
-        />
-      )}
+      {isFetching && (<Loading h={40} w={40} />)}
 
       <DeleteModal
         show={show}
@@ -367,14 +385,12 @@ const Properties = () => {
       <CreateModal
         show={showCreateModal}
         closeModal={closeCreateModal}
-        overlayClick={false}
-        className=' max-w-[650px]'
+        overlayClick={viewMode}
+        className=' max-w-[650px] sm:w-fit'
+        titleText={`${editMode ? 'Editar' : viewMode ? ' Ver  ' : 'Crear'}  propiedad `}
       >
-        <form onSubmit={handleSave}>
-          <div className=' flex justify-between'>
-            <h2 className='title-form text-2xl sm:text-4xl'>{editMode ? 'Editar' : 'Crear'} propiedad</h2>
-          </div>
-
+        <form onSubmit={handleSave} className={`${viewMode && 'disabled-all'}`}>
+          {!viewMode && <CloseOnClick action={closeCreateModal} />}
           <FieldsetGroup>
             <fieldset className=''>
               <label htmlFor='street'>Calle</label>
@@ -390,7 +406,7 @@ const Properties = () => {
               <CustomInput
                 placeholder='1247'
                 initialValue={number || ''}
-                type="number"
+                maxLength={5}
                 onChange={(value) => handleInputChange(value, 'number')}
               />
               {errors?.number && <FormError text='El número es obligatorio.' />}
@@ -403,6 +419,7 @@ const Properties = () => {
                 <label htmlFor='floor'>Piso <span className='text-xs opacity-50'>(opcional)</span></label>
                 <CustomInput
                   placeholder='10'
+                  maxLength={2}
                   initialValue={floor || ''}
                   onChange={(value) => handleInputChange(value, 'floor')}
                 />
@@ -410,7 +427,8 @@ const Properties = () => {
               <fieldset className=''>
                 <label htmlFor='dept'>Depto <span className='text-xs opacity-50'>(opcional)</span> </label>
                 <CustomInput
-                  placeholder='02'
+                  placeholder='02,B'
+                  maxLength={2}
                   initialValue={dept || ''}
                   onChange={(value) => handleInputChange(value, 'dept')}
                 />
@@ -440,8 +458,6 @@ const Properties = () => {
                 optionValue='id'
                 placeholder="elije un tipo de propiedad"
                 filter
-                // valueTemplate={selectedCountryTemplate}
-                //  itemTemplate={countryOptionTemplate} 
                 className="h-[42px] items-center !border-gray-200 shadow " />
               {errors?.PropertyTypeId && <FormError text='El tipo de propiedad es obligatorio.' />}
             </fieldset>
@@ -470,15 +486,29 @@ const Properties = () => {
                 onChange={(e) => handleInputChange(e.value, 'OwnerId')}
                 options={ownerQuery.data?.data}
                 optionLabel="fullName"
-                filterPlaceholder='Busca propietario'
+                filterBy='fullName,cuit'
+                filterPlaceholder='Busca propietario por nombre o cuit'
                 optionValue='id'
                 placeholder="elije un propietario"
                 filter
+                valueTemplate={(data, props) => {
+                  if (!data) return props.placeholder;
+                  return (
+                    <span>
+                      {data.fullName} | {data.cuit}
+                    </span>
+                  )
+                }}
+                itemTemplate={(data) => {
+                  return (
+                    <span>
+                      {data.fullName} | {data.cuit}
+                    </span>
+                  )
+                }}
                 className="h-[42px] items-center !border-gray-200 shadow " />
               {errors?.OwnerId && <FormError text='El propietario es obligatoria.' />}
-
             </fieldset>
-
           </FieldsetGroup>
 
           <fieldset>
@@ -489,24 +519,29 @@ const Properties = () => {
               onChange={(value) => handleInputChange(value, 'description')}
             />
           </fieldset>
+          {
+            !viewMode && (
+              <section className='action flex items-center gap-x-3 mt-8'>
+                <button
+                  className='btn !py-1 sec'
+                  onClick={closeCreateModal}
+                  type='button'
+                >
+                  Cerrar
+                </button>
+                <button
+                  className='btn gradient  !py-1'
+                  type='submit'
+                >
+                  Guardar
+                </button>
+              </section>
+            )
+          }
 
-          <section className='action flex items-center gap-x-3 mt-4'>
-            <button
-              className='btn !py-1'
-              onClick={closeCreateModal}
-              type='button'
-            >
-              Cerrar
-            </button>
-            <button
-              className='btn gradient  !py-1'
-              type='submit'
-            >
-              Guardar
-            </button>
-          </section>
         </form>
-      </CreateModal>
+        {viewMode && <CloseOnClick action={closeCreateModal} />}
+      </CreateModal >
     </div>
   );
 };

@@ -308,8 +308,7 @@ const Contracts = () => {
   const closeAddEventualitiesModal = () => {
     Ereset();
     setShowAddEventualityModal(false);
-
-    // setErrors({});
+    setErrors({});
   };
   const onGlobalFilterChange = (e: any) => {
     const value = e.target.value;
@@ -374,6 +373,7 @@ const Contracts = () => {
         const res = await http.post('/eventualities', Evalues);
         if (res.data.ok) {
           // data?.data && (data.data! = data?.data.filter((z: any) => z.id !== id));
+          Ereset();
           setShowAddEventualityModal(false);
           showAndHideModal('Guardado', res.data.message);
         } else {
@@ -734,7 +734,7 @@ const Contracts = () => {
                       setAssuranceItem(as);
                       setEditing(true)
                     }}>
-                      <Box className='max-w-[300px]' >
+                      <Box className='max-w-[300px] dark:!bg-gray-900' >
                         <h1><span className="font-bold"> ID : </span> {as.id}</h1>
                         <h1><span className="font-bold"> Nombre Completo : </span> {as.fullName}</h1>
                         <h1><span className="font-bold"> Email : </span>{as.email}</h1>

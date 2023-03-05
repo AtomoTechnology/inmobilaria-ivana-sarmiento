@@ -23,6 +23,7 @@ export interface AuthState {
   token: string | null;
   user: Iuser | null;
   alert: Ialert | null;
+  theme: string
 }
 
 export const initialState = {
@@ -30,6 +31,7 @@ export const initialState = {
   token: '',
   user: null,
   alert: null,
+  theme: localStorage.theme || 'light'
 };
 export interface AuthContextProps {
   authState: AuthState;
@@ -37,6 +39,7 @@ export interface AuthContextProps {
   signOut: () => void;
   hideAlert: () => void;
   showAlert: (data: Ialert) => void;
+  toggleTheme: (t: string) => void;
 }
 
 export const AuthContext = createContext({} as AuthContextProps);
@@ -89,7 +92,7 @@ export const AuthProvider = ({ children }: any) => {
   const showAlert = (data: Ialert) => dispatch({ type: 'showAlert', payload: data });
 
   const hideAlert = () => dispatch({ type: 'hideAlert' });
-
+  const toggleTheme = (t: string) => dispatch({ type: 'toggleTheme', payload: t });
   if (state.checking)
     return (
       <div className='flex gap-y-3 flex-col items-center justify-center mt-8 sm:mt-12 '>
@@ -106,6 +109,7 @@ export const AuthProvider = ({ children }: any) => {
         signOut,
         showAlert,
         hideAlert,
+        toggleTheme
       }}
     >
       {children}

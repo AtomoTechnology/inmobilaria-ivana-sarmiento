@@ -21,12 +21,12 @@ import { DelayAlertToHide } from '../../helpers/variableAndConstantes';
 const AllZones = () => {
 
   const { showAlert, hideAlert } = useContext(AuthContext);
-  const [selectedProducts2, setSelectedProducts2] = useState<Izone[]>();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [show, setShow] = useState(false);
   const { name, values, handleInputChange, reset } = useForm({ name: '' })
   const [errors, setErrors] = useState<any>();
-  const [editMode, setEditMode] = useState(false)
+  const [editMode, setEditMode] = useState(false);
+  const [to, setTo] = useState<any>()
 
   const currentZone = useRef<Izone | null>();
 
@@ -43,9 +43,11 @@ const AllZones = () => {
     setShow(!show);
     currentZone.current = data;
   };
+
   const showAndHideModal = (title: string, message: string, color: string = 'green', delay: number = DelayAlertToHide) => {
+    clearTimeout(to)
     showAlert({ title, message, color, show: true })
-    setTimeout(hideAlert, delay)
+    setTo(setTimeout(hideAlert, delay));
   }
 
   const destroy = async (id: number) => {
@@ -100,7 +102,7 @@ const AllZones = () => {
         try {
           const res = await http.post('/zones', values);
           if (res.data.ok) {
-            data?.data.push(res.data.data)
+            data?.data.unshift(res.data.data)
             reset();
             setShowCreateModal(false);
             showAndHideModal('Guardado', res.data.message)
@@ -108,7 +110,6 @@ const AllZones = () => {
             showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
           }
         } catch (error: any) {
-          console.log(error)
           if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
         }
       }
@@ -119,6 +120,7 @@ const AllZones = () => {
   const closeCreateModal = () => {
     reset();
     setShowCreateModal(false);
+    setErrors({})
   }
 
   const actionBodyTemplate = (rowData: any) => {
@@ -143,24 +145,27 @@ const AllZones = () => {
           <MdAdd size={50} />
         </button>
       </div>
-
-      <Box className='!p-0 !overflow-hidden !border-none !mx-4   sm:w-[500px] mb-4 '>
-        <DataTable
-          size='small'
-          emptyMessage='Aún no hay zona'
-          className='!overflow-hidden   !border-none'
-          value={data?.data}
-          selectionMode='checkbox'
-          selection={selectedProducts2}
-          onSelectionChange={(e: any) => setSelectedProducts2(e.value)}
-          dataKey='id'
-          responsiveLayout='scroll'
-        >
-          {/* <Column selectionMode='multiple' style={{ width: 10 }} headerStyle={{ width: 10 }} /> */}
-          <Column field='name' header='Nombre' headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' />
-          <Column body={actionBodyTemplate} headerClassName='!border-none dark:!bg-gray-800' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' exportable={false} style={{ width: 90 }} />
-        </DataTable>
-      </Box>
+      {
+        data.data.length > 0 ? (
+          <>
+            <Box className='!p-0 !overflow-hidden !border-none !mx-4   sm:w-[500px] mb-4 '>
+              <DataTable
+                size='small'
+                emptyMessage='Aún no hay zona'
+                className='!overflow-hidden   !border-none'
+                value={data?.data}
+                dataKey='id'
+                responsiveLayout='scroll'
+              >
+                <Column field='name' header='Nombre' headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' />
+                <Column body={actionBodyTemplate} headerClassName='!border-none dark:!bg-gray-800' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' exportable={false} style={{ width: 90 }} />
+              </DataTable>
+            </Box>
+          </>
+        ) : (
+          <div className='text-slate-400 mx-3 text-center'>Aún no hay zona.</div>
+        )
+      }
 
       {isFetching && (<Loading h={40} w={40} />)}
 
@@ -174,20 +179,18 @@ const AllZones = () => {
       <CreateModal
         show={showCreateModal}
         closeModal={closeCreateModal}
+        overlayClick={false}
         className='max-w-[400px] w-[300px]'
+        titleText={editMode ? 'Editar' : 'Crear' + ' zona'}
       >
         <form action="" onSubmit={handleSave}>
-
-          <div className=' flex justify-between'>
-            <h2 className='title-form'>{editMode ? 'Editar' : 'Crear'} zona</h2>
-          </div>
 
           <fieldset className=''>
             <CustomInput placeholder='Sur,Este,Norte' initialValue={name} onChange={(value) => handleInputChange(value, 'name')} />
             {errors?.name && <FormError text='El nombre es obligatorio.' />}
           </fieldset>
-          <section className='action flex items-center gap-x-3 mt-4'>
-            <button className='btn !py-1' onClick={closeCreateModal} type='button'>
+          <section className='action flex items-center gap-x-3 mt-8'>
+            <button className='btn sec !py-1' onClick={closeCreateModal} type='button'>
               Cerrar
             </button>
             <button className='btn gradient  !py-1' type='submit'>

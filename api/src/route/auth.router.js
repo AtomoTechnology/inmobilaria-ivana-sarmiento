@@ -10,7 +10,7 @@ router.get('/', ctrl.GetAll);
 router.get('/:id', ctrl.GetById);
 
 //Create
-router.post('/', ctrl.Post);
+router.post('/', ctrl.SignUp);
 
 // //Update
 // router.put('/:id', ctrl.Put);

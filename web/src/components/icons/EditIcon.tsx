@@ -8,7 +8,7 @@ interface Props {
   size?: number;
   action?: any
 }
-const EditIcon = ({ size = 25, color = localStorage.theme === 'dark' ? '#ce93d8' : SecondaryColor, action }: Props) => {
+const EditIcon = ({ size = 25, color, action }: Props) => {
   return (
     <CiEdit size={size} color={color} onClick={action} />
   )

@@ -8,7 +8,7 @@ interface Props {
   size?: number;
   action?: any
 }
-const DeleteIcon = ({ size = 25, color = localStorage.theme === 'dark' ? '#ce93d8' : SecondaryColor, action }: Props) => {
+const DeleteIcon = ({ size = 25, color = '#f96e6e', action }: Props) => {
   return (
     <AiOutlineDelete size={size} color={color} onClick={action} />
   )

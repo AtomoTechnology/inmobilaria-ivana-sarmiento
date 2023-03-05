@@ -68,7 +68,6 @@ label {
   /* background-image: linear-gradient(83deg, #8b55f5, #f16fa1); */
   border-radius: 0.25rem;
   box-shadow: rgba(0, 0, 0, 0.02) 0 1px 3px 0;
-  border: 0.4px solid rgb(224, 224, 224);
   box-sizing: border-box;
   color: rgb(1, 21, 32);
   cursor: pointer;
@@ -87,6 +86,15 @@ label {
   touch-action: manipulation;
   vertical-align: baseline;
   width: auto;
+}
+
+.bg-gradient {
+  background-color: #f16fa1;
+  background-image: linear-gradient(83deg, #8b55f5, #f16fa1);
+  color: white;
+}
+.btn.sec {
+  border: 0.4px solid rgba(0, 0, 0, 0.086);
 }
 .btn.gradient {
   background-color: #f16fa1;
@@ -130,6 +138,10 @@ input[disabled] {
   border: 1px solid #d8d7d7;
   background-color: #c7c7c7;
 }
+
+form.disabled-all {
+  pointer-events: none;
+}
 /* LOADING */
 
 .app-loading {
@@ -140,6 +152,29 @@ input[disabled] {
   border-top-color: transparent;
   margin: auto;
   animation: loading 1.3s linear infinite;
+}
+
+#box-app.dark .p-paginator.p-component.p-paginator-bottom {
+  background-color: #1f2937 !important;
+  border: none !important;
+}
+#box-app.dark .p-datatable table tbody tr {
+  background-color: #1f2937 !important;
+  color: var(--AppBg) !important;
+}
+#box-app.dark .p-paginator.p-component.p-paginator-bottom button,
+#box-app.dark .p-paginator.p-component.p-paginator-bottom span {
+  color: rgba(212, 234, 241, 0.736) !important;
+}
+
+#box-app.dark .p-dropdown.p-component {
+  background-color: rgb(17 24 39) !important;
+  border: 1px solid rgb(38, 59, 76) !important;
+}
+
+#box-app.dark .p-dropdown.p-component span {
+  color: rgb(196, 204, 208) !important;
+  opacity: 0.8;
 }
 
 @keyframes loading {

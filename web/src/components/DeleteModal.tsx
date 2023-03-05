@@ -21,14 +21,14 @@ const DeleteModal = ({ show, setShow, destroy, text }: { show: boolean, setShow:
     >
       <Box className="modal-content  max-w-[400px] flex flex-col">
         <div className=" flex justify-between">
-          <h2 className='title-form'>Borrar registro</h2>
+          <h2 className='title-form text-2xl'>Borrar registro</h2>
         </div>
         <br />
         <span className="message">
           ¿Estás seguro de eliminar : <span className="text-base text-red-500 dark:text-red-400 font-bold">{text} ?</span>
         </span>
-        <section className="action flex items-center gap-x-3 mt-4">
-          <button className='btn !py-1' onClick={closeModal} >Cerrar</button>
+        <section className="action flex items-center gap-x-3 mt-8">
+          <button className='btn sec !py-1' onClick={closeModal} >Cerrar</button>
           <button className='btn gradient  !py-1' onClick={destroy} >Borrar</button>
         </section>
       </Box>

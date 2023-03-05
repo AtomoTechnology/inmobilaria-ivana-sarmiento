@@ -6,7 +6,6 @@ import EditIcon from '../../components/icons/EditIcon';
 import DeleteIcon from '../../components/icons/DeleteIcon';
 import DeleteModal from '../../components/DeleteModal';
 import Loading from '../../components/Loading';
-import { useZones } from '../../hooks/useZones';
 import http from '../../api/axios';
 import CreateModal from '../../components/CreateModal';
 import { AuthContext } from '../../context/authContext';
@@ -22,7 +21,6 @@ import { usePropertyTypes } from '../../hooks/usePropertyTypes';
 const AllPropertyTypes = () => {
 
   const { showAlert, hideAlert } = useContext(AuthContext);
-  const [selectedProducts2, setSelectedProducts2] = useState<IpropertyType[]>();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [show, setShow] = useState(false);
   const { description, values, handleInputChange, reset } = useForm({ description: '' })
@@ -101,7 +99,7 @@ const AllPropertyTypes = () => {
         try {
           const res = await http.post('/propertytypes', values);
           if (res.data.ok) {
-            data?.data.push(res.data.data)
+            data?.data.unshift(res.data.data)
             reset();
             setShowCreateModal(false);
             showAndHideModal('Guardado', res.data.message)
@@ -119,6 +117,7 @@ const AllPropertyTypes = () => {
   const closeCreateModal = () => {
     reset();
     setShowCreateModal(false);
+    setErrors({})
   }
 
   const actionBodyTemplate = (rowData: any) => {
@@ -143,25 +142,25 @@ const AllPropertyTypes = () => {
           <MdAdd size={50} />
         </button>
       </div>
-
-      <Box className='!p-0 !overflow-hidden !border-none    sm:w-[500px] mb-4 '>
-        <DataTable
-          size='small'
-          emptyMessage='Aún no hay tipo de propiedad'
-          className='!overflow-hidden   !border-none'
-          value={data?.data}
-          selectionMode='checkbox'
-          selection={selectedProducts2}
-          onSelectionChange={(e: any) => setSelectedProducts2(e.value)}
-          dataKey='id'
-          responsiveLayout='scroll'
-        >
-          {/* <Column selectionMode='multiple' style={{ width: 10 }} headerStyle={{ width: 10 }} /> */}
-          <Column field='description' header='Detalle' headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' />
-          <Column body={actionBodyTemplate} headerClassName='!border-none dark:!bg-gray-800' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' exportable={false} style={{ width: 90 }} />
-        </DataTable>
-      </Box>
-
+      {
+        data.data.length > 0 ? (
+          <Box className='!p-0 !overflow-hidden !border-none    sm:w-[500px] mb-4 '>
+            <DataTable
+              size='small'
+              emptyMessage='Aún no hay tipo de propiedad'
+              className='!overflow-hidden   !border-none'
+              value={data?.data}
+              dataKey='id'
+              responsiveLayout='scroll'
+            >
+              <Column field='description' header='Detalle' headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' />
+              <Column body={actionBodyTemplate} headerClassName='!border-none dark:!bg-gray-800' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' exportable={false} style={{ width: 90 }} />
+            </DataTable>
+          </Box>
+        ) : (
+          <div className='text-slate-400 mx-3 text-center'>Aún no hay tipo de propiedad.</div>
+        )
+      }
       {isFetching && (<Loading h={40} w={40} />)}
 
       <DeleteModal
@@ -174,20 +173,16 @@ const AllPropertyTypes = () => {
       <CreateModal
         show={showCreateModal}
         closeModal={closeCreateModal}
-        className='max-w-[400px] w-[400px]'
+        className='max-w-[500px] sm:w-fit'
+        titleText={`${editMode ? 'Editar' : 'Crear'} tipo de propiedad`}
       >
         <form action="" onSubmit={handleSave}>
-
-          <div className=' flex justify-between'>
-            <h2 className='title-form'>{editMode ? 'Editar' : 'Crear'} tipo de propiedad</h2>
-          </div>
-
           <fieldset className=''>
             <CustomInput placeholder='Casa 2 dormitorios,Depto' initialValue={description} onChange={(value) => handleInputChange(value, 'description')} />
-            {errors?.description && <FormError text='La descripción es obligatorio.' />}
+            {errors?.description && <FormError text='La descripción es obligatoria.' />}
           </fieldset>
-          <section className='action flex items-center gap-x-3 mt-4'>
-            <button className='btn !py-1' onClick={closeCreateModal} type='button'>
+          <section className='action flex items-center gap-x-3 mt-8'>
+            <button className='btn sec !py-1' onClick={closeCreateModal} type='button'>
               Cerrar
             </button>
             <button className='btn gradient  !py-1' type='submit'>

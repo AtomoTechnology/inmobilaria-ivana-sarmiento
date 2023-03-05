@@ -6,7 +6,8 @@ type types =
   | { type: 'hideAlert' }
   | { type: 'setfavouriteIcon'; payload: {} }
   | { type: 'showAlert'; payload: Ialert }
-  | { type: 'signOut' };
+  | { type: 'signOut' }
+  | { type: 'toggleTheme'; payload: string };
 
 export const authReducer = (state: AuthState, action: types): AuthState => {
   switch (action.type) {
@@ -38,6 +39,11 @@ export const authReducer = (state: AuthState, action: types): AuthState => {
       return {
         ...state,
         alert: null,
+      };
+    case 'toggleTheme':
+      return {
+        ...state,
+        theme: action.payload,
       };
     default:
       return state;

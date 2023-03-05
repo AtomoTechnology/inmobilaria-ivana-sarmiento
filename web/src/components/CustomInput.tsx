@@ -7,9 +7,11 @@ type Props = {
   className?: string;
   initialValue?: string | number;
   disabled?: boolean;
+  maxLength?: number | undefined;
+
 };
 
-const CustomInput = ({ initialValue = '', placeholder, type = 'text', onChange, className = '', disabled = false }: Props) => {
+const CustomInput = ({ initialValue = '', placeholder, type = 'text', onChange, maxLength = undefined, className = '', disabled = false }: Props) => {
   const [value, setValue] = useState<string | number>(initialValue);
 
   return (
@@ -18,6 +20,7 @@ const CustomInput = ({ initialValue = '', placeholder, type = 'text', onChange, 
         setValue(e.target.value);
         onChange(e.target.value);
       }}
+      maxLength={maxLength}
       className={`dark:!bg-gray-900 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow ${className}`}
       value={value}
       placeholder={placeholder}

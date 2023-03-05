@@ -3,7 +3,7 @@ import http from '../api/axios';
 import { IzonesResponse } from '../interfaces/Izones';
 
 const GetAllZones = async () => {
-  const { data } = await http.get<IzonesResponse>('/zones');
+  const { data } = await http.get<IzonesResponse>('/zones?sort=name');
   return data;
 };
 
@@ -11,7 +11,6 @@ export const useZones = () => {
   const zonesQuery = useQuery({
     queryKey: ['zones'],
     queryFn: GetAllZones,
-    refetchOnWindowFocus: false,
   });
 
   return zonesQuery;

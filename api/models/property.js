@@ -95,22 +95,34 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.STRING,
         defaultValue: 'Alquiler',
+        validate: {
+          isIn: {
+            args: [['Venta', 'Alquiler']],
+            msg: 'El valor ingresado no está permitido.',
+          },
+        },
       },
       state: {
         allowNull: false,
         type: DataTypes.STRING,
         defaultValue: 'Libre',
+        validate: {
+          isIn: {
+            args: [['Libre', 'Ocupado']],
+            msg: 'El valor ingresado no está permitido.',
+          },
+        },
       },
       description: DataTypes.STRING,
     },
     {
       indexes: [
-      {
-          unique:true,
-          fields: ['street','number','floor','dept'],
-          name:'uniqueKeyProperty'
-      }
-    ],
+        {
+          unique: true,
+          fields: ['street', 'number', 'floor', 'dept'],
+          name: 'uniqueKeyProperty',
+        },
+      ],
       sequelize,
       modelName: 'Property',
     }
