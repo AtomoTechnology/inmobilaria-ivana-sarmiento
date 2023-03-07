@@ -17,7 +17,7 @@ const createSendToken = async (user, statusCode, res) => {
   const token = createToken({
     id: user.id,
     uuid: user.uuid,
-    role: user.role,
+    // role: user.role, no existe role todavia
     email: user.email,
     fullName: user.fullName,
     photo: user.photo,
