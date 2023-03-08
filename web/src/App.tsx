@@ -127,7 +127,7 @@ const App = () => {
                     item.subLink.length > 0 && (
                       <ul
                         style={{ zIndex: 900000 }}
-                        className='absolute top-[70px]  p-3 w-[200px] hidden transition-colors duration-1000 group-hover:flex bg-white border dark:bg-slate-800 dark:border-slate-700  border-gray-100  flex-col gap-y-2 rounded-b-md shadow '
+                        className='absolute top-[70px]  p-3 w-[250px] hidden transition-colors duration-1000 group-hover:flex bg-white border dark:bg-slate-800 dark:border-slate-700  border-gray-100  flex-col gap-y-2 rounded-b-md shadow '
                       >
                         {item.subLink.map((sub, index) => (
                           <NavLink

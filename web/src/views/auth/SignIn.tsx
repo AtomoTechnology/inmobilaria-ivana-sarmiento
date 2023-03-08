@@ -63,7 +63,7 @@ const SignIn = () => {
   return (
     <div className='flex h-screen w-screen dark:bg-gray-900 items-center justify-center'>
 
-      <Box className=' w-full max-w-[320px] mx-3 sm:mx-0 sm:w-80 '>
+      <Box className=' w-full max-w-[420px] mx-3 sm:mx-0 sm:w-80 '>
 
         <form onSubmit={handleSubmitLogin} className='flex items-center justify-between flex-col '>
 

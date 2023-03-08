@@ -28,6 +28,7 @@ export interface Contract {
   updatedAt: string;
   Client: Client;
   Property: Property;
+  amount: number;
 }
 
 export interface Client {
