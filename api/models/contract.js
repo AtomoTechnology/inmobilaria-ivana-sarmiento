@@ -5,10 +5,12 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Contract.belongsTo(models.Property);
       Contract.belongsTo(models.Client);
+      
       //  Relation
       Contract.hasMany(models.Eventuality);
       Contract.hasMany(models.PriceHistorial);
       Contract.hasMany(models.Assurance);
+      Contract.hasMany(models.Payment);
     }
   }
   Contract.init(

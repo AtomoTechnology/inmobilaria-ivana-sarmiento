@@ -10,5 +10,6 @@ router.use('/api/v1/properties', require('../Route/property.router'));
 router.use('/api/v1/contracts', require('../Route/contract.router'));
 router.use('/api/v1/eventualities', require('../Route/eventuality.router'));
 router.use('/api/v1/assurances', require('../Route/assurance.route'));
+router.use('/api/v1/payments', require('../Route/payment.route'));
 
 module.exports = router;
