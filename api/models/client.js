@@ -21,12 +21,8 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BIGINT,
       autoIncrement: true,
     },
-    uuid:{
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-    },
-    fullName:{
-      type: DataTypes.STRING ,
+    fullName: {
+      type: DataTypes.STRING,
       allowNull: false,
       validate: {
         notNull: {
@@ -38,8 +34,8 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     address: {
-      type: DataTypes.STRING ,
-      allowNull:false,
+      type: DataTypes.STRING,
+      allowNull: false,
       validate: {
         notNull: {
           msg: 'La dirección es obligatoria',
@@ -50,8 +46,8 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     phone: {
-      type: DataTypes.STRING ,
-      unique:  {
+      type: DataTypes.STRING,
+      unique: {
         msg: 'Ya existe un cliente con ese telefóno.',
       },
       allowNull: false,
@@ -65,25 +61,25 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     email: {
-      type: DataTypes.STRING ,
-      unique:  {
+      type: DataTypes.STRING,
+      unique: {
         msg: 'Ya existe un cliente con ese email.',
       },
       allowNull: false,
-        validate: {
-          notNull: {
-            msg: 'El email es obligatorio',
-          },
-          notEmpty: {
-            msg: 'El email es obligatorio',
-          },
+      validate: {
+        notNull: {
+          msg: 'El email es obligatorio',
         },
+        notEmpty: {
+          msg: 'El email es obligatorio',
+        },
+      },
     },
-    cuit:{
+    cuit: {
       type: DataTypes.STRING,
-      unique:  {
+      unique: {
         msg: 'Ya existe un cliente con ese C.U.I.T/C.U.I.L.',
-      } ,
+      },
       allowNull: false,
       validate: {
         notNull: {

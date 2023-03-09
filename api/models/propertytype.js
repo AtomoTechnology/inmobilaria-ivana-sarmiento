@@ -15,16 +15,12 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BIGINT,
       autoIncrement: true,
     },
-    uuid: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-    },
     description: {
-      type: DataTypes.STRING,      
-      unique:  {
+      type: DataTypes.STRING,
+      unique: {
         msg: 'Ya existe una descripción con esas caracteristica.',
       },
-      allowNull: false, 
+      allowNull: false,
       validate: {
         notNull: {
           msg: 'La descripcion no puede ser nula.',

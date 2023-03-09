@@ -16,13 +16,9 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BIGINT,
       autoIncrement: true,
     },
-    uuid: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-    },
     name: {
-      type: DataTypes.STRING,      
-      unique:  {
+      type: DataTypes.STRING,
+      unique: {
         msg: 'Ya existe un tipo de pago con ese nombre.',
       },
       allowNull: false,
