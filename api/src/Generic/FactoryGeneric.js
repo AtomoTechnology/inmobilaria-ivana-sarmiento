@@ -1,5 +1,9 @@
-const { catchAsync } = require('../../helpers/catchAsync');
-const { Op } = require('sequelize');
+const {
+  catchAsync
+} = require('../../helpers/catchAsync');
+const {
+  Op
+} = require('sequelize');
 
 const filterFields = (obj, allowedFields) => {
   const newObj = {};
@@ -12,55 +16,87 @@ const filterFields = (obj, allowedFields) => {
 exports.all = (Model, opts = null) =>
   catchAsync(async (req, res) => {
     if (opts) {
-      var { include } = opts;
+      var {
+        include
+      } = opts;
     }
-    const queryFiltered = { ...req.query };
+    const queryFiltered = {
+      ...req.query
+    };
     const excludeFields = ['page', 'sort', 'limit', 'fields'];
     excludeFields.forEach((el) => delete queryFiltered[el]);
-    let options = { ...queryFiltered };
+    let options = {
+      ...queryFiltered
+    };
 
     Object.keys(queryFiltered).map((k) => {
       if (queryFiltered[k].toString().split(':').length > 1) {
         let val = queryFiltered[k].toString().split(':');
         switch (val[1]) {
           case 'like':
-            options[`${k}`] = { [Op.substring]: val[0] };
+            options[`${k}`] = {
+              [Op.substring]: val[0]
+            };
             break;
           case 'eq':
-            options[`${k}`] = { [eq.eq]: val[0] };
+            options[`${k}`] = {
+              [eq.eq]: val[0]
+            };
             break;
           case 'ne':
-            options[`${k}`] = { [Op.ne]: val[0] };
+            options[`${k}`] = {
+              [Op.ne]: val[0]
+            };
             break;
           case 'gt':
-            options[`${k}`] = { [Op.gt]: Number(val[0]) };
+            options[`${k}`] = {
+              [Op.gt]: Number(val[0])
+            };
             break;
           case 'gte':
-            options[`${k}`] = { [Op.gte]: Number(val[0]) };
+            options[`${k}`] = {
+              [Op.gte]: Number(val[0])
+            };
             break;
           case 'lt':
-            options[`${k}`] = { [Op.lt]: Number(val[0]) };
+            options[`${k}`] = {
+              [Op.lt]: Number(val[0])
+            };
             break;
           case 'lte':
-            options[`${k}`] = { [Op.lte]: Number(val[0]) };
+            options[`${k}`] = {
+              [Op.lte]: Number(val[0])
+            };
             break;
           case 'between':
-            options[`${k}`] = { [Op.between]: val[0].split(',').map((i) => Number(i)) };
+            options[`${k}`] = {
+              [Op.between]: val[0].split(',').map((i) => Number(i))
+            };
             break;
           case 'or':
-            options[`${k}`] = { [Op.or]: val[0].split(',').map((i) => (typeof i === 'number' ? Number(i) : i)) };
+            options[`${k}`] = {
+              [Op.or]: val[0].split(',').map((i) => (typeof i === 'number' ? Number(i) : i))
+            };
             break;
           case 'and':
-            options[`${k}`] = { [Op.and]: val[0].split(',').map((i) => (typeof i === 'number' ? Number(i) : i)) };
+            options[`${k}`] = {
+              [Op.and]: val[0].split(',').map((i) => (typeof i === 'number' ? Number(i) : i))
+            };
             break;
           case 'notBetween':
-            options[`${k}`] = { [Op.notBetween]: val[0].split(',').map((i) => Number(i)) };
+            options[`${k}`] = {
+              [Op.notBetween]: val[0].split(',').map((i) => Number(i))
+            };
             break;
           case 'in':
-            options[`${k}`] = { [Op.in]: val[0].split(',').map((i) => (typeof i === 'number' ? Number(i) : i)) };
+            options[`${k}`] = {
+              [Op.in]: val[0].split(',').map((i) => (typeof i === 'number' ? Number(i) : i))
+            };
             break;
           case 'notIn':
-            options[`${k}`] = { [Op.notIn]: val[0].split(',').map((i) => (typeof i === 'number' ? Number(i) : i)) };
+            options[`${k}`] = {
+              [Op.notIn]: val[0].split(',').map((i) => (typeof i === 'number' ? Number(i) : i))
+            };
             break;
           default:
             break;
@@ -71,19 +107,20 @@ exports.all = (Model, opts = null) =>
     const docs = await Model.findAll({
       where: options,
       include,
-      attributes: req.query.fields
-        ? req.query.fields
-            .toString()
-            .split(',')
-            .map((el) => (el.includes(':') ? el.split(':') : el))
-        : '',
-      order:
-        req.query.sort !== undefined
-          ? req.query.sort
-              .toString()
-              .split(',')
-              .map((el) => el.split(':'))
-          : [['createdAt', 'desc']],
+      attributes: req.query.fields ?
+        req.query.fields
+        .toString()
+        .split(',')
+        .map((el) => (el.includes(':') ? el.split(':') : el)) :
+        '',
+      order: req.query.sort !== undefined ?
+        req.query.sort
+        .toString()
+        .split(',')
+        .map((el) => el.split(':')) :
+        [
+          ['createdAt', 'desc']
+        ],
     });
     return res.json({
       results: docs.length,
@@ -99,7 +136,9 @@ exports.paginate = (Model) =>
     if (!req.query.limit || !req.query.page)
       return next(new Error('El parametro limit y/o page es obligatorio para usar este metodo!'));
 
-    const queryFiltered = { ...req.query };
+    const queryFiltered = {
+      ...req.query
+    };
 
     const excludeFields = ['page', 'sort', 'limit', 'fields'];
     excludeFields.forEach((el) => delete queryFiltered[el]);
@@ -110,19 +149,20 @@ exports.paginate = (Model) =>
       where: queryFiltered,
       limit,
       offset,
-      attributes: req.query.fields
-        ? req.query.fields
-            .toString()
-            .split(',')
-            .map((el) => (el.includes(':') ? el.split(':') : el))
-        : '',
-      order:
-        req.query.sort !== undefined
-          ? req.query.sort
-              .toString()
-              .split(',')
-              .map((el) => el.split(':'))
-          : [['createdAt', 'desc']],
+      attributes: req.query.fields ?
+        req.query.fields
+        .toString()
+        .split(',')
+        .map((el) => (el.includes(':') ? el.split(':') : el)) :
+        '',
+      order: req.query.sort !== undefined ?
+        req.query.sort
+        .toString()
+        .split(',')
+        .map((el) => el.split(':')) :
+        [
+          ['createdAt', 'desc']
+        ],
     });
 
     return res.json({
@@ -139,17 +179,21 @@ exports.paginate = (Model) =>
 exports.findOne = (Model, opts = null) =>
   catchAsync(async (req, res, next) => {
     if (opts) {
-      var { include } = opts;
+      var {
+        include
+      } = opts;
     }
     const doc = await Model.findOne({
-      where: { id: req.params.id },
+      where: {
+        id: req.params.id
+      },
       include,
-      attributes: req.query.fields
-        ? req.query.fields
-            .toString()
-            .split(',')
-            .map((el) => (el.includes(':') ? el.split(':') : el))
-        : '',
+      attributes: req.query.fields ?
+        req.query.fields
+        .toString()
+        .split(',')
+        .map((el) => (el.includes(':') ? el.split(':') : el)) :
+        '',
     });
     if (!doc) return next(new Error(`No hay registro para el ${req.params.id}`));
     return res.json({
@@ -188,7 +232,11 @@ exports.bulk = (Model) =>
 exports.update = (Model, allowedFileds) =>
   catchAsync(async (req, res, next) => {
     const insertedFileds = filterFields(req.body, allowedFileds);
-    const doc = await Model.update(insertedFileds, { where: { id: req.params.id } });
+    const doc = await Model.update(insertedFileds, {
+      where: {
+        id: req.params.id
+      }
+    });
     if (doc[0] <= 0) return next(new Error('No hay registro(s) con id : ' + req.params.id));
     return res.json({
       status: 'success',
@@ -200,7 +248,13 @@ exports.update = (Model, allowedFileds) =>
 
 exports.down = (Model) =>
   catchAsync(async (req, res, next) => {
-    const doc = await Model.update({ state: 2 }, { where: { id: req.params.id } });
+    const doc = await Model.update({
+      state: 2
+    }, {
+      where: {
+        id: req.params.id
+      }
+    });
     if (doc[0] <= 0) return next(new Error('No hay registro con id : ' + req.params.id));
     return res.json({
       code: 200,
@@ -213,7 +267,13 @@ exports.down = (Model) =>
 
 exports.up = (Model) =>
   catchAsync(async (req, res, next) => {
-    const doc = await Model.update({ state: 1 }, { where: { id: req.params.id } });
+    const doc = await Model.update({
+      state: 1
+    }, {
+      where: {
+        id: req.params.id
+      }
+    });
     if (doc[0] <= 0) return next(new Error('No hay registro con id : ' + req.params.id));
     return res.json({
       status: 'success',
@@ -225,7 +285,11 @@ exports.up = (Model) =>
 
 exports.destroy = (Model) =>
   catchAsync(async (req, res, next) => {
-    const doc = await Model.destroy({ where: { id: req.params.id } });
+    const doc = await Model.destroy({
+      where: {
+        id: req.params.id
+      }
+    });
     if (doc <= 0) return next(new Error('No hay registro con id : ' + req.params.id));
     return res.status(200).json({
       code: 200,

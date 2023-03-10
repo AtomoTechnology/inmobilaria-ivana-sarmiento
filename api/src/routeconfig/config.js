@@ -12,5 +12,6 @@ router.use('/api/v1/eventualities', require('../Route/eventuality.router'));
 router.use('/api/v1/assurances', require('../Route/assurance.route'));
 router.use('/api/v1/payments', require('../Route/payment.route'));
 router.use('/api/v1/visits', require('../Route/visit.router'));
+router.use('/api/v1/claims', require('../Route/claim.router'));
 
 module.exports = router;
