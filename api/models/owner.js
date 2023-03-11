@@ -15,12 +15,8 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BIGINT,
       autoIncrement: true,
     },
-    uuid:{
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-    },
-    fullName:{
-      type: DataTypes.STRING ,
+    fullName: {
+      type: DataTypes.STRING,
       allowNull: false,
       validate: {
         notNull: {
@@ -32,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     address: {
-      type: DataTypes.STRING ,
+      type: DataTypes.STRING,
       allowNull: false,
       validate: {
         notNull: {
@@ -45,9 +41,9 @@ module.exports = (sequelize, DataTypes) => {
     },
     phone: {
       type: DataTypes.STRING,
-      unique:  {
+      unique: {
         msg: 'Ya existe un propietario con ese telefóno.',
-      } ,
+      },
       allowNull: false,
       validate: {
         notNull: {
@@ -59,8 +55,8 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     email: {
-      type: DataTypes.STRING ,
-      unique:  {
+      type: DataTypes.STRING,
+      unique: {
         msg: 'Ya existe un propietario con ese email.',
       },
       allowNull: false,
@@ -73,9 +69,9 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
     },
-    cuit:  {
-      type: DataTypes.STRING ,
-      unique:  {
+    cuit: {
+      type: DataTypes.STRING,
+      unique: {
         msg: 'Ya existe un propietario con ese C.U.I.T/C.U.I.L.',
       },
       allowNull: false,

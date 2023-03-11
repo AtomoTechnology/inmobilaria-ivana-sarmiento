@@ -15,15 +15,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BIGINT,
       autoIncrement: true,
     },
-    uuid: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-    },
     name: {
       type: DataTypes.STRING(50),
       allowNull: false,
       unique: {
-        name:true,
+        name: true,
         msg: 'Ya existe otra zona con ese nombre.',
       },
       validate: {
