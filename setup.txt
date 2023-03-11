@@ -70,9 +70,13 @@ QUESTIONS FOR PRADEL
 -- si caduce el token voy a necesitar renovarlo 
 
 
-TODO: show cntracts which will expire in the three months
+TODO: show cntracts
+ which will expire in the three months
 
 
 
 DUDAS : 
     
+CONTRATOS : nro_carpeta
+visitas : fecha , descripcion , persona , propiedad,telefono
+informes --> deudas --> color cuando psa mas de 2 meses 
