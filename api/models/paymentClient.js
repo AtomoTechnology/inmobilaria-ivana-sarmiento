@@ -3,14 +3,14 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class Payment extends Model {
+  class PaymentClient extends Model {
     static associate(models) {
       //  Relation
-      Payment.belongsTo(models.Contract);
-      Payment.belongsTo(models.PaymentType);
+      PaymentClient.belongsTo(models.Contract);
+      PaymentClient.belongsTo(models.PaymentType);
     }
   }
-  Payment.init({
+  PaymentClient.init({
     id: {
       primaryKey: true,
       allowNull: false,
@@ -77,9 +77,28 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    ExpenseDetails: {
+      type: DataTypes.TEXT('long'),
+      get: function () {
+        return JSON.parse(this.getDataValue("ExpenseDetails"));
+      },
+      set: function (value) {
+        return this.setDataValue("ExpenseDetails", JSON.stringify(value));
+      }
+    },
+    eventualityDetails: {
+      type: DataTypes.TEXT('long'),
+      get: function () {
+        return JSON.parse(this.getDataValue("eventualityDetails"));
+      },
+      set: function (value) {
+        return this.setDataValue("eventualityDetails", JSON.stringify(value));
+      }
+    },
   }, {
+    paranoid: true,
     sequelize,
-    modelName: 'Payment',
+    modelName: 'PaymentClient',
   });
-  return Payment;
+  return PaymentClient;
 };
