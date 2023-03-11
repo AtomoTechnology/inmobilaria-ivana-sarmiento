@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
   class PaymentType extends Model {
     static associate(models) {
       // define association here
-      PaymentType.hasMany(models.Payment);
+      PaymentType.hasMany(models.PaymentClient);
     }
   }
   PaymentType.init({
@@ -32,6 +32,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     }
   }, {
+    paranoid: true,
     sequelize,
     modelName: 'PaymentType',
   });

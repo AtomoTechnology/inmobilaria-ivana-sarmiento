@@ -74,6 +74,7 @@ module.exports = (sequelize, DataTypes) => {
       fields: ['PropertyId', 'date', 'phone', 'fullName'],
       name: "visitUnique"
     }],
+    paranoid: true,
     sequelize,
     modelName: 'Visit',
   });
