@@ -20,10 +20,10 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.BIGINT,
 				validate: {
 					notNull: {
-						msg: 'El contrato es obligatorio',
+						msg: 'El contrato es obligatorio.',
 					},
 					notEmpty: {
-						msg: 'El contrato es obligatorio',
+						msg: 'El contrato es obligatorio.',
 					},
 				},
 			},
@@ -32,10 +32,10 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.FLOAT,
 				validate: {
 					notNull: {
-						msg: 'La cantidad es obligatoria',
+						msg: 'El monto del cliente es obligatorio.',
 					},
 					notEmpty: {
-						msg: 'La cantidad es obligatoria',
+						msg: 'El monto del cliente es obligatorio.',
 					},
 				},
 			},
@@ -44,10 +44,10 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.FLOAT,
 				validate: {
 					notNull: {
-						msg: 'La cantidad es obligatoria',
+						msg: 'El monto del dueño es obligatorio.',
 					},
 					notEmpty: {
-						msg: 'La cantidad es obligatoria',
+						msg: 'El monto del dueño es obligatorio.',
 					},
 				},
 			},
@@ -64,10 +64,26 @@ module.exports = (sequelize, DataTypes) => {
 			description: {
 				allowNull: false,
 				type: DataTypes.STRING,
+				validate: {
+					notNull: {
+						msg: 'La descripción es obligatoria.',
+					},
+					notEmpty: {
+						msg: 'La descripción es obligatoria.',
+					},
+				},
 			},
 			expiredDate: {
 				allowNull: false,
 				type: DataTypes.DATE,
+				validate: {
+					notNull: {
+						msg: 'La fecha de vencimiento es obligatoria.',
+					},
+					notEmpty: {
+						msg: 'La fecha de vencimiento es obligatoria.',
+					},
+				},
 			},
 		},
 		{

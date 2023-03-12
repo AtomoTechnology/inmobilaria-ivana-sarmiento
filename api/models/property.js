@@ -21,19 +21,15 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.BIGINT,
 				autoIncrement: true,
 			},
-			uuid: {
-				type: DataTypes.UUID,
-				defaultValue: DataTypes.UUIDV4,
-			},
 			ZoneId: {
 				allowNull: false,
 				type: DataTypes.BIGINT,
 				validate: {
 					notNull: {
-						msg: 'La zona es obligatorio',
+						msg: 'La zona es obligatoria',
 					},
 					notEmpty: {
-						msg: 'La zona es obligatorio',
+						msg: 'La zona es obligatoria',
 					},
 				},
 			},
@@ -78,10 +74,10 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.STRING(5),
 				validate: {
 					notNull: {
-						msg: 'El numero de la calle es obligatorio',
+						msg: 'El número de la calle es obligatorio',
 					},
 					notEmpty: {
-						msg: 'El numero de la calle es obligatorio',
+						msg: 'El número de la calle es obligatorio',
 					},
 				},
 			},

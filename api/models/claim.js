@@ -1,5 +1,4 @@
 'use strict'
-const { json } = require('body-parser')
 const { Model } = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
 	class Claim extends Model {
@@ -29,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
 				},
 			},
 			state: {
-				allowNull: true,
+				allowNull: false,
 				type: DataTypes.STRING(150),
 				defaultValue: 'Abierto',
 				validate: {
@@ -38,7 +37,9 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			details: {
 				type: DataTypes.TEXT('long'),
+				allowNull: true,
 				get: function () {
+					if (!this.getDataValue('details')) return []
 					return JSON.parse(this.getDataValue('details'))
 				},
 				set: function (value) {
@@ -46,8 +47,16 @@ module.exports = (sequelize, DataTypes) => {
 				},
 			},
 			description: {
-				allowNull: true,
 				type: DataTypes.STRING,
+				allowNull: false,
+				validate: {
+					notNull: {
+						msg: 'La descripción no puede ser nulo.',
+					},
+					notEmpty: {
+						msg: 'La descripción no puede ser nulo.',
+					},
+				},
 			},
 		},
 		{

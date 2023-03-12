@@ -29,16 +29,24 @@ module.exports = (sequelize, DataTypes) => {
 			amount: {
 				type: DataTypes.FLOAT,
 				allowNull: false,
+				validate: {
+					notNull: {
+						msg: 'El monto es obligatorio',
+					},
+					notEmpty: {
+						msg: 'El monto es obligatorio.',
+					},
+				},
 			},
 			date: {
 				allowNull: false,
 				type: DataTypes.DATE,
 				validate: {
 					notNull: {
-						msg: 'La fecha fin es obligatoria',
+						msg: 'La fecha  es obligatoria',
 					},
 					notEmpty: {
-						msg: 'La fecha fin es obligatoria',
+						msg: 'La fecha  es obligatoria',
 					},
 				},
 			},

@@ -1,17 +1,20 @@
-var router = require('express').Router();
+var router = require('express').Router()
 
-router.use('/api/v1/paymenttypes', require('../route/paymenttype.router'));
-router.use('/api/v1/zones', require('../route/zone.router'));
-router.use('/api/v1/auth', require('../route/auth.router'));
-router.use('/api/v1/propertytypes', require('../Route/propertyType.route'));
-router.use('/api/v1/owners', require('../Route/owner.router'));
-router.use('/api/v1/clients', require('../Route/client.router'));
-router.use('/api/v1/properties', require('../Route/property.router'));
-router.use('/api/v1/contracts', require('../Route/contract.router'));
-router.use('/api/v1/eventualities', require('../Route/eventuality.router'));
-router.use('/api/v1/assurances', require('../Route/assurance.route'));
-router.use('/api/v1/payments', require('../Route/payment.route'));
-router.use('/api/v1/visits', require('../Route/visit.router'));
-router.use('/api/v1/claims', require('../Route/claim.router'));
-
-module.exports = router;
+router.use('/api/v1/paymenttypes', require('../route/paymenttype.router'))
+router.use('/api/v1/zones', require('../route/zone.router'))
+router.use('/api/v1/auth', require('../route/auth.router'))
+router.use('/api/v1/propertytypes', require('../Route/propertyType.route'))
+router.use('/api/v1/owners', require('../Route/owner.router'))
+router.use('/api/v1/clients', require('../Route/client.router'))
+router.use('/api/v1/properties', require('../Route/property.router'))
+router.use('/api/v1/contracts', require('../Route/contract.router'))
+router.use('/api/v1/eventualities', require('../Route/eventuality.router'))
+router.use('/api/v1/price-historial', require('../Route/historyPrice.router'))
+router.use('/api/v1/assurances', require('../Route/assurance.route'))
+router.use('/api/v1/visits', require('../Route/visit.router'))
+router.use('/api/v1/claims', require('../Route/claim.router'))
+router.use('/api/v1/client-expenses', require('../Route/clientExpense.router'))
+router.use('/api/v1/owner-expenses', require('../Route/ownerExpense.router'))
+router.use('/api/v1/config', require('../Route/config.router'))
+router.use('/api/v1/payment-clients', require('../Route/paymentClient.route'))
+module.exports = router

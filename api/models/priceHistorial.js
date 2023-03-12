@@ -18,18 +18,60 @@ module.exports = (sequelize, DataTypes) => {
 			ContractId: {
 				allowNull: false,
 				type: DataTypes.BIGINT,
+				validate: {
+					notNull: {
+						msg: 'El contrato es obligatorio',
+					},
+					notEmpty: {
+						msg: 'El contrato es obligatorio',
+					},
+				},
 			},
 			amount: {
 				type: DataTypes.FLOAT,
 				allowNull: false,
+				validate: {
+					notNull: {
+						msg: 'El monto es obligatorio',
+					},
+					notEmpty: {
+						msg: 'El monto es obligatorio',
+					},
+				},
 			},
 			year: {
 				type: DataTypes.INTEGER,
 				allowNull: false,
+				validate: {
+					notNull: {
+						msg: 'El año es obligatorio',
+					},
+					notEmpty: {
+						msg: 'El año es obligatorio',
+					},
+				},
 			},
-			porcent: DataTypes.FLOAT,
+			percent: {
+				type: DataTypes.FLOAT,
+				allowNull: false,
+				validate: {
+					notNull: {
+						msg: 'El porcentaje de aumento es obligatorio',
+					},
+					notEmpty: {
+						msg: 'El porcentaje de aumento  es obligatorio',
+					},
+				},
+			},
 		},
 		{
+			indexes: [
+				{
+					unique: true,
+					fields: ['ContractId', 'year'],
+					name: 'avoidMorethanonepriceForContractAtTheSameYear',
+				},
+			],
 			sequelize,
 			modelName: 'PriceHistorial',
 			paranoid: true,

@@ -70,6 +70,11 @@ module.exports = (sequelize, DataTypes) => {
 					notEmpty: {
 						msg: 'La fecha fin es obligatoria',
 					},
+					isGreaterThanStartDate(value) {
+						if (value <= this.startDate) {
+							throw new Error('La fecha fin del contrato debe ser mayor a la fecha de inicio.')
+						}
+					},
 				},
 			},
 			commission: {
@@ -91,6 +96,14 @@ module.exports = (sequelize, DataTypes) => {
 			amount: {
 				type: DataTypes.FLOAT,
 				allowNull: false,
+				validate: {
+					notNull: {
+						msg: 'El valor del contrato es obligatorio',
+					},
+					notEmpty: {
+						msg: 'El valor del contrato es obligatorio',
+					},
+				},
 			},
 			description: DataTypes.STRING,
 			stamped: {
