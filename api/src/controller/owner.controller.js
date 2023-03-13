@@ -1,8 +1,8 @@
-const { Owner, Property } = require('../../models')
+const { Owner, Property, PropertyType } = require('../../models')
 
 const { all, paginate, create, findOne, update, destroy } = require('../Generic/FactoryGeneric')
 
-exports.GetAll = all(Owner, { include: [{ model: Property }] })
+exports.GetAll = all(Owner, { include: [{ model: Property, include: { model: PropertyType } }] })
 exports.Paginate = paginate(Owner)
 exports.Create = create(Owner, [
 	'fullName',

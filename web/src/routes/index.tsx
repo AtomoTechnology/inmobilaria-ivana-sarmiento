@@ -6,6 +6,8 @@ import Clients from '../views/clients/allClients'
 import Owners from '../views/clients/owners'
 import ContractDetail from '../views/contracts/ContractDetail'
 import Contracts from '../views/contracts/Contracts'
+import PageNotFound from '../views/general/PageNotFound'
+import Visits from '../views/general/visits'
 import Home from '../views/Home'
 import AllPaymentTypes from '../views/payment/allPaymentTypes'
 import Payments from '../views/payment/payments'
@@ -114,8 +116,16 @@ export const router = createBrowserRouter([
 				),
 			},
 			{
+				path: '/visits',
+				element: (
+					<PrivateRoute>
+						<Visits />
+					</PrivateRoute>
+				),
+			},
+			{
 				path: '/*',
-				element: <h1 className='text-white text-center text-semibold'>Esta routa no existe ! Vuelve al Inicio</h1>,
+				element: <PageNotFound />,
 			},
 		],
 	},

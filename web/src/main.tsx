@@ -1,37 +1,36 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { RouterProvider } from 'react-router-dom';
-import './index.css';
-import './App.css';
-import { router } from './routes';
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
-import { AuthProvider } from './context/authContext';
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { RouterProvider } from 'react-router-dom'
+import './index.css'
+import './App.css'
+import './responsive.css'
+import { router } from './routes'
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
+import { AuthProvider } from './context/authContext'
 
-import 'primereact/resources/themes/md-light-indigo/theme.css';
-import 'primereact/resources/primereact.min.css';
-import 'primeicons/primeicons.css';
+import 'primereact/resources/themes/md-light-indigo/theme.css'
+import 'primereact/resources/primereact.min.css'
+import 'primeicons/primeicons.css'
 
-import 'react-responsive-modal/styles.css';
-
+import 'react-responsive-modal/styles.css'
 
 const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: Infinity,
-      retry: 2,
-      cacheTime: Infinity,
-      refetchOnWindowFocus: false
-
-    }
-  }
-});
+	defaultOptions: {
+		queries: {
+			staleTime: Infinity,
+			retry: 2,
+			cacheTime: Infinity,
+			refetchOnWindowFocus: false,
+		},
+	},
+})
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </QueryClientProvider>
-  </React.StrictMode>
-);
+	<React.StrictMode>
+		<QueryClientProvider client={queryClient}>
+			<AuthProvider>
+				<RouterProvider router={router} />
+			</AuthProvider>
+		</QueryClientProvider>
+	</React.StrictMode>
+)

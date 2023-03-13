@@ -116,6 +116,13 @@ module.exports = (sequelize, DataTypes) => {
 				},
 			},
 			description: DataTypes.STRING,
+			folderNumber: {
+				allowNull: true,
+				type: DataTypes.STRING,
+				unique: {
+					msg: 'El número de carpeta debe ser único.',
+				},
+			},
 		},
 		{
 			indexes: [

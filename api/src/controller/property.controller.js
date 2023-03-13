@@ -25,12 +25,12 @@ exports.Create = create(Property, [
 	'floor',
 	'dept',
 	'isFor',
-	'state',
 	'description',
 	'nroPartWater',
 	'nroPartMuni',
 	'nroPartAPI',
 	'nroPartGas',
+	'folderNumber',
 	,
 ])
 exports.GetById = findOne(Property, {
@@ -55,6 +55,8 @@ exports.Put = update(Property, [
 	'nroPartMuni',
 	'nroPartAPI',
 	'nroPartGas',
+	'folderNumber',
+
 	,
 ])
 exports.Destroy = destroy(Property)

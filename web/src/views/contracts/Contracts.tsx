@@ -789,31 +789,6 @@ const Contracts = () => {
 						</fieldset>
 					</FieldsetGroup>
 
-					<FieldsetGroup>
-						<fieldset className=''>
-							<label htmlFor='nroPartWater'>Nro Part. Muni</label>
-
-							<CustomInput
-								initialValue={nroPartMuni}
-								onChange={(value) => handleInputChange(value, 'nroPartMuni')}
-								placeholder='0101010101010'
-								className='h-[42px] items-cente '
-							/>
-							{errors?.nroPartMuni && <FormError text='Este campo es obligatorio.' />}
-						</fieldset>
-						<fieldset className=''>
-							<label htmlFor='nroPartWater'>Nro Part. API</label>
-
-							<CustomInput
-								initialValue={nroPartAPI}
-								onChange={(value) => handleInputChange(value, 'nroPartAPI')}
-								placeholder='0101010101010'
-								className='h-[42px] items-cente '
-							/>
-							{errors?.nroPartWater && <FormError text='Este campo es obligatorio.' />}
-						</fieldset>
-					</FieldsetGroup>
-
 					<fieldset>
 						<label htmlFor='description'>
 							Descripción <span className='text-xs opacity-50'>(opcional)</span>{' '}
