@@ -111,7 +111,7 @@ module.exports = (sequelize, DataTypes) => {
 				validate: {
 					isIn: {
 						args: [['Libre', 'Ocupado']],
-						msg: 'El valor ingresado no está permitido.',
+						msg: 'El estado ingresado no está permitido.',
 					},
 				},
 			},
