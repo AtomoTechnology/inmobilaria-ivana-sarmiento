@@ -53,37 +53,19 @@ const Contracts = () => {
 	const [assuranceItem, setAssuranceItem] = useState<any>()
 	const [editing, setEditing] = useState(false)
 	const { values, handleInputChange, reset, updateAll } = useForm({
-		ClientId: 0,
-		PropertyId: 0,
+		ClientId: null,
+		PropertyId: null,
 		startDate: '',
 		endDate: '',
-		nroPartWater: '',
-		nroPartMuni: '',
-		nroPartAPI: '',
 		commission: 0,
-		state: '',
 		description: '',
 		stamped: 0,
 		warrantyInquiry: 0,
 		fees: 0,
 		amount: 0,
 	})
-	const {
-		ClientId,
-		PropertyId,
-		startDate,
-		endDate,
-		nroPartWater,
-		nroPartMuni,
-		nroPartAPI,
-		commission,
-		state,
-		description,
-		stamped,
-		warrantyInquiry,
-		amount,
-		fees,
-	} = values
+	const { ClientId, PropertyId, startDate, endDate, commission, description, stamped, warrantyInquiry, amount, fees } =
+		values
 	const {
 		values: Gvalues,
 		handleInputChange: GhandleInputChange,
@@ -103,7 +85,8 @@ const Contracts = () => {
 	const { fullName, email, phone, cuit, address, obs } = Gvalues
 
 	const {
-		amount: amountEvent,
+		clientAmount,
+		ownerAmount,
 		description: descEvent,
 		expiredDate,
 		values: Evalues,
@@ -111,7 +94,8 @@ const Contracts = () => {
 		reset: Ereset,
 	} = useForm({
 		ContractId: null,
-		amount: 0.0,
+		clientAmount: 0.0,
+		ownerAmount: 0.0,
 		expiredDate: null,
 		description: '',
 	})
@@ -132,7 +116,7 @@ const Contracts = () => {
 
 	const edit = (data: Contract) => {
 		console.log(data)
-		updateAll({ ...data, startDate: data.startDate.slice(0, 10) })
+		// updateAll({ ...data, startDate: data.startDate.slice(0, 10) })
 		// TODO: fix date  and complete  edit  and show detail
 		setShowCreateModal(true)
 		setEditMode(true)
@@ -196,9 +180,13 @@ const Contracts = () => {
 	const verifyFormEventuality = () => {
 		let ok = true
 		let error: any = {}
-		if (!amountEvent) {
+		if (!clientAmount) {
 			ok = false
-			error.amountEvent = true
+			error.clientAmount = true
+		}
+		if (!ownerAmount) {
+			ok = false
+			error.ownerAmount = true
 		}
 		if (!expiredDate) {
 			ok = false
@@ -278,14 +266,15 @@ const Contracts = () => {
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		// console.log(values)
-		console.log({ ...values, assurances })
+		// console.log({ ...values, assurances })
 		// return;
 		if (verifyForm()) {
 			if (editMode) {
 				try {
+					// @ts-expect-error
 					values.PropertyId = values.PropertyId?.id!
-					console.log({ ...values, assurances })
-					// return;
+					// @ts-expect-error
+					values.ClientId = values.ClientId?.id!
 					const res = await http.put(`/contracts/${currentContract.current?.id}`, { ...values, assurances })
 					if (res.data.ok) {
 						refetch()
@@ -301,8 +290,10 @@ const Contracts = () => {
 				}
 			} else {
 				try {
+					// @ts-expect-error
 					values.PropertyId = values.PropertyId?.id!
-					console.log({ ...values, assurances })
+					// @ts-expect-error
+					values.ClientId = values.ClientId?.id!
 					const res = await http.post('/contracts', { ...values, assurances })
 					if (res.data.ok) {
 						refetch()
@@ -506,8 +497,7 @@ const Contracts = () => {
 						// field='Property.street'
 						body={(data) => (
 							<span>
-								{' '}
-								{data.Property.street} {data.Property.number} {data.Property.floor} {data.Property.dept}{' '}
+								{data.Property.street} {data.Property.number} {data.Property.floor} {data.Property.dept}
 							</span>
 						)}
 						header='Propiedad'
@@ -519,8 +509,7 @@ const Contracts = () => {
 						// field='Client.fullName'
 						body={(data) => (
 							<span>
-								{' '}
-								{data.Client.fullName} <span className='text-sm'> ({data.Client.cuit}) </span>{' '}
+								{data.Client.fullName} <span className='text-sm'> ({data.Client.cuit}) </span>
 							</span>
 						)}
 						header='Inquilino'
@@ -609,14 +598,14 @@ const Contracts = () => {
 				<form onSubmit={handleSave}>
 					<FieldsetGroup>
 						<fieldset className=''>
-							<label htmlFor='PropertyId'>Inquilino</label>
+							<label htmlFor='ClientId'>Inquilino</label>
 							<Dropdown
 								value={ClientId}
 								onChange={(e) => handleInputChange(e.value, 'ClientId')}
 								options={clientQuery.data?.data}
 								optionLabel='fullName'
 								filterPlaceholder='Busca  inquilino...'
-								optionValue='id'
+								// optionValue='id'
 								showClear
 								placeholder='elije un inquilino'
 								filter
@@ -637,6 +626,12 @@ const Contracts = () => {
 								}}
 								className='h-[42px] items-center !border-gray-200 dark:!border-gray-700 shadow dark:bg-slate-900 dark:!text-slate-400 '
 							/>
+							{ClientId && (
+								<span className='text-brand2'>
+									{/* @ts-expect-error*/}
+									{ClientId?.email!} - {ClientId?.phone!}
+								</span>
+							)}
 							{errors?.ClientId && <FormError text='El inquilino es obligatorio.' />}
 						</fieldset>
 
@@ -669,11 +664,11 @@ const Contracts = () => {
 								}}
 								className='h-[42px] items-center !border-gray-200 shadow'
 							/>
-							{/* typescript-ignore */}
+							{/* @ts-expect-error */}
 							{PropertyId?.Owner && (
-								<span>
-									{' '}
-									{PropertyId.Owner?.fullName} - {PropertyId.Owner?.phone}{' '}
+								<span className='text-brand2'>
+									{/* @ts-expect-error */}
+									{PropertyId.Owner?.fullName} - {PropertyId.Owner?.phone}
 								</span>
 							)}
 							{errors?.PropertyId && <FormError text='La propiedad es obligatoria.' />}
@@ -681,29 +676,28 @@ const Contracts = () => {
 					</FieldsetGroup>
 
 					<FieldsetGroup>
-						<fieldset className=''>
-							<label htmlFor='startDate'>Fecha inicio</label>
-							<CustomInput
-								placeholder='2'
-								type='date'
-								initialValue={startDate || ''}
-								onChange={(value) => handleInputChange(value, 'startDate')}
-							/>
-							{errors?.startDate && <FormError text='La fecha de inicio  es obligatoria.' />}
-						</fieldset>
-						<fieldset className=''>
-							<label htmlFor='endDate'>Fecha fin</label>
-							<CustomInput
-								placeholder=''
-								type='date'
-								initialValue={endDate || ''}
-								onChange={(value) => handleInputChange(value, 'endDate')}
-							/>
-							{errors?.endDate && <FormError text='La fecha fin  es obligatoria.' />}
-						</fieldset>
-					</FieldsetGroup>
-
-					<FieldsetGroup>
+						<FieldsetGroup className='w-full sm:w-[50%]'>
+							<fieldset className='w-full sm:w-[50%]'>
+								<label htmlFor='startDate'>Fecha inicio</label>
+								<CustomInput
+									placeholder='2'
+									type='date'
+									initialValue={startDate || ''}
+									onChange={(value) => handleInputChange(value, 'startDate')}
+								/>
+								{errors?.startDate && <FormError text='La fecha de inicio  es obligatoria.' />}
+							</fieldset>
+							<fieldset className=''>
+								<label htmlFor='endDate'>Fecha fin</label>
+								<CustomInput
+									placeholder=''
+									type='date'
+									initialValue={endDate || ''}
+									onChange={(value) => handleInputChange(value, 'endDate')}
+								/>
+								{errors?.endDate && <FormError text='La fecha fin  es obligatoria.' />}
+							</fieldset>
+						</FieldsetGroup>
 						<FieldsetGroup className='w-full sm:w-[50%]'>
 							<fieldset className=''>
 								<label htmlFor='amount'>Valor contrato</label>
@@ -726,9 +720,11 @@ const Contracts = () => {
 								{errors?.commission && <FormError text='La comisión  es obligatoria.' />}
 							</fieldset>
 						</FieldsetGroup>
+					</FieldsetGroup>
 
+					<FieldsetGroup>
 						<FieldsetGroup className='w-full sm:w-[50%]'>
-							<fieldset className='w-full sm:w-[50%]'>
+							<fieldset className=''>
 								<label htmlFor='fees'>Total a abonar </label>
 								<input
 									placeholder='10000.00'
@@ -739,8 +735,7 @@ const Contracts = () => {
 									onChange={(value) => handleInputChange(value, 'fees')}
 								/>
 							</fieldset>
-
-							<fieldset className='w-full sm:w-[50%]'>
+							<fieldset className=''>
 								<label htmlFor='fees'>Honorarios </label>
 								<CustomInput
 									placeholder='10000.00'
@@ -751,9 +746,6 @@ const Contracts = () => {
 								{errors?.fees && <FormError text='El hononario es obligatorio.' />}
 							</fieldset>
 						</FieldsetGroup>
-					</FieldsetGroup>
-
-					<FieldsetGroup className=''>
 						<FieldsetGroup className='w-full sm:w-[50%]'>
 							<fieldset className=''>
 								<label htmlFor='warrantyInquiry'>Ave. de Gtía</label>
@@ -776,17 +768,6 @@ const Contracts = () => {
 								{errors?.stamped && <FormError text='Este campo es obligatorio.' />}
 							</fieldset>
 						</FieldsetGroup>
-						<fieldset className='w-full sm:w-[50%]'>
-							<label htmlFor='nroPartWater'>Nro Part. Agua</label>
-
-							<CustomInput
-								initialValue={nroPartWater}
-								onChange={(value) => handleInputChange(value, 'nroPartWater')}
-								placeholder='0101010101010'
-								className='h-[42px] items-cente '
-							/>
-							{errors?.nroPartWater && <FormError text='Este campo es obligatorio.' />}
-						</fieldset>
 					</FieldsetGroup>
 
 					<fieldset>
@@ -1091,20 +1072,19 @@ const Contracts = () => {
 				>
 					<FieldsetGroup>
 						<fieldset className=''>
-							<label htmlFor='ContractId'>
-								Contrato : <span className='text-brand'>#</span>
-								{currentContract.current?.Client.fullName +
+							<label htmlFor='ContractId'>Contrato </label>
+							<CustomInput
+								disabled={true}
+								initialValue={
+									currentContract.current?.Client.fullName +
 									' - ' +
 									currentContract.current?.Client.cuit +
 									'  | ' +
 									currentContract.current?.Property.street +
 									' ' +
 									currentContract.current?.Property.number +
-									' '}
-							</label>
-							<CustomInput
-								disabled={true}
-								initialValue={currentContract.current?.id}
+									' '
+								}
 								onChange={(val) => {}}
 								placeholder=''
 							/>
@@ -1112,26 +1092,36 @@ const Contracts = () => {
 					</FieldsetGroup>
 					<FieldsetGroup>
 						<fieldset className=''>
-							<label htmlFor='amountEvent'>Monto </label>
+							<label htmlFor='clientAmount'>Monto Inquilino</label>
 							<CustomInput
 								placeholder='123.99'
 								type='number'
-								initialValue={amountEvent || ''}
-								onChange={(value) => EhandleInputChange(value, 'amount')}
+								initialValue={clientAmount || ''}
+								onChange={(value) => EhandleInputChange(value, 'clientAmount')}
 							/>
-							{errors?.amountEvent && <FormError text='El monto es obligatorio.' />}
+							{errors?.clientAmount && <FormError text='El monto del cliente es obligatorio.' />}
 						</fieldset>
 						<fieldset className=''>
-							<label htmlFor='expiredDate'>Fecha Vencimiento </label>
+							<label htmlFor='ownerAmount'>Monto dueño </label>
 							<CustomInput
-								placeholder='example@gmail.com'
-								initialValue={expiredDate || ''}
-								type='date'
-								onChange={(value) => EhandleInputChange(value, 'expiredDate')}
+								placeholder='123.99'
+								type='number'
+								initialValue={ownerAmount || ''}
+								onChange={(value) => EhandleInputChange(value, 'ownerAmount')}
 							/>
-							{errors?.expiredDate && <FormError text='La fecha de vencimiento es obligatorio.' />}
+							{errors?.ownerAmount && <FormError text='El monto del dueño es obligatorio.' />}
 						</fieldset>
 					</FieldsetGroup>
+					<fieldset className=''>
+						<label htmlFor='expiredDate'>Fecha Vencimiento </label>
+						<CustomInput
+							placeholder='example@gmail.com'
+							initialValue={expiredDate || ''}
+							type='date'
+							onChange={(value) => EhandleInputChange(value, 'expiredDate')}
+						/>
+						{errors?.expiredDate && <FormError text='La fecha de vencimiento es obligatorio.' />}
+					</fieldset>
 					<fieldset className=''>
 						<label htmlFor='descEvent'>Descripción </label>
 						<CustomTextArea
@@ -1163,3 +1153,5 @@ const Contracts = () => {
 }
 
 export default Contracts
+
+// TODO: agregar clientExpenses and ownerExpenses for each contract

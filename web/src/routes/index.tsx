@@ -6,6 +6,7 @@ import Clients from '../views/clients/allClients'
 import Owners from '../views/clients/owners'
 import ContractDetail from '../views/contracts/ContractDetail'
 import Contracts from '../views/contracts/Contracts'
+import ExpiredContracts from '../views/contracts/ExpiredContracts'
 import PageNotFound from '../views/general/PageNotFound'
 import Visits from '../views/general/visits'
 import Home from '../views/Home'
@@ -88,6 +89,14 @@ export const router = createBrowserRouter([
 				element: (
 					<PrivateRoute>
 						<Contracts />
+					</PrivateRoute>
+				),
+			},
+			{
+				path: '/contracts-expired',
+				element: (
+					<PrivateRoute>
+						<ExpiredContracts />
 					</PrivateRoute>
 				),
 			},

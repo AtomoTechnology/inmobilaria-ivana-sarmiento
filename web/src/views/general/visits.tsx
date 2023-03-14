@@ -44,8 +44,8 @@ const Visits = () => {
 	const propertyQuery = useProperties()
 
 	const edit = (data: IVisit) => {
-		data.date = '2020-10-12 22:22:00' // TODO: format the date before fill the fields and property also
-		updateAll({ ...data })
+		data.PropertyId = data.Property!
+		updateAll({ ...data, date: formatDate(data.date) })
 		setShowCreateModal(true)
 		setEditMode(true)
 		currentVisit.current = data
@@ -121,7 +121,7 @@ const Visits = () => {
 							(data.data = data?.data.map((z) => {
 								if (z.id === currentVisit.current?.id) {
 									// @ts-expect-error
-									z = { ...values, createdAt: '', updatedAt: '', deletedAt: null, id: 0 } // eslint-disable-line no-use-before-define
+									z = { ...values, Property: values.PropertyId, createdAt: '', updatedAt: '', deletedAt: null, id: 0 } // eslint-disable-line no-use-before-define
 								}
 								return z
 							}))
@@ -226,6 +226,15 @@ const Visits = () => {
 								header='Nombre'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+								sortable
+							/>
+							<Column
+								field='date'
+								header='fecha'
+								body={(data) => <span>{formatDate(data.date)}</span>}
+								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+								sortable
 							/>
 							<Column
 								field='phone'
@@ -239,13 +248,7 @@ const Visits = () => {
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 							/>
-							<Column
-								field='date'
-								header='fecha'
-								body={(data) => <span>{formatDate(data.date)}</span>}
-								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-							/>
+
 							<Column
 								body={actionBodyTemplate}
 								headerClassName='!border-none dark:!bg-gray-800'
@@ -286,7 +289,16 @@ const Visits = () => {
 					onSubmit={handleSave}
 				>
 					<fieldset className=''>
-						<label htmlFor='PropertyId'>Propiedad </label>
+						<label htmlFor='PropertyId'>
+							Propiedad{' '}
+							{currentVisit.current && (
+								<span className='text-blue-600 text-sm ml-2'>
+									Actual : {currentVisit.current?.Property.street} {'  '}
+									{currentVisit.current?.Property.number} {'  '}
+									{currentVisit.current?.Property?.dept}-{currentVisit.current?.Property?.floor}
+								</span>
+							)}
+						</label>
 						<Dropdown
 							value={PropertyId}
 							onChange={(e) => handleInputChange(e.value, 'PropertyId')}

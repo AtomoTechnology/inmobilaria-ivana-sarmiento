@@ -11,6 +11,7 @@ export interface IVisitsResponse {
 export interface IVisit {
 	id: number
 	PropertyId: number
+	Property: any
 	date: string
 	fullName: string
 	phone: string

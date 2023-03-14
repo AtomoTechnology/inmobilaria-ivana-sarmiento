@@ -92,6 +92,12 @@ module.exports = (sequelize, DataTypes) => {
 			state: {
 				type: DataTypes.STRING,
 				defaultValue: 'En curso',
+				validate: {
+					isIn: {
+						args: [['En curso', 'Finalizado']],
+						msg: 'El estado igresado no está permitido.',
+					},
+				},
 			},
 			amount: {
 				type: DataTypes.FLOAT,

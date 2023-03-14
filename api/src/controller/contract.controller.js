@@ -11,9 +11,10 @@ const {
 } = require('../../models')
 const { Op } = require('sequelize')
 
-const { all, paginate, create, findOne, update, destroy } = require('../Generic/FactoryGeneric')
+const { all, paginate, findOne, update, destroy } = require('../Generic/FactoryGeneric')
 const AppError = require('../../helpers/AppError')
 const { catchAsync } = require('../../helpers/catchAsync')
+const { addDays } = require('../../helpers/date')
 
 exports.GetAll = all(Contract, {
 	include: [{ model: Client }, { model: Property }],
@@ -25,75 +26,28 @@ exports.Paginate = paginate(Contract, {
 exports.Post = catchAsync(async (req, res, next) => {
 	const transact = await sequelize.transaction()
 	try {
-		const {
-			PropertyId,
-			ClientId,
-			startDate,
-			endDate,
-			commission,
-			amount,
-			description,
-			stamped,
-			fees,
-			warrantyInquiry,
-			assurances,
-		} = req.body
+		const { PropertyId, amount, assurances } = req.body
 
-		const isExist = await Contract.findOne({
-			where: {
-				[Op.and]: [{ PropertyId: PropertyId }, { state: 'Finalizado' }],
-			},
-		})
-
-		if (isExist !== null) {
-			return next(new AppError('Existe un contrato vigente para este inmueble', 400))
-		}
-
-		//Update property
-		const propert = await Property.update(
-			{
-				state: process.env.Rent,
-			},
-			{ where: { id: PropertyId } },
+		const p = await Property.findOne(
+			{ where: { [Op.and]: [{ id: PropertyId }, { state: 'Libre' }] } },
 			{ transaction: transact }
 		)
+		if (!p) return next(new AppError('Existe un contrato vigente para este inmueble', 400))
+		const cont = await Contract.create(req.body)
 
-		const cont = await Contract.create(
-			{
-				PropertyId: PropertyId,
-				ClientId: ClientId,
-				startDate: startDate,
-				endDate: endDate,
-				commission: commission,
-				amount: amount,
-				state: process.env.In_progress,
-				description: description,
-				stamped: stamped,
-				fees: fees,
-				warrantyInquiry: warrantyInquiry,
-			},
-			{ transaction: transact }
-		)
-
-		if (assurances !== undefined) {
-			if (assurances.length > 0) {
-				for (let index = 0; index < assurances.length; index++) {
-					assurances[index].ContractId = cont.id
-					await Assurance.create(assurances[index], { transaction: transact })
-				}
+		if (assurances.length > 0) {
+			for (let j = 0; j < assurances.length; j++) {
+				assurances[j].ContractId = cont.id
+				await Assurance.create(assurances[j], { transaction: transact })
 			}
 		}
-
-		//Para insertar el historial
-		const history = await PriceHistorial.create(
-			{
-				ContractId: cont.id,
-				amount: amount,
-				year: 1,
-				porcent: 0,
-			},
-			{ transaction: transact }
-		)
+		await Property.update({ state: 'Ocupado' }, { where: { id: PropertyId } }, { transaction: transact })
+		await PriceHistorial.create({ ContractId: cont.id, amount: amount, year: 1, percent: 0 }, { transaction: transact })
+		// const isExist = await Contract.findOne({
+		// 	where: {
+		// 		[Op.and]: [{ PropertyId: PropertyId }, { state: 'Finalizado' }],
+		// 	},
+		// })
 
 		await transact.commit()
 		return res.json({
@@ -136,3 +90,25 @@ exports.Put = update(Contract, [
 	'warrantyInquiry',
 ])
 exports.Destroy = destroy(Contract)
+
+exports.ExpiredContracts = catchAsync(async (req, res, next) => {
+	const days = req.params.days * 1
+	console.log(days)
+	console.log(addDays(Date(), days))
+
+	const docs = await Contract.findAll({
+		where: {
+			endDate: {
+				[Op.and]: {
+					[Op.gt]: Date(), // should greater then today
+					[Op.lte]: addDays(Date(), days), // should greater then today
+				},
+			},
+		},
+	})
+
+	return res.json({
+		data: docs,
+		ok: true,
+	})
+})
