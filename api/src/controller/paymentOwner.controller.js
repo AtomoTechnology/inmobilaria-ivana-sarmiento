@@ -1,5 +1,5 @@
 const {
-	PaymentClient,
+	PaymentOwner,
 	Eventuality,
 	Client,
 	Property,
@@ -18,7 +18,7 @@ const {
 	catchAsync
 } = require('../../helpers/catchAsync')
 
-exports.GetAll = all(PaymentClient, {
+exports.GetAll = all(PaymentOwner, {
 	include: [{
 			model: Eventuality,
 		},
@@ -27,7 +27,7 @@ exports.GetAll = all(PaymentClient, {
 		},
 	],
 })
-exports.Paginate = paginate(PaymentClient, {
+exports.Paginate = paginate(PaymentOwner, {
 	include: [{
 			model: Eventuality,
 		},
@@ -40,7 +40,7 @@ exports.Paginate = paginate(PaymentClient, {
 exports.Post = catchAsync(async (req, res, next) => {
 	const transact = await sequelize.transaction()
 	try {
-		const cont = await PaymentClient.create(req.body, {
+		const cont = await PaymentOwner.create(req.body, {
 			transaction: transact,
 		})
 
@@ -58,7 +58,7 @@ exports.Post = catchAsync(async (req, res, next) => {
 	}
 })
 
-exports.GetById = findOne(PaymentClient, {
+exports.GetById = findOne(PaymentOwner, {
 	include: [{
 			model: Eventuality,
 		},
@@ -71,7 +71,7 @@ exports.GetById = findOne(PaymentClient, {
 	],
 })
 
-exports.Put = update(PaymentClient, [
+exports.Put = update(PaymentOwner, [
 	'PaymentTypeId',
 	'insurance',
 	'compensation',
@@ -84,8 +84,4 @@ exports.Put = update(PaymentClient, [
 	'eventualityDetails',
 	'ExpenseDetails',
 ])
-exports.allDebt = (req, res, next) => {
-
-}
-
-exports.Destroy = destroy(PaymentClient)
+exports.Destroy = destroy(PaymentOwner)

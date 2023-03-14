@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const ctrl = require('../controller/paymentClient.controller')
+const ctrl = require('../controller/paymentOwner.controller')
 const validador = require('../../helpers/validador')
 
 router.use(validador.protect)
