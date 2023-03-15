@@ -65,15 +65,20 @@ exports.globalError = (err, req, res, next) => {
 	err.status = err.status || 'error'
 	let error = Object.assign(err)
 	// console.log("error.errors", error.errors[0].message)
-	console.log(error)
+	// console.log('Message ::: ', error.errors[0].message)
 	if (error.errors !== undefined) {
-		if (error.errors[0].message === 'contracts__property_id__client_id_start_date_end_date must be unique')
-			error = handleSequelizeUniqueConstraintErrorContract(error)
-		if (error.errors[0].message === 'visits__property_id_date_phone_full_name must be unique') {
-			error = handleSequelizeUniqueConstraintErrorVisit(error)
-		}
-		if (error.errors[0].message === 'avoidMorethanonepriceForContractAtTheSameYear must be unique') {
-			error = handleSequelizeUniqueConstraintErrorPriceHistorial(error)
+		switch (error.errors[0].message) {
+			case 'contracts__property_id__client_id_start_date_end_date must be unique':
+				error = handleSequelizeUniqueConstraintErrorContract(error)
+				break
+			case 'visits__property_id_date_phone_full_name must be unique':
+				error = handleSequelizeUniqueConstraintErrorVisit(error)
+				break
+			case 'avoidMorethanonepriceForContractAtTheSameYear must be unique':
+				error = handleSequelizeUniqueConstraintErrorPriceHistorial(error)
+				break
+			default:
+				break
 		}
 	}
 	if (error.name === 'SequelizeAccessDeniedError') error = handleSequelizeAccessDeniedError()

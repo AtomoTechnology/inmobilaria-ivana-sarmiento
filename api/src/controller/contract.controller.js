@@ -7,6 +7,7 @@ const {
 	Property,
 	sequelize,
 	PriceHistorial,
+	Owner,
 	Eventuality,
 } = require('../../models')
 const { Op } = require('sequelize')
@@ -35,7 +36,7 @@ exports.Post = catchAsync(async (req, res, next) => {
 		if (!p) return next(new AppError('Existe un contrato vigente para este inmueble', 400))
 		const cont = await Contract.create(req.body)
 
-		if (assurances.length > 0) {
+		if (assurances !== undefined && assurances.length > 0) {
 			for (let j = 0; j < assurances.length; j++) {
 				assurances[j].ContractId = cont.id
 				await Assurance.create(assurances[j], { transaction: transact })
@@ -93,22 +94,24 @@ exports.Destroy = destroy(Contract)
 
 exports.ExpiredContracts = catchAsync(async (req, res, next) => {
 	const days = req.params.days * 1
-	console.log(days)
-	console.log(addDays(Date(), days))
 
 	const docs = await Contract.findAll({
 		where: {
 			endDate: {
 				[Op.and]: {
-					[Op.gt]: Date(), // should greater then today
-					[Op.lte]: addDays(Date(), days), // should greater then today
+					[Op.gt]: Date(),
+					[Op.lte]: addDays(new Date().toDateString(), days),
 				},
 			},
 		},
+		// attributes : ['id','endDate']
+		include: [{ model: Client }, { model: Property, include: { model: Owner } }],
 	})
 
 	return res.json({
-		data: docs,
+		results: docs.length,
 		ok: true,
+		status: 'success',
+		data: docs,
 	})
 })

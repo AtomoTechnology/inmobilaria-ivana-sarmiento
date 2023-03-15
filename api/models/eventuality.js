@@ -75,7 +75,7 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			expiredDate: {
 				allowNull: false,
-				type: DataTypes.DATE,
+				type: DataTypes.DATEONLY,
 				validate: {
 					notNull: {
 						msg: 'La fecha de vencimiento es obligatoria.',

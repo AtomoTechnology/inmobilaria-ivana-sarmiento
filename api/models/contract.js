@@ -50,7 +50,7 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			startDate: {
 				allowNull: false,
-				type: DataTypes.DATE,
+				type: DataTypes.DATEONLY,
 				validate: {
 					notNull: {
 						msg: 'La fecha del comienzo es obligatoria',
@@ -62,7 +62,7 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			endDate: {
 				allowNull: false,
-				type: DataTypes.DATE,
+				type: DataTypes.DATEONLY,
 				validate: {
 					notNull: {
 						msg: 'La fecha fin es obligatoria',

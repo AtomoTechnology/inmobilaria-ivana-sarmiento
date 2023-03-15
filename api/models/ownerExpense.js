@@ -32,7 +32,7 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			date: {
 				allowNull: false,
-				type: DataTypes.DATE,
+				type: DataTypes.DATEONLY,
 				validate: {
 					notNull: {
 						msg: 'La fecha fin es obligatoria',
