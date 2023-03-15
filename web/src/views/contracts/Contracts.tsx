@@ -454,7 +454,7 @@ const Contracts = () => {
 	if (isError) return <RequestError error={error} />
 
 	return (
-		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
+		<div className='container m-auto  flex sm:mx-0  flex-col justify-center sm:justify-center'>
 			<div className='flex gap-x-4 mb-6 mx-3  items-center'>
 				<h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Contratos</h3>
 				<button
@@ -482,11 +482,11 @@ const Contracts = () => {
 					className='!overflow-hidden   !border-none'
 					value={data?.data}
 					// value={[]}
-					paginator
-					rows={10}
 					filters={filters}
 					globalFilterFields={['Property.street', 'Client.fullName']}
 					// rowsPerPageOptions={[5, 10, 25, 50]}
+					paginator
+					rows={10}
 					paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
 					currentPageReportTemplate='{first} al {last} de {totalRecords}'
 					paginatorLeft={paginatorLeft}
@@ -605,10 +605,10 @@ const Contracts = () => {
 								options={clientQuery.data?.data}
 								optionLabel='fullName'
 								filterPlaceholder='Busca  inquilino...'
+								filter
 								// optionValue='id'
 								showClear
 								placeholder='elije un inquilino'
-								filter
 								valueTemplate={(data, props) => {
 									if (!data) return props.placeholder
 									return (

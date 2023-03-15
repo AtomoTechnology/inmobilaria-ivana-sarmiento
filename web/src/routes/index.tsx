@@ -4,6 +4,7 @@ import SignIn from '../views/auth/SignIn'
 import SignUp from '../views/auth/signUp'
 import Clients from '../views/clients/allClients'
 import Owners from '../views/clients/owners'
+import ClientExpenses from '../views/contracts/ClientExpenses'
 import ContractDetail from '../views/contracts/ContractDetail'
 import Contracts from '../views/contracts/Contracts'
 import ExpiredContracts from '../views/contracts/ExpiredContracts'
@@ -105,6 +106,14 @@ export const router = createBrowserRouter([
 				element: (
 					<PrivateRoute>
 						<ContractDetail />
+					</PrivateRoute>
+				),
+			},
+			{
+				path: '/client-expenses',
+				element: (
+					<PrivateRoute>
+						<ClientExpenses />
 					</PrivateRoute>
 				),
 			},
