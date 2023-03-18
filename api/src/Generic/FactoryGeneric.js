@@ -11,13 +11,13 @@ const filterFields = (obj, allowedFields) => {
 
 exports.all = (Model, opts = null) =>
 	catchAsync(async (req, res) => {
-		if (opts) {
+		if (opts && req.query.include === undefined ? true : false) {
 			var { include } = opts
 		}
 		const queryFiltered = {
 			...req.query,
 		}
-		const excludeFields = ['page', 'sort', 'limit', 'fields']
+		const excludeFields = ['page', 'sort', 'limit', 'fields', 'include']
 		excludeFields.forEach((el) => delete queryFiltered[el])
 		let options = {
 			...queryFiltered,

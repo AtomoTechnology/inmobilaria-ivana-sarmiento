@@ -30,6 +30,7 @@ export interface Contract {
 	updatedAt: string
 	Client: Client
 	Property: Property
+	PriceHistorials: IHistorialPrice[]
 	amount: number
 }
 
@@ -39,6 +40,16 @@ export interface Client {
 	phone: string
 	email: string
 	cuit: string
+}
+export interface IHistorialPrice {
+	id: number
+	ContractId: number
+	amount: number
+	year: number
+	percent: number
+	createdAt: string
+	updatedAt: string
+	deletedAt: null | string
 }
 
 export interface Property {

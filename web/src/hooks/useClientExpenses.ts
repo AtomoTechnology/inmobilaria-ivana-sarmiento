@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import http from '../api/axios'
-import { IzonesResponse } from '../interfaces/Izones'
+import { IClientExpensesResponse } from '../interfaces/clientExpenses'
 
 const GetAllClientExpenses = async () => {
-	const { data } = await http.get<IzonesResponse>('/client-expenses?sort=ContractId')
+	const { data } = await http.get<IClientExpensesResponse>('/client-expenses?sort=ContractId')
 	return data
 }
 

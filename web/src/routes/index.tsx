@@ -8,11 +8,13 @@ import ClientExpenses from '../views/contracts/ClientExpenses'
 import ContractDetail from '../views/contracts/ContractDetail'
 import Contracts from '../views/contracts/Contracts'
 import ExpiredContracts from '../views/contracts/ExpiredContracts'
+import HistorialPrices from '../views/contracts/HistorialPrice'
+import OwnerExpenses from '../views/contracts/OwnerExpenses'
 import PageNotFound from '../views/general/PageNotFound'
 import Visits from '../views/general/visits'
 import Home from '../views/Home'
 import AllPaymentTypes from '../views/payment/allPaymentTypes'
-import Payments from '../views/payment/payments'
+import ClientPayments from '../views/payment/clientPayments'
 import AllPropertyTypes from '../views/properties/allTypes'
 import Properties from '../views/properties/properties'
 import AllZones from '../views/zones/allZones'
@@ -118,10 +120,26 @@ export const router = createBrowserRouter([
 				),
 			},
 			{
-				path: '/payments',
+				path: '/owner-expenses',
 				element: (
 					<PrivateRoute>
-						<Payments />
+						<OwnerExpenses />
+					</PrivateRoute>
+				),
+			},
+			{
+				path: '/contract-price-historial',
+				element: (
+					<PrivateRoute>
+						<HistorialPrices />
+					</PrivateRoute>
+				),
+			},
+			{
+				path: '/client-payment',
+				element: (
+					<PrivateRoute>
+						<ClientPayments />
 					</PrivateRoute>
 				),
 			},

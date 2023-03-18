@@ -12,7 +12,7 @@ const Expired = ({ data, days }: { data: any; days: number }) => {
 					Contratos a Vencer <br /> <span className='text-sm'> en los próximos {days} días </span>
 				</Text>
 			</h2>
-			<Box className='p-0 !m-0'>
+			<Box className='!p-0 !m-0'>
 				<div className='overflow-x-auto'>
 					<table className='w-full p-6 text-sm text-left whitespace-nowrap'>
 						<thead className=' rounded-lg  overflow-hidden'>
@@ -37,7 +37,7 @@ const Expired = ({ data, days }: { data: any; days: number }) => {
 									<td className='px-3 py-2'>
 										{c.Property.street} {c.Property.number} {c.Property.dept} - {c.Property.floor}
 									</td>
-									<td className='px-3 py-2'> {c.Property.Owner!.fullName}</td>
+									<td className='px-3 py-2'> {c.Property.Owner?.fullName}</td>
 									<td className='px-3 py-2'> {c.Client.fullName}</td>
 									<td className='px-3 py-2'>{c.amount}</td>
 									<td className='px-3 py-2'>{c.amount}</td>

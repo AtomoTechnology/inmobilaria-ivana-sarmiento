@@ -15,12 +15,12 @@ import { useForm } from '../../hooks/useForm'
 import FormError from '../../components/FormError'
 import RequestError from '../../components/RequestError'
 import { DelayAlertToHide } from '../../helpers/variableAndConstantes'
-import { useClientExpenses } from '../../hooks/useClientExpenses'
 import { useContracts } from '../../hooks/useContracts'
 import FieldsetGroup from '../../components/FieldsetGroup'
 import { Dropdown } from 'primereact/dropdown'
 import { Button } from 'primereact/button'
 import { FilterMatchMode } from 'primereact/api'
+import { useOwnerExpenses } from '../../hooks/useOwnerExpenses'
 
 interface IClientExpense {
 	id: number
@@ -30,7 +30,7 @@ interface IClientExpense {
 	ContractId: number
 }
 
-const ClientExpenses = () => {
+const OwnerExpenses = () => {
 	const { showAlert, hideAlert } = useContext(AuthContext)
 	const [showCreateModal, setShowCreateModal] = useState(false)
 	const [show, setShow] = useState(false)
@@ -51,7 +51,7 @@ const ClientExpenses = () => {
 	})
 	const currentClientExpense = useRef<IClientExpense | null>()
 
-	const { data, isError, isLoading, error, isFetching, refetch } = useClientExpenses()
+	const { data, isError, isLoading, error, isFetching, refetch } = useOwnerExpenses()
 	const contractQuery = useContracts()
 
 	const edit = (data: IClientExpense) => {
@@ -87,7 +87,7 @@ const ClientExpenses = () => {
 
 	const destroy = async (id: number) => {
 		try {
-			const res = await http.delete('/client-expenses/' + id)
+			const res = await http.delete('/owner-expenses/' + id)
 			if (res.data.ok) {
 				data?.data && (data.data! = data?.data.filter((z) => z.id !== id))
 				setShow(false)
@@ -128,7 +128,7 @@ const ClientExpenses = () => {
 		if (verifyForm()) {
 			if (editMode) {
 				try {
-					const res = await http.put(`/client-expenses/${currentClientExpense.current?.id}`, values)
+					const res = await http.put(`/owner-expenses/${currentClientExpense.current?.id}`, values)
 					if (res.data.ok) {
 						refetch()
 						reset()
@@ -142,7 +142,7 @@ const ClientExpenses = () => {
 				}
 			} else {
 				try {
-					const res = await http.post('/client-expenses', values)
+					const res = await http.post('/owner-expenses', values)
 					if (res.data.ok) {
 						refetch()
 						reset()
@@ -187,7 +187,7 @@ const ClientExpenses = () => {
 	return (
 		<div className='container m-auto  flex sm:mx-0  flex-col justify-center sm:justify-center'>
 			<div className='flex gap-x-4 mb-6 mx-4  items-center justify-between sm:justify-start'>
-				<h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Impuestos Inquilinos</h3>
+				<h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Impuestos propietario</h3>
 				<button
 					onClick={() => {
 						setEditMode(false)
@@ -390,4 +390,4 @@ const ClientExpenses = () => {
 	)
 }
 
-export default ClientExpenses
+export default OwnerExpenses

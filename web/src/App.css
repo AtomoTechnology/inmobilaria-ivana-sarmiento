@@ -291,3 +291,7 @@ form.disabled-all {
 /* .p-dropdown-panel .p-dropdown-items-wrapper {
   width: 160px;
 } */
+
+.react-responsive-modal-modal {
+	max-width: 100% !important;
+}

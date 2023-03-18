@@ -7,8 +7,15 @@ export interface IClientExpensesResponse {
 	ok: boolean
 	data: IClientExpenses[]
 }
+export interface IClientExpensesResponseSimple {
+	results: number
+	code: number
+	status: string
+	ok: boolean
+	data: IClientExpItem[]
+}
 
-export interface IClientExpenses {
+export interface IClientExpItem {
 	id: number
 	description: string
 	amount: number
@@ -17,6 +24,9 @@ export interface IClientExpenses {
 	createdAt: string
 	updatedAt: string
 	deletedAt: null | string
+}
+
+export interface IClientExpenses extends IClientExpItem {
 	Contract: Contract
 }
 

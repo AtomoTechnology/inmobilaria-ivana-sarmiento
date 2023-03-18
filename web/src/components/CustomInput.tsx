@@ -28,7 +28,7 @@ const CustomInput = ({
 				onChange(e.target.value)
 			}}
 			maxLength={maxLength}
-			className={`dark:!bg-gray-900 bg-gray-100 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow ${className}`}
+			className={`dark:!bg-gray-900 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow ${className}`}
 			value={value}
 			placeholder={placeholder}
 			type={type}

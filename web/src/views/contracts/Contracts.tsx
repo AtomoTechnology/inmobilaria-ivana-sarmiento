@@ -9,7 +9,7 @@ import Loading from '../../components/Loading'
 import http from '../../api/axios'
 import CreateModal from '../../components/CreateModal'
 import { AuthContext } from '../../context/authContext'
-import { MdAdd } from 'react-icons/md'
+import { MdAdd, MdOutlineAttachMoney } from 'react-icons/md'
 import CustomInput from '../../components/CustomInput'
 import { useForm } from '../../hooks/useForm'
 import FormError from '../../components/FormError'
@@ -99,6 +99,7 @@ const Contracts = () => {
 		expiredDate: null,
 		description: '',
 	})
+
 	const [globalFilterValue, setGlobalFilterValue] = useState('')
 	const [errors, setErrors] = useState<any>()
 	const [editMode, setEditMode] = useState(false)
@@ -373,6 +374,12 @@ const Contracts = () => {
 	const actionBodyTemplate = (rowData: any) => {
 		return (
 			<div className='flex gap-x-3 items-center justify-start'>
+				{/* <div
+					className='btn-add-price'
+					title='Ajustar precio siguiente año'
+				>
+					<MdOutlineAttachMoney size={25} />
+				</div> */}
 				<SeeIcon
 					action={() => navigate(`/contracts/${rowData.id}/${rowData.uuid}`)}
 					color=''
@@ -481,10 +488,8 @@ const Contracts = () => {
 					emptyMessage='Aún no hay contrato'
 					className='!overflow-hidden   !border-none'
 					value={data?.data}
-					// value={[]}
 					filters={filters}
 					globalFilterFields={['Property.street', 'Client.fullName']}
-					// rowsPerPageOptions={[5, 10, 25, 50]}
 					paginator
 					rows={10}
 					paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
@@ -518,7 +523,7 @@ const Contracts = () => {
 						sortable
 					/>
 					<Column
-						// field='startDate'
+						field='startDate'
 						header='Fecha inicio'
 						body={(data) => <span>{data.startDate.slice(0, 10)}</span>}
 						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
@@ -526,29 +531,42 @@ const Contracts = () => {
 						sortable
 					/>
 					<Column
-						// field='endDate'
+						field='endDate'
 						header='Fecha fin'
-						body={(data) => (
-							<span>{data.endDate.slice(0, 10)}</span>
-							// <span>
-							// 	{new Date(data.endDate.slice(0, 10)).toLocaleDateString('es-es', {
-							// 		year: 'numeric',
-							// 		month: 'short',
-							// 		day: 'numeric',
-							// 	})}
-							// </span>
-						)}
+						body={(data) => <span>{data.endDate.slice(0, 10)}</span>}
 						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 						sortable
 					/>
 					<Column
-						// field='status'
+						field='state'
 						header='Estado'
 						sortable
 						body={(data) => (
 							<span className={`font-bold ${data.state === 'En curso' ? 'text-green-500' : 'text-red-500'}`}>
 								{data.state}{' '}
+							</span>
+						)}
+						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+					/>
+					<Column
+						// field='status'
+						header='Año'
+						body={(data: Contract) => (
+							<span className={`${data.PriceHistorials.length === 3 && 'text-yellow-500 font-bold'}`}>
+								{data.PriceHistorials[data.PriceHistorials.length - 1]?.year}
+							</span>
+						)}
+						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+					/>
+					<Column
+						// field='status'
+						header='Monto Actual'
+						body={(data) => (
+							<span className={`font-bold ${data.state === 'En curso' ? 'text-green-500' : 'text-red-500'}`}>
+								${data.PriceHistorials[data.PriceHistorials.length - 1]?.amount}
 							</span>
 						)}
 						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
@@ -1148,10 +1166,102 @@ const Contracts = () => {
 					</section>
 				</form>
 			</CreateModal>
+
+			{/* modal histprial-price */}
+			<CreateModal
+				show={showAddEventualityModal}
+				closeModal={closeAddEventualitiesModal}
+				overlayClick={false}
+				titleText='Agregar  eventualidad'
+				className='shadow-none border-0 max-w-[500px]'
+				// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
+			>
+				<form
+					onSubmit={handleAddEventualities}
+					className='!relative'
+				>
+					<FieldsetGroup>
+						<fieldset className=''>
+							<label htmlFor='ContractId'>Contrato </label>
+							<CustomInput
+								disabled={true}
+								initialValue={
+									currentContract.current?.Client.fullName +
+									' - ' +
+									currentContract.current?.Client.cuit +
+									'  | ' +
+									currentContract.current?.Property.street +
+									' ' +
+									currentContract.current?.Property.number +
+									' '
+								}
+								onChange={(val) => {}}
+								placeholder=''
+							/>
+						</fieldset>
+					</FieldsetGroup>
+					<FieldsetGroup>
+						<fieldset className=''>
+							<label htmlFor='clientAmount'>Monto Inquilino</label>
+							<CustomInput
+								placeholder='123.99'
+								type='number'
+								initialValue={clientAmount || ''}
+								onChange={(value) => EhandleInputChange(value, 'clientAmount')}
+							/>
+							{errors?.clientAmount && <FormError text='El monto del cliente es obligatorio.' />}
+						</fieldset>
+						<fieldset className=''>
+							<label htmlFor='ownerAmount'>Monto dueño </label>
+							<CustomInput
+								placeholder='123.99'
+								type='number'
+								initialValue={ownerAmount || ''}
+								onChange={(value) => EhandleInputChange(value, 'ownerAmount')}
+							/>
+							{errors?.ownerAmount && <FormError text='El monto del dueño es obligatorio.' />}
+						</fieldset>
+					</FieldsetGroup>
+					<fieldset className=''>
+						<label htmlFor='expiredDate'>Fecha Vencimiento </label>
+						<CustomInput
+							placeholder='example@gmail.com'
+							initialValue={expiredDate || ''}
+							type='date'
+							onChange={(value) => EhandleInputChange(value, 'expiredDate')}
+						/>
+						{errors?.expiredDate && <FormError text='La fecha de vencimiento es obligatorio.' />}
+					</fieldset>
+					<fieldset className=''>
+						<label htmlFor='descEvent'>Descripción </label>
+						<CustomTextArea
+							placeholder='Escribe una breve descripción ...'
+							initialValue={descEvent || ''}
+							onChange={(value) => EhandleInputChange(value, 'description')}
+						/>
+						{errors?.descEvent && <FormError text='La descripción es obligatoria.' />}
+					</fieldset>
+					<section className='action flex items-center gap-x-3 mt-4'>
+						<button
+							className='btn !py-1'
+							onClick={closeAddEventualitiesModal}
+							type='button'
+						>
+							Cerrar
+						</button>
+						<button
+							className='btn gradient  !py-1'
+							type='submit'
+						>
+							Guardar
+						</button>
+					</section>
+				</form>
+			</CreateModal>
 		</div>
 	)
 }
 
 export default Contracts
 
-// TODO: agregar clientExpenses and ownerExpenses for each contract
+// TODO: finish edit contract and ContractDetails

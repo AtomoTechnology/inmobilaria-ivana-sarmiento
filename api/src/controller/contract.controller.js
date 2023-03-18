@@ -18,7 +18,7 @@ const { catchAsync } = require('../../helpers/catchAsync')
 const { addDays } = require('../../helpers/date')
 
 exports.GetAll = all(Contract, {
-	include: [{ model: Client }, { model: Property }],
+	include: [{ model: Client }, { model: Property }, { model: PriceHistorial }],
 })
 exports.Paginate = paginate(Contract, {
 	include: [{ model: Client }, { model: Property }],
@@ -114,4 +114,8 @@ exports.ExpiredContracts = catchAsync(async (req, res, next) => {
 		status: 'success',
 		data: docs,
 	})
+})
+
+exports.HistorialPrice = all(Contract, {
+	include: [{ model: PriceHistorial }, { model: Property, include: { model: Owner } }],
 })
