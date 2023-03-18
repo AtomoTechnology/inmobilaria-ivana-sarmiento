@@ -1,10 +1,12 @@
 const {
 	PaymentClient,
-	Eventuality,
-	Client,
-	Property,
+	Contract,
+	PropertyType,
 	sequelize
 } = require('../../models')
+const {
+	Op
+} = require('sequelize')
 
 const {
 	all,
@@ -20,19 +22,19 @@ const {
 
 exports.GetAll = all(PaymentClient, {
 	include: [{
-			model: Eventuality,
+			model: Contract,
 		},
 		{
-			model: Property,
+			model: PropertyType,
 		},
 	],
 })
 exports.Paginate = paginate(PaymentClient, {
 	include: [{
-			model: Eventuality,
+			model: Contract,
 		},
 		{
-			model: Property,
+			model: PropertyType,
 		},
 	],
 })
@@ -60,32 +62,33 @@ exports.Post = catchAsync(async (req, res, next) => {
 
 exports.GetById = findOne(PaymentClient, {
 	include: [{
-			model: Eventuality,
+			model: Contract,
 		},
 		{
-			model: Property,
+			model: PropertyType,
 		},
 		{
-			model: Eventuality,
+			model: Contract,
 		},
 	],
 })
 
 exports.Put = update(PaymentClient, [
 	'PaymentTypeId',
-	'insurance',
-	'compensation',
-	'admExpenses',
 	'recharge',
 	'total',
 	'month',
 	'year',
 	'totalPro',
 	'eventualityDetails',
-	'ExpenseDetails',
+	'expenseDetails',
 ])
-exports.allDebt = (req, res, next) => {
+exports.allDebt = catchAsync(async (req, res, next) => {
+	const docs = await PaymentClient.findAll({
+		where: {
 
-}
+		},
+	})
+})
 
 exports.Destroy = destroy(PaymentClient)
