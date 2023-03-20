@@ -1,14 +1,13 @@
 'use strict'
 const { Model } = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
-	class PaymentClient extends Model {
+	class DebtOwner extends Model {
 		static associate(models) {
 			//  Relation
-			PaymentClient.belongsTo(models.Contract)
-			PaymentClient.belongsTo(models.PaymentType)
+			DebtOwner.belongsTo(models.Contract)
 		}
 	}
-	PaymentClient.init(
+	DebtOwner.init(
 		{
 			id: {
 				primaryKey: true,
@@ -28,24 +27,7 @@ module.exports = (sequelize, DataTypes) => {
 					},
 				},
 			},
-			PaymentTypeId: {
-				allowNull: false,
-				type: DataTypes.BIGINT,
-				validate: {
-					notNull: {
-						msg: 'El forma de pago es obligatorio',
-					},
-					notEmpty: {
-						msg: 'El forma de pago es obligatorio',
-					},
-				},
-			},
 
-			recharge: {
-				type: DataTypes.FLOAT,
-				allowNull: false,
-				defaultValue: 0,
-			},
 			year: {
 				type: DataTypes.INTEGER,
 				allowNull: false,
@@ -71,7 +53,7 @@ module.exports = (sequelize, DataTypes) => {
 				},
 			},
 			month: {
-				type: DataTypes.STRING(15),
+				type: DataTypes.INTEGER,
 				allowNull: false,
 				validate: {
 					notNull: {
@@ -82,17 +64,15 @@ module.exports = (sequelize, DataTypes) => {
 					},
 				},
 			},
+			paid: {
+				type: DataTypes.BOOLEAN,
+				allowNull: false,
+				defaultValue: false,
+			},
 			total: {
 				type: DataTypes.FLOAT,
 				allowNull: false,
-				validate: {
-					notNull: {
-						msg: 'El total de pago es obligatorio',
-					},
-					notEmpty: {
-						msg: 'El total de pago es obligatorio',
-					},
-				},
+				defaultValue: 0,
 			},
 			expenseDetails: {
 				type: DataTypes.TEXT('long'),
@@ -104,22 +84,12 @@ module.exports = (sequelize, DataTypes) => {
 					return this.setDataValue('expenseDetails', JSON.stringify(value || ''))
 				},
 			},
-			eventualityDetails: {
-				type: DataTypes.TEXT('long'),
-				get: function () {
-					if (!this.getDataValue('eventualityDetails')) return null
-					return JSON.parse(this.getDataValue('eventualityDetails'))
-				},
-				set: function (value) {
-					return this.setDataValue('eventualityDetails', JSON.stringify(value || ''))
-				},
-			},
 		},
 		{
 			paranoid: true,
 			sequelize,
-			modelName: 'PaymentClient',
+			modelName: 'DebtOwner',
 		}
 	)
-	return PaymentClient
+	return DebtOwner
 }

@@ -18,4 +18,6 @@ router.use('/api/v1/owner-expenses', require('../Route/ownerExpense.router'))
 router.use('/api/v1/config', require('../Route/config.router'))
 router.use('/api/v1/payment-clients', require('../Route/paymentClient.router'))
 router.use('/api/v1/payment-owners', require('../Route/paymentOwner.router'))
+router.use('/api/v1/debt-clients', require('../Route/debtClient.router'))
+router.use('/api/v1/debt-owners', require('../Route/debtOwner.router'))
 module.exports = router

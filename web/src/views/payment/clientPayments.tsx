@@ -6,8 +6,6 @@ import EditIcon from '../../components/icons/EditIcon'
 import DeleteIcon from '../../components/icons/DeleteIcon'
 import DeleteModal from '../../components/DeleteModal'
 import Loading from '../../components/Loading'
-import { useZones } from '../../hooks/useZones'
-import { Izone } from '../../interfaces/Izones'
 import http from '../../api/axios'
 import CreateModal from '../../components/CreateModal'
 import { AuthContext } from '../../context/authContext'
@@ -26,6 +24,8 @@ import { IClientExpensesResponseSimple, IClientExpItem } from '../../interfaces/
 import { IEventualitiesResponse, IEventuality } from '../../interfaces/Ieventualities'
 import CloseOnClick from '../../components/CloseOnClick'
 import { useClientPayments } from '../../hooks/useClientPayments'
+import { Idebt, IdebtsResponse } from '../../interfaces/IDebtsResponse'
+import { IClienyPayment } from '../../interfaces/IclientPayments'
 
 const ClientPayments = () => {
 	const { showAlert, hideAlert } = useContext(AuthContext)
@@ -64,25 +64,29 @@ const ClientPayments = () => {
 	const [to, setTo] = useState<any>()
 	const [selectedEventualities, setSelectedEventualities] = useState<IEventuality[]>([])
 	const [selectedExpensesClient, setSelectedExpensesClient] = useState<IClientExpItem[]>([])
+	const [selectedDebts, setSelectedDebts] = useState<Idebt[]>([])
+
 	const eventTotal = useRef(0)
 	const expsTotal = useRef(0)
-	const currentPayment = useRef<Izone | null>()
+	const currentPayment = useRef<IClienyPayment | null>()
 	const [expenseDetails, setExpenseDetails] = useState<IClientExpItem[]>([])
 	const [eventualityDetails, setEventualityDetails] = useState<IEventuality[]>([])
+	const [debts, setDebts] = useState<Idebt[]>([])
+
 	const clientPaymentQuery = useClientPayments()
 	const { data, isError, isLoading, error, isFetching } = useContracts()
 	const [loadingExpenses, setLoadingExpenses] = useState(false)
 	// const contractQuery = useContracts()
 	const paymentTypeQuery = usePaymentTypes()
 
-	const edit = (data: Izone) => {
+	const edit = (data: IClienyPayment) => {
 		// handleInputChange(data.name, 'name')
 		setShowCreateModal(true)
 		setEditMode(true)
 		currentPayment.current = data
 	}
 
-	const ConfirmDestroy = (data: Izone) => {
+	const ConfirmDestroy = (data: IClienyPayment) => {
 		setShow(!show)
 		currentPayment.current = data
 	}
@@ -120,6 +124,18 @@ const ClientPayments = () => {
 			ok = false
 			error.ContractId = true
 		}
+		if (!month) {
+			ok = false
+			error.month = true
+		}
+		if (!year) {
+			ok = false
+			error.year = true
+		}
+		if (!PaymentTypeId) {
+			ok = false
+			error.PaymentTypeId = true
+		}
 		setErrors(error)
 		return ok
 	}
@@ -127,8 +143,8 @@ const ClientPayments = () => {
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		values.total = rentingAmount + eventTotal.current + expsTotal.current + recharge
-		console.log({ ...values, expenseDetails: selectedExpensesClient, eventualityDetails: selectedEventualities })
-		return
+		// console.log({ ...values, expenseDetails: selectedExpensesClient, eventualityDetails: selectedEventualities })
+		// return
 		if (verifyForm()) {
 			if (editMode) {
 				// @ts-expect-error
@@ -140,15 +156,18 @@ const ClientPayments = () => {
 						eventualityDetails: selectedEventualities,
 					})
 					if (res.data.ok) {
-						data?.data &&
-							(data.data = data?.data.map((z) => {
-								if (z.id === currentPayment.current?.id) {
-									// z.name = values.name
-								}
-								return z
-							}))
+						// data?.data &&
+						// 	(data.data = data?.data.map((z) => {
+						// 		if (z.id === currentPayment.current?.id) {
+						// 			// z.name = values.name
+						// 		}
+						// 		return z
+						// 	}))
+						clientPaymentQuery.refetch()
 						reset()
-						setShowCreateModal(false)
+						// setShowCreateModal(false)
+						closeCreateModal()
+
 						showAndHideModal('Editado', res.data.message)
 					} else {
 						showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
@@ -167,9 +186,10 @@ const ClientPayments = () => {
 						eventualityDetails: selectedEventualities,
 					})
 					if (res.data.ok) {
-						data?.data.unshift(res.data.data)
+						clientPaymentQuery.refetch()
 						reset()
-						setShowCreateModal(false)
+						// setShowCreateModal(false)
+						closeCreateModal()
 						showAndHideModal('Guardado', res.data.message)
 					} else {
 						showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
@@ -183,6 +203,13 @@ const ClientPayments = () => {
 
 	const closeCreateModal = () => {
 		reset()
+		setSelectedEventualities([])
+		setSelectedExpensesClient([])
+		setEventualityDetails([])
+		setExpenseDetails([])
+		setDebts([])
+		eventTotal.current = 0
+		expsTotal.current = 0
 		setShowCreateModal(false)
 		setErrors({})
 	}
@@ -251,8 +278,10 @@ const ClientPayments = () => {
 			const docsEvents = await http.get<IEventualitiesResponse>(
 				`/eventualities?clientPaid=0&ContractId=${e.value.id}&include=true`
 			)
+			const docsDebts = await http.get<IdebtsResponse>(`/debt-clients?paid=0&ContractId=${e.value.id}`)
 			setEventualityDetails(docsEvents.data.data)
 			setExpenseDetails(docsExps.data.data)
+			setDebts(docsDebts.data.data)
 		} catch (error) {}
 		setLoadingExpenses(false)
 	}
@@ -286,12 +315,13 @@ const ClientPayments = () => {
 							responsiveLayout='scroll'
 						>
 							<Column
-								field='Contract.id'
-								// body={(data) => (
-								// 	<span>
-								// 		{data.Property.street} {data.Property.number} {data.Property.floor} {data.Property.dept}
-								// 	</span>
-								// )}
+								field='Contract.Property.street'
+								body={(data) => (
+									<span>
+										{data.Contract.Property.street} {data.Contract.Property.number} {data.Contract.Property.floor}{' '}
+										{data.Contract.Property.dept}
+									</span>
+								)}
 								header='Propiedad'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
@@ -350,7 +380,7 @@ const ClientPayments = () => {
 				show={show}
 				setShow={setShow}
 				destroy={() => destroy(currentPayment.current?.id!)}
-				text={`${currentPayment.current?.name}`}
+				text={`El cobro de ${currentPayment.current?.month} - ${currentPayment.current?.year}`}
 			/>
 
 			<CreateModal
@@ -462,6 +492,46 @@ const ClientPayments = () => {
 									</div>
 								</div>
 							)}
+
+							{debts.length > 0 && (
+								<div className='my-4'>
+									<h1 className='title-form mb-2'>Deudas anteriores</h1>
+									<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
+										{debts.map((evt, index) => (
+											<div
+												key={evt.updatedAt + evt.id}
+												className='align-items-center flex items-center   flex-wrap border border-gray-300 p-1'
+											>
+												<Checkbox
+													inputId={evt.updatedAt + evt.id}
+													value={evt}
+													name='expenseClients'
+													onChange={onExpensesClienteChange}
+													checked={selectedExpensesClient.some((item: any) => item.id === evt.id)}
+												/>
+												<label
+													htmlFor={evt.updatedAt + evt.id}
+													className='ml-2 '
+												>
+													<span className=''>
+														{evt.description} $ {evt.amount}
+													</span>
+													{/* <span className='flex  gap-x-1'>
+														{evt.expenseDetails.map((ev) => (
+															<span className='border border-gray-400 px-1  w-fit'>
+																{ev.description} - ${ev.amount}
+															</span>
+														))}
+													</span> */}
+													{/* <span className='border bg-blue-800 text-white px-1  w-fit'>
+														Total a pagar : ${evt.total}
+													</span> */}
+												</label>
+											</div>
+										))}
+									</div>
+								</div>
+							)}
 						</>
 					) : (
 						<Loading />
@@ -479,18 +549,18 @@ const ClientPayments = () => {
 									filter
 									className='h-[42px] items-center !border-gray-200 shadow'
 								/>
-								{errors?.PaymentTypeId && <FormError text='El mes de pago es obligatorio.' />}
+								{errors?.month && <FormError text='El mes de pago es obligatorio.' />}
 							</fieldset>
 							<fieldset>
 								<label htmlFor='year'>Año de pago</label>
 								<Dropdown
 									placeholder='Elija un año'
 									value={year || ''}
-									options={selectedYears()}
+									options={selectedYears}
 									onChange={(event: DropdownChangeEvent) => handleInputChange(event.value, 'year')}
 									className='h-[42px] items-center !border-gray-200 shadow'
 								/>
-								{errors?.PaymentTypeId && <FormError text='El año de pago es obligatorio.' />}
+								{errors?.year && <FormError text='El año de pago es obligatorio.' />}
 							</fieldset>
 						</FieldsetGroup>
 						<FieldsetGroup className='w-full sm:w-[50%]'>
@@ -535,32 +605,6 @@ const ClientPayments = () => {
 							</fieldset>
 						</FieldsetGroup>
 						<FieldsetGroup className='w-full sm:w-[50%]'>
-							<fieldset className=''>
-								<label htmlFor='rentingAmount'>Valor alquiler</label>
-								<input
-									placeholder='1234.90'
-									type='number'
-									disabled={true}
-									value={rentingAmount || ''}
-									onChange={() => {}}
-								/>
-								{/* {errors?.rentingAmount && <FormError text='EL formato de pago es obligatorio.' />} */}
-							</fieldset>
-							<fieldset className=''>
-								<label htmlFor='total'>Total a cobrar</label>
-								<input
-									placeholder='1234.90'
-									disabled={true}
-									name='total'
-									type='number'
-									value={rentingAmount + eventTotal.current + expsTotal.current + recharge}
-									onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value, 'total')}
-								/>
-							</fieldset>
-						</FieldsetGroup>
-					</FieldsetGroup>
-					<FieldsetGroup>
-						<FieldsetGroup className='w-full sm:w-[50%]'>
 							{/* <fieldset className=''>
 							<label htmlFor='isRecharged'>Cobrar recargo (S/N)</label>
 							<input
@@ -603,6 +647,34 @@ const ClientPayments = () => {
 								/>
 							</fieldset>
 						</FieldsetGroup>
+					</FieldsetGroup>
+					<FieldsetGroup className='w-full sm:w-[50%]'>
+						<fieldset className=''>
+							<label htmlFor='rentingAmount'>Valor alquiler</label>
+							<input
+								placeholder='1234.90'
+								type='number'
+								// disabled={true}
+								value={rentingAmount ?? ''}
+								onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+									handleInputChange(Number(e.target.value), 'rentingAmount')
+								}}
+							/>
+							{/* {errors?.rentingAmount && <FormError text='EL formato de pago es obligatorio.' />} */}
+						</fieldset>
+						<fieldset className=''>
+							<label htmlFor='total'>Total a cobrar</label>
+							<input
+								placeholder='1234.90'
+								disabled={true}
+								name='total'
+								type='number'
+								value={rentingAmount + eventTotal.current + expsTotal.current + recharge}
+								onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value, 'total')}
+							/>
+						</fieldset>
+					</FieldsetGroup>
+					<FieldsetGroup>
 						<FieldsetGroup className='w-full sm:w-[50%]'></FieldsetGroup>
 					</FieldsetGroup>
 

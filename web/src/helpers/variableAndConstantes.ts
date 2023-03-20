@@ -16,8 +16,18 @@ export const monthsInSpanish = [
 	'Diciembre',
 ]
 
-export const selectedYears = () => {
-	console.log('in')
-	const year = new Date().getFullYear()
-	return [year - 3, year - 2, year - 1, year, year + 1, year + 2, year + 3, year + 4]
-}
+// export const selectedYears = () => {
+// 	console.log('in')
+// 	const year = new Date().getFullYear()
+// 	return [year - 3, year - 2, year - 1, year, year + 1, year + 2, year + 3, year + 4]
+// }
+export const selectedYears = [
+	new Date().getFullYear() - 3,
+	new Date().getFullYear() - 2,
+	new Date().getFullYear() - 1,
+	new Date().getFullYear(),
+	new Date().getFullYear() + 1,
+	new Date().getFullYear() + 2,
+	new Date().getFullYear() + 3,
+	new Date().getFullYear() + 4,
+]
