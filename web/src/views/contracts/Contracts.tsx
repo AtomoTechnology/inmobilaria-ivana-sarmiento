@@ -511,7 +511,7 @@ const Contracts = () => {
 						sortable
 					/>
 					<Column
-						// field='Client.fullName'
+						field='Client.fullName'
 						body={(data) => (
 							<span>
 								{data.Client.fullName} <span className='text-sm'> ({data.Client.cuit}) </span>

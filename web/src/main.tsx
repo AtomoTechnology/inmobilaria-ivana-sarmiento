@@ -17,10 +17,10 @@ import 'react-responsive-modal/styles.css'
 const queryClient = new QueryClient({
 	defaultOptions: {
 		queries: {
-			staleTime: Infinity,
+			// staleTime: Infinity,
 			retry: 2,
 			refetchOnWindowFocus: false,
-			cacheTime: Infinity,
+			// cacheTime: Infinity,
 		},
 	},
 })

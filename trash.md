@@ -98,3 +98,18 @@
 							/>
 							{/* {errors?.TGI && <FormError text='EL formato de pago es obligatorio.' />} */}
 						</fieldset>
+
+
+
+
+NOTA :: 21/03 
+-- fecha cobro 
+-- validar que las deudas no arrastran mitad de mes, cuando el clinete 
+- pantalla para ver las deudas 
+--pantala para ver las event
+-- formato fecha dd-mm-yyyy
+-- alqNeta monto actual - %comi prop. 
+-- %comProp en property igual para todos sus propiedades 
+-- nrocarpeta , añoActual ,
+
+deudas mas de dos meses en rojo 

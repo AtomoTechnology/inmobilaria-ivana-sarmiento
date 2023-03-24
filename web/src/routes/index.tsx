@@ -10,6 +10,7 @@ import Contracts from '../views/contracts/Contracts'
 import ExpiredContracts from '../views/contracts/ExpiredContracts'
 import HistorialPrices from '../views/contracts/HistorialPrice'
 import OwnerExpenses from '../views/contracts/OwnerExpenses'
+import Claims from '../views/general/Claims'
 import PageNotFound from '../views/general/PageNotFound'
 import Visits from '../views/general/visits'
 import Home from '../views/Home'
@@ -156,6 +157,14 @@ export const router = createBrowserRouter([
 				element: (
 					<PrivateRoute>
 						<Visits />
+					</PrivateRoute>
+				),
+			},
+			{
+				path: '/claims',
+				element: (
+					<PrivateRoute>
+						<Claims />
 					</PrivateRoute>
 				),
 			},

@@ -322,11 +322,11 @@ const Properties = () => {
 							emptyMessage='Aún no hay propiedad'
 							className='!overflow-hidden   !border-none'
 							value={data?.data}
-							paginator
-							rows={10}
 							filters={filters}
 							globalFilterFields={['PropertyType.description', 'Owner.fullName', 'Zone.name', 'street']}
 							// rowsPerPageOptions={[5, 10, 25, 50]}
+							paginator
+							rows={10}
 							paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
 							currentPageReportTemplate='{first} al {last} de {totalRecords}'
 							paginatorLeft={paginatorLeft}

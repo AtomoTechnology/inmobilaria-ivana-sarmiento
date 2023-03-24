@@ -41,6 +41,7 @@ const menuItems = [
 			{ to: 'client-payment', title: 'Deptos en venta' },
 			{ to: 'owner-payment', title: 'Deptos en Alquiler' },
 			{ to: 'visits', title: 'Visitas' },
+			{ to: 'claims', title: 'Reclamos' },
 		],
 	},
 	{
@@ -291,4 +292,3 @@ const App = () => {
 }
 
 export default App
-
