@@ -72,6 +72,18 @@ module.exports = (sequelize, DataTypes) => {
 					},
 				},
 			},
+			commision: {
+				type: DataTypes.FLOAT,				
+				allowNull: false,
+				validate: {
+					notNull: {
+						msg: 'La comisión es obligatoria',
+					},
+					notEmpty: {
+						msg: 'La comisión es obligatoria',
+					},
+				},
+			},
 			cuit: {
 				type: DataTypes.STRING,
 				unique: {

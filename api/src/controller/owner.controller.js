@@ -16,6 +16,7 @@ exports.Create = create(Owner, [
 	'obs',
 	'fixedPhone',
 	'codePostal',
+	'commision',
 ])
 exports.GetById = findOne(Owner)
 exports.Put = update(Owner, [
@@ -30,5 +31,7 @@ exports.Put = update(Owner, [
 	'obs',
 	'fixedPhone',
 	'codePostal',
+	'commision',
+	
 ])
 exports.Destroy = destroy(Owner)

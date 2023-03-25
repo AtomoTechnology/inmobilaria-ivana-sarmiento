@@ -31,6 +31,7 @@ import { useNavigate } from 'react-router-dom'
 import { TbReportMoney } from 'react-icons/tb'
 import { validateMail } from '../../helpers/general'
 import CloseOnClick from '../../components/CloseOnClick'
+import { formatDate, formatDateDDMMYYYY } from '../../helpers/date'
 
 export interface Iassurance {
 	fullName: string
@@ -57,14 +58,12 @@ const Contracts = () => {
 		PropertyId: null,
 		startDate: '',
 		endDate: '',
-		commission: 0,
 		description: '',
-		stamped: 0,
-		warrantyInquiry: 0,
-		fees: 0,
+		deposit: 0,
+		booking: 0,
 		amount: 0,
 	})
-	const { ClientId, PropertyId, startDate, endDate, commission, description, stamped, warrantyInquiry, amount, fees } =
+	const { ClientId, PropertyId, startDate, endDate, description, deposit, booking, amount } =
 		values
 	const {
 		values: Gvalues,
@@ -117,7 +116,8 @@ const Contracts = () => {
 
 	const edit = (data: Contract) => {
 		console.log(data)
-		// updateAll({ ...data, startDate: data.startDate.slice(0, 10) })
+		// @ts-expect-error
+		updateAll({ ...data, ClientId: data.Client, PropertyId: data.Property })
 		// TODO: fix date  and complete  edit  and show detail
 		setShowCreateModal(true)
 		setEditMode(true)
@@ -159,22 +159,15 @@ const Contracts = () => {
 			ok = false
 			error.amount = true
 		}
-		if (!commission) {
-			ok = false
-			error.commission = true
-		}
-		if (!stamped) {
-			ok = false
-			error.stamped = true
-		}
-		if (!fees) {
-			ok = false
-			error.fees = true
-		}
-		if (!warrantyInquiry) {
-			ok = false
-			error.warrantyInquiry = true
-		}
+
+		// if (!deposit) {
+		// 	ok = false
+		// 	error.deposit = true
+		// }
+		// if (!booking) {
+		// 	ok = false
+		// 	error.booking = true
+		// }
 		setErrors(error)
 		return ok
 	}
@@ -525,7 +518,7 @@ const Contracts = () => {
 					<Column
 						field='startDate'
 						header='Fecha inicio'
-						body={(data) => <span>{data.startDate.slice(0, 10)}</span>}
+						body={(data) => <span>{formatDateDDMMYYYY(data.startDate)}</span>}
 						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 						sortable
@@ -533,7 +526,7 @@ const Contracts = () => {
 					<Column
 						field='endDate'
 						header='Fecha fin'
-						body={(data) => <span>{data.endDate.slice(0, 10)}</span>}
+						body={(data) => <span>{formatDateDDMMYYYY(data.endDate)}</span>}
 						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 						sortable
@@ -554,8 +547,8 @@ const Contracts = () => {
 						// field='status'
 						header='Año'
 						body={(data: Contract) => (
-							<span className={`${data.PriceHistorials.length === 3 && 'text-yellow-500 font-bold'}`}>
-								{data.PriceHistorials[data.PriceHistorials.length - 1]?.year}
+							<span className={`${data.PriceHistorials?.length === 3 && 'text-yellow-500 font-bold'}`}>
+								{data.PriceHistorials[data.PriceHistorials?.length - 1]?.year}
 							</span>
 						)}
 						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
@@ -566,7 +559,7 @@ const Contracts = () => {
 						header='Monto Actual'
 						body={(data) => (
 							<span className={`font-bold ${data.state === 'En curso' ? 'text-green-500' : 'text-red-500'}`}>
-								${data.PriceHistorials[data.PriceHistorials.length - 1]?.amount}
+								${data.PriceHistorials[data.PriceHistorials?.length - 1]?.amount}
 							</span>
 						)}
 						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
@@ -644,17 +637,18 @@ const Contracts = () => {
 								}}
 								className='h-[42px] items-center !border-gray-200 dark:!border-gray-700 shadow dark:bg-slate-900 dark:!text-slate-400 '
 							/>
-							{ClientId && (
+							{/* @ts-expect-error */}
+							{ClientId?.email && (
 								<span className='text-brand2'>
 									{/* @ts-expect-error*/}
-									{ClientId?.email!} - {ClientId?.phone!}
+									Email : {ClientId?.email!} - Tel : {ClientId?.phone!}
 								</span>
 							)}
 							{errors?.ClientId && <FormError text='El inquilino es obligatorio.' />}
 						</fieldset>
 
 						<fieldset className=''>
-							<label htmlFor='PropertyId'>Propiedad </label>
+							<label htmlFor='PropertyId'>Propiedad {editMode && (<span>: {currentContract.current?.Property.street} {currentContract.current?.Property.number} {currentContract.current?.Property.floor}-{currentContract.current?.Property.dept}</span>)}</label>
 							<Dropdown
 								value={PropertyId}
 								onChange={(e) => handleInputChange(e.value, 'PropertyId')}
@@ -686,7 +680,7 @@ const Contracts = () => {
 							{PropertyId?.Owner && (
 								<span className='text-brand2'>
 									{/* @ts-expect-error */}
-									{PropertyId.Owner?.fullName} - {PropertyId.Owner?.phone}
+									Dueño : {PropertyId.Owner?.fullName} - Tel : {PropertyId.Owner?.phone}
 								</span>
 							)}
 							{errors?.PropertyId && <FormError text='La propiedad es obligatoria.' />}
@@ -695,7 +689,7 @@ const Contracts = () => {
 
 					<FieldsetGroup>
 						<FieldsetGroup className='w-full sm:w-[50%]'>
-							<fieldset className='w-full sm:w-[50%]'>
+							<fieldset className=''>
 								<label htmlFor='startDate'>Fecha inicio</label>
 								<CustomInput
 									placeholder='2'
@@ -722,70 +716,36 @@ const Contracts = () => {
 								<CustomInput
 									placeholder='46000.00'
 									type='number'
+									disabled={editMode}
 									initialValue={amount || ''}
 									onChange={(value) => handleInputChange(value, 'amount')}
 								/>
 								{errors?.amount && <FormError text='El valor del contrato es obligatorio.' />}
 							</fieldset>
 							<fieldset className=''>
-								<label htmlFor='commission'>% Comisión</label>
-								<CustomInput
-									placeholder='10'
-									type='number'
-									initialValue={commission || ''}
-									onChange={(value) => handleInputChange(value, 'commission')}
-								/>
-								{errors?.commission && <FormError text='La comisión  es obligatoria.' />}
-							</fieldset>
-						</FieldsetGroup>
-					</FieldsetGroup>
-
-					<FieldsetGroup>
-						<FieldsetGroup className='w-full sm:w-[50%]'>
-							<fieldset className=''>
-								<label htmlFor='fees'>Total a abonar </label>
-								<input
-									placeholder='10000.00'
-									min={0}
-									value={(values.amount - (values.commission / 100) * values.amount).toFixed(2)?.toString()}
-									disabled={true}
-									type='number'
-									onChange={(value) => handleInputChange(value, 'fees')}
-								/>
-							</fieldset>
-							<fieldset className=''>
-								<label htmlFor='fees'>Honorarios </label>
-								<CustomInput
-									placeholder='10000.00'
-									initialValue={fees || ''}
-									type='number'
-									onChange={(value) => handleInputChange(value, 'fees')}
-								/>
-								{errors?.fees && <FormError text='El hononario es obligatorio.' />}
-							</fieldset>
-						</FieldsetGroup>
-						<FieldsetGroup className='w-full sm:w-[50%]'>
-							<fieldset className=''>
-								<label htmlFor='warrantyInquiry'>Ave. de Gtía</label>
-								<CustomInput
-									placeholder='1000.99'
-									type='number'
-									initialValue={warrantyInquiry || ''}
-									onChange={(value) => handleInputChange(value, 'warrantyInquiry')}
-								/>
-								{errors?.warrantyInquiry && <FormError text='Este campo es obligatorio.' />}
-							</fieldset>
-							<fieldset className=''>
-								<label htmlFor='stamped'>Sellado </label>
+								<label htmlFor='deposit'>Depósito </label>
 								<CustomInput
 									placeholder='500.00'
 									type='number'
-									initialValue={stamped || ''}
-									onChange={(value) => handleInputChange(value, 'stamped')}
+									initialValue={deposit || ''}
+									onChange={(value) => handleInputChange(value, 'deposit')}
 								/>
-								{errors?.stamped && <FormError text='Este campo es obligatorio.' />}
+								{/* {errors?.deposit && <FormError text='Este campo es obligatorio.' />} */}
 							</fieldset>
 						</FieldsetGroup>
+					</FieldsetGroup>
+					<FieldsetGroup className='w-full sm:w-[50%]'>
+						<fieldset className=''>
+							<label htmlFor='booking'>Reserva</label>
+							<CustomInput
+								placeholder='1000.99'
+								type='number'
+								initialValue={booking || ''}
+								onChange={(value) => handleInputChange(value, 'booking')}
+							/>
+							{/* {errors?.booking && <FormError text='Este campo es obligatorio.' />} */}
+						</fieldset>
+
 					</FieldsetGroup>
 
 					<fieldset>
@@ -992,7 +952,7 @@ const Contracts = () => {
 							<CustomInput
 								disabled={true}
 								initialValue={currentContract.current?.id}
-								onChange={(val) => {}}
+								onChange={(val) => { }}
 								placeholder=''
 							/>
 						</fieldset>
@@ -1082,7 +1042,7 @@ const Contracts = () => {
 				overlayClick={false}
 				titleText='Agregar  eventualidad'
 				className='shadow-none border-0 max-w-[500px]'
-				// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
+			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
 				<form
 					onSubmit={handleAddEventualities}
@@ -1103,7 +1063,7 @@ const Contracts = () => {
 									currentContract.current?.Property.number +
 									' '
 								}
-								onChange={(val) => {}}
+								onChange={(val) => { }}
 								placeholder=''
 							/>
 						</fieldset>
@@ -1174,7 +1134,7 @@ const Contracts = () => {
 				overlayClick={false}
 				titleText='Agregar  eventualidad'
 				className='shadow-none border-0 max-w-[500px]'
-				// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
+			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
 				<form
 					onSubmit={handleAddEventualities}
@@ -1195,7 +1155,7 @@ const Contracts = () => {
 									currentContract.current?.Property.number +
 									' '
 								}
-								onChange={(val) => {}}
+								onChange={(val) => { }}
 								placeholder=''
 							/>
 						</fieldset>

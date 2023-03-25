@@ -77,18 +77,18 @@ module.exports = (sequelize, DataTypes) => {
 					},
 				},
 			},
-			commission: {
-				allowNull: false,
-				type: DataTypes.FLOAT,
-				validate: {
-					notNull: {
-						msg: 'La comisión es obligatoria',
-					},
-					notEmpty: {
-						msg: 'La comisión es obligatoria',
-					},
-				},
-			},
+			// commission: {
+			// 	allowNull: false,
+			// 	type: DataTypes.FLOAT,
+			// 	validate: {
+			// 		notNull: {
+			// 			msg: 'La comisión es obligatoria',
+			// 		},
+			// 		notEmpty: {
+			// 			msg: 'La comisión es obligatoria',
+			// 		},
+			// 	},
+			// },
 			state: {
 				type: DataTypes.STRING,
 				defaultValue: 'En curso',
@@ -111,19 +111,27 @@ module.exports = (sequelize, DataTypes) => {
 					},
 				},
 			},
+			booking: {
+				type: DataTypes.FLOAT,
+				allowNull: true,
+			},
+			deposit: {
+				type: DataTypes.FLOAT,
+				allowNull: true,
+			},
 			description: DataTypes.STRING,
-			stamped: {
-				allowNull: true,
-				type: DataTypes.FLOAT,
-			},
-			fees: {
-				allowNull: true,
-				type: DataTypes.FLOAT,
-			},
-			warrantyInquiry: {
-				allowNull: true,
-				type: DataTypes.FLOAT,
-			},
+			// stamped: {
+			// 	allowNull: true,
+			// 	type: DataTypes.FLOAT,
+			// },
+			// fees: {
+			// 	allowNull: true,
+			// 	type: DataTypes.FLOAT,
+			// },
+			// warrantyInquiry: {
+			// 	allowNull: true,
+			// 	type: DataTypes.FLOAT,
+			// },
 		},
 		{
 			indexes: [

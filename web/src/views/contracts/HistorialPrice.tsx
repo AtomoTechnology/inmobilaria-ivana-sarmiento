@@ -25,6 +25,7 @@ import { useNavigate } from 'react-router-dom'
 import { TbReportMoney } from 'react-icons/tb'
 import CloseOnClick from '../../components/CloseOnClick'
 import EditIcon from '../../components/icons/EditIcon'
+import { formatDateDDMMYYYY } from '../../helpers/date'
 
 const HistorialPrices = () => {
 	const { authState, showAlert, hideAlert } = useContext(AuthContext)
@@ -87,7 +88,7 @@ const HistorialPrices = () => {
 			ok = false
 			error.year = true
 		}
-		if (!percent) {
+		if (percent < 0 || percent > 150) {
 			ok = false
 			error.percent = true
 		}
@@ -237,7 +238,7 @@ const HistorialPrices = () => {
 						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 						field='createdAt'
-						body={(data) => <span> {data.createdAt.slice(0, 10)} </span>}
+						body={(data) => <span> {formatDateDDMMYYYY(data.createdAt.slice(0, 10))} </span>}
 						header='Fecha'
 					></Column>
 					<Column
@@ -339,7 +340,7 @@ const HistorialPrices = () => {
 					<Column
 						field='startDate'
 						header='Fecha inicio'
-						body={(data) => <span>{data.startDate.slice(0, 10)}</span>}
+						body={(data) => <span>{formatDateDDMMYYYY(data.startDate)}</span>}
 						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 						sortable
@@ -347,7 +348,7 @@ const HistorialPrices = () => {
 					<Column
 						field='endDate'
 						header='Fecha fin'
-						body={(data) => <span>{data.endDate.slice(0, 10)}</span>}
+						body={(data) => <span>{formatDateDDMMYYYY(data.endDate)}</span>}
 						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 						sortable
@@ -415,9 +416,9 @@ const HistorialPrices = () => {
 				show={showCreateModal}
 				closeModal={closeCreateModal}
 				overlayClick={false}
-				titleText='Agregar  eventualidad'
+				titleText='Ajustar precio'
 				className='shadow-none border-0 max-w-[500px]'
-				// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
+			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
 				<form
 					onSubmit={handleAddPrice}
@@ -432,15 +433,15 @@ const HistorialPrices = () => {
 									editMode
 										? currentPrice.current?.ContractId
 										: currentContract.current?.Client.fullName +
-										  ' - ' +
-										  currentContract.current?.Client.cuit +
-										  '  | ' +
-										  currentContract.current?.Property.street +
-										  ' ' +
-										  currentContract.current?.Property.number +
-										  ' '
+										' - ' +
+										currentContract.current?.Client.cuit +
+										'  | ' +
+										currentContract.current?.Property.street +
+										' ' +
+										currentContract.current?.Property.number +
+										' '
 								}
-								onChange={(val) => {}}
+								onChange={(val) => { }}
 								placeholder=''
 							/>
 						</fieldset>
@@ -450,7 +451,7 @@ const HistorialPrices = () => {
 						<CustomInput
 							placeholder='40'
 							type='number'
-							initialValue={percent || ''}
+							initialValue={percent}
 							onChange={(value) => {
 								// handleInputChange(value, 'percent')
 								// updateAll({ ...values, percent: Number(value) })
@@ -467,7 +468,7 @@ const HistorialPrices = () => {
 								}
 							}}
 						/>
-						{errors?.percent && <FormError text='El porcentaje  es obligatorio.' />}
+						{errors?.percent && <FormError text='El porcentaje  es obligatorio.[0,100]' />}
 					</fieldset>
 					<FieldsetGroup>
 						<fieldset className=''>

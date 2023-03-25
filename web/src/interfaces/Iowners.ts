@@ -25,5 +25,6 @@ export interface IPerson {
 	obs: string
 	createdAt: string
 	updatedAt: string
+	commision?: number
 	Properties?: Iproperty[]
 }

@@ -8,6 +8,8 @@ const {
 	sequelize,
 	PriceHistorial,
 	Owner,
+	DebtOwner,
+	DebtClient,
 	Eventuality,
 } = require('../../models')
 const { Op } = require('sequelize')
@@ -18,7 +20,7 @@ const { catchAsync } = require('../../helpers/catchAsync')
 const { addDays } = require('../../helpers/date')
 
 exports.GetAll = all(Contract, {
-	include: [{ model: Client }, { model: Property }, { model: PriceHistorial }],
+	include: [{ model: Client }, { model: Property , include : { model :Owner  } }, { model: PriceHistorial }],
 })
 exports.Paginate = paginate(Contract, {
 	include: [{ model: Client }, { model: Property }],
@@ -80,17 +82,41 @@ exports.Put = update(Contract, [
 	'ClientId',
 	'startDate',
 	'endDate',
-	'nroPartWater',
-	'nroPartMuni',
-	'nroPartAPI',
-	'commission',
+	'amount',
+	'deposit',
+	'booking',
 	'state',
 	'description',
-	'stamped',
-	'fees',
-	'warrantyInquiry',
+	// 'stamped',
+	// 'fees',
+	// 'warrantyInquiry',
 ])
-exports.Destroy = destroy(Contract)
+// TODO :: valida que no haya deudas pendientes, ni pagos pendientes , cambiar ele estado del inmueble a libre
+exports.Destroy =  catchAsync(async (req, res, next) => {
+
+	const id = req.params.id 
+	const transact = await sequelize.transaction()
+	try {
+		const contract = await Contract.findOne({where : {id}}, { transaction: transact })
+		if(!contract) return next(new AppError('No se encontro el contrato', 400))
+		const debts  = await DebtClient.findAll({where : {ContractId : id , paid : false}}, { transaction: transact })
+		if(debts.length > 0) return next(new AppError('No se puede eliminar el contrato, existen deudas pendientes', 400))
+		const payments = await DebtOwner.findAll({where : {ContractId : id , paid : false}}, { transaction: transact })
+		if(payments.length > 0) return next(new AppError('No se puede eliminar el contrato, existen pagos pendientes', 400))
+		const events = await Eventuality.findAll({where : {ContractId : id, [Op.or] :{ clientPaid : false , ownerPaid : false } }}, { transaction: transact })
+		if (events.length > 0) return next(new AppError('No se puede eliminar el contrato, existen eventualidades sin pagar o cobrar', 400))
+		
+		await Property.update({state : 'Libre'},{where : {id : contract.PropertyId}}, { transaction: transact })
+		await Contract.destroy({where : {id}}, { transaction: transact })
+		await transact.commit()
+		return res.json({ ok: true, status: 'success', message: 'El registro fue eliminado con exito' })
+	} catch (error) {
+		await transact.rollback()
+		throw error
+	}
+
+
+})
 
 exports.ExpiredContracts = catchAsync(async (req, res, next) => {
 	const days = req.params.days * 1
@@ -105,7 +131,7 @@ exports.ExpiredContracts = catchAsync(async (req, res, next) => {
 			},
 		},
 		// attributes : ['id','endDate']
-		include: [{ model: Client }, { model: Property, include: { model: Owner } }],
+		include: [{ model: Client }, { model: Property, include: { model: Owner } },{ model: PriceHistorial } ],
 	})
 
 	return res.json({

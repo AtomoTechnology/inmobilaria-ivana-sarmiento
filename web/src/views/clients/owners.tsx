@@ -42,8 +42,9 @@ const Owners = () => {
 		address: '',
 		codePostal: '',
 		obs: '',
+		commision: 0,
 	})
-	const { fullName, email, phone, cuit, province, city, address, codePostal, obs, fixedPhone } = values
+	const { fullName, email, phone, cuit, province, city, address, codePostal, obs, fixedPhone, commision } = values
 	const [globalFilterValue, setGlobalFilterValue] = useState('')
 	const [errors, setErrors] = useState<any>()
 	const [editMode, setEditMode] = useState(false)
@@ -72,6 +73,7 @@ const Owners = () => {
 		//   codePostal: data.codePostal,
 		//   obs: data.obs,
 		// });
+		// @ts-ignore
 		updateAll({ ...data })
 		getCitiesByProvinces(data.province)
 		setShowCreateModal(true)
@@ -107,6 +109,10 @@ const Owners = () => {
 		if (!address.trim().length) {
 			ok = false
 			error.address = true
+		}
+		if (!commision) {
+			ok = false
+			error.commision = true
 		}
 		setErrors(error)
 		return ok
@@ -144,6 +150,7 @@ const Owners = () => {
 										address: values.address,
 										codePostal: values.codePostal,
 										fixedPhone: values.fixedPhone,
+										commision: values.commision,
 										obs: values.obs,
 										id: currentOwner.current.id,
 										uuid: currentOwner.current.uuid,
@@ -279,7 +286,8 @@ const Owners = () => {
 		)
 	}
 	const allowExpansion = (rowData: IPerson) => {
-		return rowData?.Properties!.length > 0
+		// @ts-ignore
+		return rowData?.Properties?.length > 0
 	}
 	if (isLoading) return <Loading />
 	if (isError) return <RequestError error={error} />
@@ -370,15 +378,20 @@ const Owners = () => {
 								field='address'
 								body={(data) => (
 									<span>
-										{' '}
-										{data.city || '-'} {data.province || '-'} , {data.address}{' '}
+										{data.city || '-'} {data.province || '-'} , {data.address}
 									</span>
 								)}
 								header='Dirección'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 							/>
-
+							<Column
+								field='commision'
+								header='Comisión'
+								body={(data) => (<span> {data.commision}% </span>)}
+								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+							/>
 							<Column
 								body={actionBodyTemplate}
 								headerClassName='!border-none dark:!bg-gray-800'
@@ -409,6 +422,7 @@ const Owners = () => {
 
 			<CreateModal
 				show={showCreateModal}
+				className='max-w-[700px]'
 				closeModal={closeCreateModal}
 				titleText={`${editMode ? 'Editar' : 'Crear'} propietario`}
 			>
@@ -440,32 +454,49 @@ const Owners = () => {
 					</FieldsetGroup>
 
 					<FieldsetGroup>
-						<fieldset className=''>
-							<label htmlFor='cuit'>Cuit/Cuil </label>
-							<CustomInput
-								placeholder='20909239120'
-								initialValue={cuit || ''}
-								onChange={(value) => handleInputChange(value, 'cuit')}
-							/>
-							{errors?.cuit && <FormError text='El cuit es obligatorio.' />}
-						</fieldset>
-						<fieldset className=''>
-							<label htmlFor='phone'>Teléfono </label>
-							<CustomInput
-								placeholder='3417207882'
-								initialValue={phone || ''}
-								onChange={(value) => handleInputChange(value, 'phone')}
-							/>
-							{errors?.phone && <FormError text='El teléfono es obligatorio.' />}
-						</fieldset>
-						<fieldset className=''>
-							<label htmlFor='fixedPhone'>Teléfono fijo </label>
-							<CustomInput
-								placeholder='3417207882'
-								initialValue={fixedPhone || ''}
-								onChange={(value) => handleInputChange(value, 'fixedPhone')}
-							/>
-						</fieldset>
+						<FieldsetGroup>
+
+							<fieldset className=''>
+								<label htmlFor='cuit'>Cuit/Cuil </label>
+								<CustomInput
+									placeholder='20909239120'
+									initialValue={cuit || ''}
+									onChange={(value) => handleInputChange(value, 'cuit')}
+								/>
+								{errors?.cuit && <FormError text='El cuit es obligatorio.' />}
+							</fieldset>
+							<fieldset className=''>
+								<label htmlFor='commision'>%Comision</label>
+								<CustomInput
+									placeholder='10'
+									initialValue={commision || ''}
+									onChange={(value) => handleInputChange(value, 'commision')}
+								/>
+								{errors?.commision && <FormError text='La comision es obligatoria.' />}
+							</fieldset>
+
+						</FieldsetGroup>
+						<FieldsetGroup>
+							<fieldset className=''>
+								<label htmlFor='phone'>Teléfono </label>
+								<CustomInput
+									placeholder='3417207882'
+									initialValue={phone || ''}
+									onChange={(value) => handleInputChange(value, 'phone')}
+								/>
+								{errors?.phone && <FormError text='El teléfono es obligatorio.' />}
+							</fieldset>
+
+							<fieldset className=''>
+								<label htmlFor='fixedPhone'>Tel. fijo <span className='text-xs opacity-50'>(opcional)</span> </label>
+								<CustomInput
+									placeholder='3417207882'
+									initialValue={fixedPhone || ''}
+									onChange={(value) => handleInputChange(value, 'fixedPhone')}
+								/>
+							</fieldset>
+
+						</FieldsetGroup>
 					</FieldsetGroup>
 
 					<FieldsetGroup>

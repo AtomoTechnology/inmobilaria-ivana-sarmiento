@@ -17,15 +17,15 @@ export interface Contract {
 	ClientId: number
 	startDate: string
 	endDate: string
-	nroPartWater: string
-	nroPartMuni: string
-	nroPartAPI: string
-	commission: number
+	// nroPartWater: string
+	// nroPartMuni: string
+	// nroPartAPI: string
+	// commission: number
 	state: string
 	description: string
-	stamped: number
-	fees: number
-	warrantyInquiry: number
+	deposit: number
+	booking: number
+	// warrantyInquiry: number
 	createdAt: string
 	updatedAt: string
 	Client: Client
