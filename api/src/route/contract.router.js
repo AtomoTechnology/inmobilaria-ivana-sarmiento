@@ -8,7 +8,8 @@ router.get('/', ctrl.GetAll)
 router.get('/:id', ctrl.GetById)
 router.get('/expired-contracts/:days', ctrl.ExpiredContracts)
 router.get('/historial/prices', ctrl.HistorialPrice)
-
+router.get('/debts/client/all', ctrl.DebtsClients)
+router.get('/debts/owner/all', ctrl.DebtsOwners)
 //Create
 router.post('/', ctrl.Post)
 

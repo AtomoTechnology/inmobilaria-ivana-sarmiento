@@ -42,3 +42,67 @@ export async function copyToClipboard(text: string) {
 export const validateMail = (mail: string): boolean => {
   return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(mail);
 };
+
+
+
+export const menuItems = [
+	{
+		to: null,
+		title: 'ABM',
+		subLink: [
+			{ to: 'zones', title: 'Zonas' },
+			{ to: 'payment-methods', title: 'Tipo de pago' },
+			{ to: 'property-types', title: 'Tipo de propiedades' },
+			{ to: 'properties', title: 'Propiedades' },
+			{ to: 'configurations', title: 'Infos general' },
+		],
+	},
+
+	{
+		to: 'clients',
+		title: 'Inquilinos',
+		subLink: [],
+	},
+	{
+		to: 'owners',
+		title: 'Propietarios',
+		subLink: [],
+	},
+	{
+		to: 'contracts',
+		title: 'Contratos',
+		subLink: [],
+	},
+	{
+		to: null,
+		title: 'Consultas',
+		subLink: [
+			{ to: 'client-payment', title: 'Deptos en venta' },
+			{ to: 'owner-payment', title: 'Deptos en Alquiler' },
+			{ to: 'visits', title: 'Visitas' },
+			{ to: 'claims', title: 'Reclamos' },
+		],
+	},
+	{
+		to: null,
+		title: 'Pagos',
+		subLink: [
+			{ to: 'client-payment', title: 'Cobro a inquilino' },
+			{ to: 'owner-payment', title: 'Pgao a propietario' },
+			{ to: 'properties', title: 'Lista conceptos' },
+			{ to: 'revert-payment', title: 'Revertir cobro' },
+		],
+	},
+	{
+		to: null,
+		title: 'Informes',
+		subLink: [
+			{ to: 'contract-debts-clients', title: 'Deudas x inqulinos' },
+			{ to: 'contract-debts-owners', title: 'Deudas x  propietario' },
+			{ to: 'contracts-expired', title: 'Vto de contratos' },
+			{ to: 'contract-price-historial', title: 'Ajustes % contratos' },
+			{ to: 'client-expenses', title: 'Impuestos inquilinos' },
+			{ to: 'owner-expenses', title: 'Impuestos propietario' },
+		],
+	},
+]

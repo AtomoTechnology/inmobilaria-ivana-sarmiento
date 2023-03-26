@@ -10,7 +10,7 @@ const GetAllProperty = async (filter?: string) => {
 
 export const useProperties = (filter?: string) => {
   const propertyQuery = useQuery({
-    queryKey: ['properties'],
+    queryKey: ['properties',{filter}],
     queryFn: () => GetAllProperty(filter),
   });
 

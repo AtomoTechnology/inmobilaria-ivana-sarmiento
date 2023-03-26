@@ -15,6 +15,8 @@ const handleSequelizeUniqueConstraintErrorContract = (error) =>
 	)
 const handleSequelizeUniqueConstraintErrorPriceHistorial = (error) =>
 	new AppError('El contrato ya tiene un valor para ese año.', 400)
+const handleSequelizeUniqueConstraintErrorPaymentClient = (error) =>
+	new AppError('El contrato ya tiene  un cobro para ese periodo .', 400)
 const handleSequelizeUniqueConstraintErrorVisit = (error) =>
 	new AppError('Esta persona ya tiene una visita pactada para esa propiedad con esa fecha.', 400)
 const handleSequelizeUniqueConstraintError = (error) => new AppError(error.errors.map((e) => e.message).join(',,'), 400)
@@ -76,6 +78,9 @@ exports.globalError = (err, req, res, next) => {
 				break
 			case 'avoidMorethanonepriceForContractAtTheSameYear must be unique':
 				error = handleSequelizeUniqueConstraintErrorPriceHistorial(error)
+				break
+			case 'payment_clients__contract_id_month_year must be unique':
+				error = handleSequelizeUniqueConstraintErrorPaymentClient(error)
 				break
 			default:
 				break

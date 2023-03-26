@@ -15,6 +15,7 @@ export interface Idebt {
 	year: number
 	amount: number
 	month: number
+	rent : boolean
 	// total: number
 	paid: boolean
 	description: string

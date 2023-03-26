@@ -10,7 +10,7 @@ const GetAllContract = async (filter: string) => {
 export const useContracts = (filter: string = '') => {
 	// console.log('...jkjk :: ', filter)
 	const cocontractQuery = useQuery({
-		queryKey: ['contracts'],
+		queryKey: ['contracts',{filter}],
 		queryFn: () => GetAllContract(filter),
 	})
 

@@ -64,8 +64,6 @@ app.use(globalError)
 //Starting
 app.listen(app.get('port'), () => {
 	console.log(' server on port', app.get('port'), '  MODE : ', process.env.NODE_ENV)
-
-	//Connection to bd
 	// sequelize
 	// 	.sync({
 	// 		alter: true,

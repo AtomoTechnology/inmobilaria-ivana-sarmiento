@@ -107,6 +107,7 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 						amount: docs2[k].PriceHistorials.sort((a, b) => a.amount - b.amount)[docs2[k].PriceHistorials.length - 1]
 							.amount,
 						year,
+						rent : true,
 						month,
 						ContractId: docs2[k].id,
 					},

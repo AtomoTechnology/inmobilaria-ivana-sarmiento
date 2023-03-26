@@ -26,7 +26,11 @@ import CloseOnClick from '../../components/CloseOnClick'
 import { useClientPayments } from '../../hooks/useClientPayments'
 import { Idebt, IdebtsResponse } from '../../interfaces/IDebtsResponse'
 import { IClienyPayment } from '../../interfaces/IclientPayments'
-
+import { IConfigResponse } from '../../interfaces/Iconfig'
+import { diffenceBetweenDates, formatDateDDMMYYYY, padTo2Digits } from '../../helpers/date'
+import { Button } from 'primereact/button'
+import { BsPrinter, BsSkipBackward } from 'react-icons/bs'
+import { TfiBackLeft } from 'react-icons/tfi'
 const ClientPayments = () => {
 	const { showAlert, hideAlert } = useContext(AuthContext)
 	const [showCreateModal, setShowCreateModal] = useState(false)
@@ -217,8 +221,9 @@ const ClientPayments = () => {
 	const actionBodyTemplate = (rowData: any) => {
 		return (
 			<div className='flex gap-x-3 items-center justify-center'>
-				<EditIcon action={() => edit(rowData)} />
-				<DeleteIcon action={() => ConfirmDestroy(rowData)} />
+				<BsPrinter title='Imprimir comprobante' size={22} onClick={() => console.log(rowData)} />
+				{/* <EditIcon action={() => edit(rowData)} /> */}
+				<TfiBackLeft title='Revertir cobro' size={23} onClick={() => ConfirmDestroy(rowData)} />
 			</div>
 		)
 	}
@@ -248,43 +253,71 @@ const ClientPayments = () => {
 		setSelectedExpensesClient([])
 		eventTotal.current = 0
 		expsTotal.current = 0
-		// handleInputChange(e.value, 'ContractId')
-		let day = new Date().getDate()
-		if (day > 10) {
-			let qte = day - 10
-			console.log(qte * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (4 / 100))
-			updateAll({
-				...values,
-				recharge: Number(
-					(qte * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (4 / 100)).toFixed(2)
-				),
-				qteDays: qte,
-				rentingAmount: e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount,
-				ContractId: e.value,
-				dailyPunitive: e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (4 / 100),
-			})
-		} else {
-			updateAll({
-				...values,
-				rentingAmount: e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount,
-				ContractId: e.value,
-			})
-		}
 
 		try {
-			const docsExps = await http.get<IClientExpensesResponseSimple>(
-				`/client-expenses?amount=0:gt&ContractId=${e.value.id}&include=true`
-			)
-			const docsEvents = await http.get<IEventualitiesResponse>(
-				`/eventualities?clientPaid=0&ContractId=${e.value.id}&include=true`
-			)
-			const docsDebts = await http.get<IdebtsResponse>(`/debt-clients?paid=0&ContractId=${e.value.id}`)
+
+			const docsExpss = http.get<IClientExpensesResponseSimple>(`/client-expenses?amount=0:gt&ContractId=${e.value.id}&include=true`)
+			const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?clientPaid=0&ContractId=${e.value.id}&include=true`)
+			const dps = http.get<IConfigResponse>(`/config?key=dailypunitive`)
+			const docsDebtss = http.get<IdebtsResponse>(`/debt-clients?paid=0&ContractId=${e.value.id}`)
+			const [docsExps, docsEvents, dp, docsDebts] = await Promise.all([docsExpss, docsEventss, dps, docsDebtss])
+
 			setEventualityDetails(docsEvents.data.data)
 			setExpenseDetails(docsExps.data.data)
+			// setDailyPunitive(Number(dp.data.data[0].value))
 			setDebts(docsDebts.data.data)
-		} catch (error) {}
+			docsDebts.data.data.map((d) => {
+				if (d.rent) {
+					let qtyDay = diffenceBetweenDates(d.year + '-' + padTo2Digits(d.month) + '-10', new Date().toString())
+					console.log('alq : ', e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount, qtyDay, d.year + '-' + padTo2Digits(d.month) + '-10', new Date().toISOString())
+					setDebts((debts) => [...debts,
+					{
+						...d,
+						description: 'RECARGO ' + d.description,
+						amount: Number((qtyDay * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (Number(dp.data.data[0].value) / 100)).toFixed(2)),
+						createdAt: (new Date().getTime().toString()),
+						rent: false,
+						id: new Date().getTime()
+					}
+					])
+
+					console.log(d)
+				}
+			})
+			let day = new Date().getDate()
+			if (day > 10) {
+				let qte = day - 10
+				console.log(qte * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (Number(dp.data.data[0].value) / 100))
+				updateAll({
+					...values,
+					recharge: Number(
+						(qte * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (Number(dp.data.data[0].value) / 100)).toFixed(2)
+					),
+					qteDays: qte,
+					rentingAmount: e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount,
+					ContractId: e.value,
+					dailyPunitive: e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (Number(dp.data.data[0].value) / 100),
+				})
+			} else {
+				updateAll({
+					...values,
+					rentingAmount: e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount,
+					ContractId: e.value,
+				})
+			}
+
+		} catch (error) { }
 		setLoadingExpenses(false)
 	}
+	const paginatorLeft = (
+		<Button
+			onClick={() => clientPaymentQuery.refetch()}
+			type='button'
+			icon='pi pi-refresh'
+			text
+		/>
+	)
+	// @ts-ignore
 	if (clientPaymentQuery.isLoading) return <Loading />
 	if (clientPaymentQuery.isError) return <RequestError error={clientPaymentQuery.error} />
 	// console.log(values)
@@ -313,6 +346,11 @@ const ClientPayments = () => {
 							value={clientPaymentQuery?.data?.data}
 							dataKey='id'
 							responsiveLayout='scroll'
+							paginator
+							rows={10}
+							paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+							currentPageReportTemplate='{first} al {last} de {totalRecords}'
+							paginatorLeft={paginatorLeft}
 						>
 							<Column
 								field='Contract.Property.street'
@@ -335,6 +373,14 @@ const ClientPayments = () => {
 									</span>
 								)}
 								header='Periodo'
+								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+								sortable
+							/>
+							<Column
+								field='createdAt'
+								body={(data) => <span>{formatDateDDMMYYYY(data.createdAt)}</span>}
+								header='Fecha de Cobro'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 								sortable
@@ -369,12 +415,7 @@ const ClientPayments = () => {
 				<div className='text-slate-400 mx-3 text-center'>Aún no hay Cobro.</div>
 			)}
 
-			{isFetching && (
-				<Loading
-					h={40}
-					w={40}
-				/>
-			)}
+			{clientPaymentQuery.isFetching && (<Loading h={40} w={40} />)}
 
 			<DeleteModal
 				show={show}
@@ -391,221 +432,221 @@ const ClientPayments = () => {
 				titleText={'Cobros'}
 				overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
-				{/* <div className='flex justify-between f-full gap-x-6 mt-3'> */}
-				<form
-					action=''
-					onSubmit={handleSave}
-					// bg-gray-100 p-2 rounded-md shadow-xl
-					className=' w-[650px] '
-				>
-					<CloseOnClick action={closeCreateModal} />
-					<FieldsetGroup>
-						<fieldset className=''>
-							<label htmlFor='ContractId'>Contrato</label>
-							<Dropdown
-								value={ContractId}
-								onChange={handleChangeContract}
-								options={data?.data}
-								optionLabel='id'
-								valueTemplate={(data, props) => {
-									if (!data) return props.placeholder
-									return (
-										<span>
-											{data.Client.fullName} - {data.Client.cuit} | {data.Property.street} {data.Property.number}{' '}
-											{data.Property.floor}-{data.Property.dept}
-										</span>
-									)
-								}}
-								itemTemplate={(data) => {
-									return (
-										<span>
-											{data.Client.fullName} - {data.Client.cuit} | {data.Property.street} {data.Property.number}{' '}
-											{data.Property.floor}-{data.Property.dept}
-										</span>
-									)
-								}}
-								filterPlaceholder='Busca contrato'
-								filterBy='Property.street,Property.number,Client.fullName'
-								// optionValue='id'
-								placeholder='elije contrato'
-								filter
-								className='h-[42px] items-center !border-gray-200 shadow '
-							/>
-							{errors?.ContractId && <FormError text='El contrato es obligatorio.' />}
-						</fieldset>
-					</FieldsetGroup>
+				<div className='flex justify-between f-full gap-x-6 mt-3'>
+					<form
+						action=''
+						onSubmit={handleSave}
+						// bg-gray-100 p-2 rounded-md shadow-xl
+						className=' w-[600px] '
+					>
+						<CloseOnClick action={closeCreateModal} />
+						<FieldsetGroup>
+							<fieldset className=''>
+								<label htmlFor='ContractId'>Contrato</label>
+								<Dropdown
+									value={ContractId}
+									onChange={handleChangeContract}
+									options={data?.data}
+									optionLabel='id'
+									valueTemplate={(data, props) => {
+										if (!data) return props.placeholder
+										return (
+											<span>
+												{data.Client.fullName} - {data.Client.cuit} | {data.Property.street} {data.Property.number}{' '}
+												{data.Property.floor}-{data.Property.dept}
+											</span>
+										)
+									}}
+									itemTemplate={(data) => {
+										return (
+											<span>
+												{data.Client.fullName} - {data.Client.cuit} | {data.Property.street} {data.Property.number}{' '}
+												{data.Property.floor}-{data.Property.dept}
+											</span>
+										)
+									}}
+									filterPlaceholder='Busca contrato'
+									filterBy='Property.street,Property.number,Client.fullName'
+									// optionValue='id'
+									placeholder='elije contrato'
+									filter
+									className='h-[42px] items-center !border-gray-200 shadow '
+								/>
+								{errors?.ContractId && <FormError text='El contrato es obligatorio.' />}
+							</fieldset>
+						</FieldsetGroup>
 
-					{!loadingExpenses ? (
-						<>
-							{expenseDetails.length > 0 && (
-								<div className=''>
-									<h1 className='title-form mb-2'>Gastos inquilino</h1>
-									<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
-										{expenseDetails.map((evt, index) => (
-											<div
-												key={evt.id.toString() + evt.createdAt}
-												className='align-items-center flex items-center flex-auto   border border-gray-300 p-2'
-											>
-												<Checkbox
-													inputId={evt.id.toString() + evt.createdAt}
-													name='expenseClients'
-													value={evt}
-													onChange={onExpensesClienteChange}
-													checked={selectedExpensesClient.some((item: any) => item.id === evt.id)}
-												/>
-												<label
-													htmlFor={evt.id.toString() + evt.createdAt}
-													className='ml-2'
+						{!loadingExpenses ? (
+							<>
+								{expenseDetails.length > 0 && (
+									<div className=''>
+										<h1 className='title-form mb-2'>Gastos inquilino</h1>
+										<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
+											{expenseDetails.map((evt, index) => (
+												<div
+													key={evt.id.toString() + evt.createdAt}
+													className='align-items-center flex items-center flex-auto   border border-gray-300 p-2'
 												>
-													${evt.amount} - {evt.description}
-												</label>
-											</div>
-										))}
+													<Checkbox
+														inputId={evt.id.toString() + evt.createdAt}
+														name='expenseClients'
+														value={evt}
+														onChange={onExpensesClienteChange}
+														checked={selectedExpensesClient.some((item: any) => item.id === evt.id)}
+													/>
+													<label
+														htmlFor={evt.id.toString() + evt.createdAt}
+														className='ml-2'
+													>
+														${evt.amount} - {evt.description}
+													</label>
+												</div>
+											))}
+										</div>
 									</div>
-								</div>
-							)}
+								)}
 
-							{eventualityDetails.length > 0 && (
-								<div className='my-4'>
-									<h1 className='title-form mb-2'>Eventualidades</h1>
-									<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
-										{eventualityDetails.map((evt, index) => (
-											<div
-												key={evt.updatedAt + evt.description}
-												className='align-items-center flex items-center flex-auto   border border-gray-300 p-2'
-											>
-												<Checkbox
-													inputId={evt.updatedAt + evt.description}
-													value={evt}
-													name='eventuality'
-													onChange={onEventualityChange}
-													checked={selectedEventualities.some((item: any) => item.id === evt.id)}
-												/>
-												<label
-													htmlFor={evt.updatedAt + evt.description}
-													className='ml-2'
+								{eventualityDetails.length > 0 && (
+									<div className='my-4'>
+										<h1 className='title-form mb-2'>Eventualidades</h1>
+										<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
+											{eventualityDetails.map((evt, index) => (
+												<div
+													key={evt.updatedAt + evt.description}
+													className='align-items-center flex items-center flex-auto   border border-gray-300 p-2'
 												>
-													${evt.clientAmount} - {evt.description}
-												</label>
-											</div>
-										))}
+													<Checkbox
+														inputId={evt.updatedAt + evt.description}
+														value={evt}
+														name='eventuality'
+														onChange={onEventualityChange}
+														checked={selectedEventualities.some((item: any) => item.id === evt.id)}
+													/>
+													<label
+														htmlFor={evt.updatedAt + evt.description}
+														className='ml-2'
+													>
+														${evt.clientAmount} - {evt.description}
+													</label>
+												</div>
+											))}
+										</div>
 									</div>
-								</div>
-							)}
+								)}
 
-							{debts.length > 0 && (
-								<div className='my-4'>
-									<h1 className='title-form mb-2'>Deudas anteriores</h1>
-									<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
-										{debts.map((evt, index) => (
-											<div
-												key={evt.updatedAt + evt.id}
-												className='align-items-center flex items-center   flex-wrap border border-gray-300 p-1'
-											>
-												<Checkbox
-													inputId={evt.updatedAt + evt.id}
-													value={evt}
-													name='expenseClients'
-													onChange={onExpensesClienteChange}
-													checked={selectedExpensesClient.some((item: any) => item.id === evt.id)}
-												/>
-												<label
-													htmlFor={evt.updatedAt + evt.id}
-													className='ml-2 '
+								{debts.length > 0 && (
+									<div className='my-4'>
+										<h1 className='title-form mb-2'>Deudas anteriores</h1>
+										<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
+											{debts.map((evt, index) => (
+												<div
+													key={evt.updatedAt + evt.id}
+													className={`align-items-center flex items-center  flex-wrap border border-gray-300 p-1 ${diffenceBetweenDates(evt.year + '-' + padTo2Digits(evt.month) + '-10', new Date().toString()) > 40 ? ' !border-red-500' : ''}`}
 												>
-													<span className=''>
-														{evt.description} $ {evt.amount}
-													</span>
-													{/* <span className='flex  gap-x-1'>
+													<Checkbox
+														inputId={evt.updatedAt + evt.id}
+														value={evt}
+														name='expenseClients'
+														onChange={onExpensesClienteChange}
+														checked={selectedExpensesClient.some((item: any) => item.id === evt.id)}
+													/>
+													<label
+														htmlFor={evt.updatedAt + evt.id}
+														className='ml-2 '
+													>
+														<span className=''>
+															{evt.description} $ {evt.amount}
+														</span>
+														{/* <span className='flex  gap-x-1'>
 														{evt.expenseDetails.map((ev) => (
 															<span className='border border-gray-400 px-1  w-fit'>
 																{ev.description} - ${ev.amount}
 															</span>
 														))}
 													</span> */}
-													{/* <span className='border bg-blue-800 text-white px-1  w-fit'>
+														{/* <span className='border bg-blue-800 text-white px-1  w-fit'>
 														Total a pagar : ${evt.total}
 													</span> */}
-												</label>
-											</div>
-										))}
+													</label>
+												</div>
+											))}
+										</div>
 									</div>
-								</div>
-							)}
-						</>
-					) : (
-						<Loading />
-					)}
-					<FieldsetGroup>
-						<FieldsetGroup className='w-full sm:w-[50%]'>
-							<fieldset>
-								<label htmlFor='month'>Mes de pago</label>
-								<Dropdown
-									value={month || ''}
-									placeholder='Elija un mes'
-									filterPlaceholder='Busca mes'
-									options={monthsInSpanish}
-									onChange={(event: DropdownChangeEvent) => handleInputChange(event.value, 'month')}
-									filter
-									className='h-[42px] items-center !border-gray-200 shadow'
-								/>
-								{errors?.month && <FormError text='El mes de pago es obligatorio.' />}
-							</fieldset>
-							<fieldset>
-								<label htmlFor='year'>Año de pago</label>
-								<Dropdown
-									placeholder='Elija un año'
-									value={year || ''}
-									options={selectedYears}
-									onChange={(event: DropdownChangeEvent) => handleInputChange(event.value, 'year')}
-									className='h-[42px] items-center !border-gray-200 shadow'
-								/>
-								{errors?.year && <FormError text='El año de pago es obligatorio.' />}
-							</fieldset>
+								)}
+							</>
+						) : (
+							<Loading />
+						)}
+						<FieldsetGroup>
+							<FieldsetGroup className='w-full sm:w-[50%]'>
+								<fieldset>
+									<label htmlFor='month'>Mes de pago</label>
+									<Dropdown
+										value={month || ''}
+										placeholder='Elija un mes'
+										filterPlaceholder='Busca mes'
+										options={monthsInSpanish}
+										onChange={(event: DropdownChangeEvent) => handleInputChange(event.value, 'month')}
+										filter
+										className='h-[42px] items-center !border-gray-200 shadow'
+									/>
+									{errors?.month && <FormError text='El mes de pago es obligatorio.' />}
+								</fieldset>
+								<fieldset>
+									<label htmlFor='year'>Año de pago</label>
+									<Dropdown
+										placeholder='Elija un año'
+										value={year || ''}
+										options={selectedYears}
+										onChange={(event: DropdownChangeEvent) => handleInputChange(event.value, 'year')}
+										className='h-[42px] items-center !border-gray-200 shadow'
+									/>
+									{errors?.year && <FormError text='El año de pago es obligatorio.' />}
+								</fieldset>
+							</FieldsetGroup>
+							<FieldsetGroup className='w-full sm:w-[50%]'>
+								<fieldset className=''>
+									<label htmlFor='PaymentTypeId'>Formato de pago </label>
+									<Dropdown
+										value={PaymentTypeId}
+										onChange={(e) => handleInputChange(e.value, 'PaymentTypeId')}
+										options={paymentTypeQuery.data?.data}
+										optionLabel='name'
+										filterPlaceholder='Busca un formato de pago'
+										optionValue='id'
+										placeholder='elije una un formato de pago'
+										filter
+										className='h-[42px] items-center !border-gray-200 shadow'
+									/>
+									{errors?.PaymentTypeId && <FormError text='El formato de pago es obligatorio.' />}
+								</fieldset>
+							</FieldsetGroup>
 						</FieldsetGroup>
-						<FieldsetGroup className='w-full sm:w-[50%]'>
-							<fieldset className=''>
-								<label htmlFor='PaymentTypeId'>Formato de pago </label>
-								<Dropdown
-									value={PaymentTypeId}
-									onChange={(e) => handleInputChange(e.value, 'PaymentTypeId')}
-									options={paymentTypeQuery.data?.data}
-									optionLabel='name'
-									filterPlaceholder='Busca un formato de pago'
-									optionValue='id'
-									placeholder='elije una un formato de pago'
-									filter
-									className='h-[42px] items-center !border-gray-200 shadow'
-								/>
-								{errors?.PaymentTypeId && <FormError text='El formato de pago es obligatorio.' />}
-							</fieldset>
-						</FieldsetGroup>
-					</FieldsetGroup>
-					<FieldsetGroup>
-						<FieldsetGroup className='w-full sm:w-[50%]'>
-							<fieldset className=''>
-								<label htmlFor=''>Total event.</label>
-								<input
-									placeholder='1234.90'
-									type='number'
-									disabled={true}
-									value={eventTotal.current}
-									onChange={(value) => {}}
-								/>
-							</fieldset>
-							<fieldset className=''>
-								<label htmlFor=''>Total impuestos</label>
-								<input
-									placeholder='1234.90'
-									type='number'
-									disabled={true}
-									value={expsTotal.current}
-									onChange={(value) => {}}
-								/>
-							</fieldset>
-						</FieldsetGroup>
-						<FieldsetGroup className='w-full sm:w-[50%]'>
-							{/* <fieldset className=''>
+						<FieldsetGroup>
+							<FieldsetGroup className='w-full sm:w-[50%]'>
+								<fieldset className=''>
+									<label htmlFor=''>Total event.</label>
+									<input
+										placeholder='1234.90'
+										type='number'
+										disabled={true}
+										value={eventTotal.current}
+										onChange={(value) => { }}
+									/>
+								</fieldset>
+								<fieldset className=''>
+									<label htmlFor=''>Total impuestos</label>
+									<input
+										placeholder='1234.90'
+										type='number'
+										disabled={true}
+										value={expsTotal.current}
+										onChange={(value) => { }}
+									/>
+								</fieldset>
+							</FieldsetGroup>
+							<FieldsetGroup className='w-full sm:w-[50%]'>
+								{/* <fieldset className=''>
 							<label htmlFor='isRecharged'>Cobrar recargo (S/N)</label>
 							<input
 								type='checkbox'
@@ -615,112 +656,150 @@ const ClientPayments = () => {
 								id='isRecharged'
 							/>
 						</fieldset> */}
-							<fieldset className=''>
-								<label htmlFor='total'>Días atrasados</label>
+								<fieldset className=''>
+									<label htmlFor='total'>Días atrasados</label>
 
+									<input
+										placeholder='1234.90'
+										name='qteDays'
+										className='w-24'
+										min={0}
+										type='number'
+										value={qteDays ?? ''}
+										onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+											// handleInputChange(e.target.value, 'qteDays')
+											updateAll({
+												...values,
+												qteDays: Number(e.target.value),
+												recharge: Number((Number(e.target.value) * dailyPunitive).toFixed(2)),
+											})
+										}}
+									/>
+								</fieldset>
+								<fieldset className=''>
+									<label htmlFor='recharge'>Totla recargo</label>
+									<input
+										placeholder='1234.90'
+										disabled={true}
+										name='total'
+										type='number'
+										value={Number((qteDays * dailyPunitive).toFixed(2))}
+										onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value, 'recharge')}
+									/>
+								</fieldset>
+							</FieldsetGroup>
+						</FieldsetGroup>
+						<FieldsetGroup className='w-full sm:w-[50%]'>
+							<fieldset className=''>
+								<label htmlFor='rentingAmount'>Valor alquiler</label>
 								<input
 									placeholder='1234.90'
-									name='qteDays'
-									className='w-24'
-									min={0}
 									type='number'
-									value={qteDays ?? ''}
+									// disabled={true}
+									value={rentingAmount ?? ''}
 									onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-										// handleInputChange(e.target.value, 'qteDays')
-										updateAll({
-											...values,
-											qteDays: Number(e.target.value),
-											recharge: Number((Number(e.target.value) * dailyPunitive).toFixed(2)),
-										})
+										handleInputChange(Number(e.target.value), 'rentingAmount')
 									}}
 								/>
+								{/* {errors?.rentingAmount && <FormError text='EL formato de pago es obligatorio.' />} */}
 							</fieldset>
 							<fieldset className=''>
-								<label htmlFor='recharge'>Totla recargo</label>
+								<label htmlFor='total'>Total a cobrar</label>
 								<input
 									placeholder='1234.90'
 									disabled={true}
 									name='total'
 									type='number'
-									value={Number((qteDays * dailyPunitive).toFixed(2))}
-									onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value, 'recharge')}
+									value={rentingAmount + eventTotal.current + expsTotal.current + recharge}
+									onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value, 'total')}
 								/>
 							</fieldset>
 						</FieldsetGroup>
-					</FieldsetGroup>
-					<FieldsetGroup className='w-full sm:w-[50%]'>
-						<fieldset className=''>
-							<label htmlFor='rentingAmount'>Valor alquiler</label>
-							<input
-								placeholder='1234.90'
-								type='number'
-								// disabled={true}
-								value={rentingAmount ?? ''}
-								onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-									handleInputChange(Number(e.target.value), 'rentingAmount')
-								}}
-							/>
-							{/* {errors?.rentingAmount && <FormError text='EL formato de pago es obligatorio.' />} */}
-						</fieldset>
-						<fieldset className=''>
-							<label htmlFor='total'>Total a cobrar</label>
-							<input
-								placeholder='1234.90'
-								disabled={true}
-								name='total'
-								type='number'
-								value={rentingAmount + eventTotal.current + expsTotal.current + recharge}
-								onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value, 'total')}
-							/>
-						</fieldset>
-					</FieldsetGroup>
-					<FieldsetGroup>
-						<FieldsetGroup className='w-full sm:w-[50%]'></FieldsetGroup>
-					</FieldsetGroup>
+						<FieldsetGroup>
+							<FieldsetGroup className='w-full sm:w-[50%]'></FieldsetGroup>
+						</FieldsetGroup>
 
-					<section className='action flex items-center gap-x-3 mt-8'>
-						<button
-							className='btn sec !py-1'
-							onClick={closeCreateModal}
-							type='button'
-						>
-							Cerrar
-						</button>
-						<button
-							className='btn gradient  !py-1'
-							type='submit'
-						>
-							Guardar
-						</button>
-					</section>
-				</form>
-
-				{/* <div className='payment-pdf bg-gray-50 flex-1'>
-						{expenseDetails.map((evt, index) => (
-							<div
-								key={index}
-								className='align-items-center flex items-center flex-auto   border border-gray-300 p-2'
+						<section className='action flex items-center gap-x-3 mt-8'>
+							<button
+								className='btn sec !py-1'
+								onClick={closeCreateModal}
+								type='button'
 							>
-								<Checkbox
-									inputId={index.toString()}
-									name='expenseClients'
-									value={evt}
-									onChange={onExpensesClienteChange}
-									checked={selectedExpensesClient.some((item: any) => item.id === evt.id)}
-								/>
-								<label
-									htmlFor={index.toString()}
-									className='ml-2'
+								Cerrar
+							</button>
+							<button
+								className='btn gradient  !py-1'
+								type='submit'
+							>
+								Guardar
+							</button>
+						</section>
+					</form>
+					<Box className="shadow-md rounded-lg border border-gray-200 dark:!from-gray-700 dark:!to-gray-800 dark:!bg-gradient-to-tr p-2">
+						{ContractId && (<h3 className='font-bold mb-2 text-lg '>Lista de conceptos a cobrar</h3>)}
+						<div className='payment-pdf  pt-4 flex-1 gap-y-1 flex flex-col px-1'>
+							{
+								values.rentingAmount > 0 && (
+									<div
+										className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+									>
+										<span className=''>ALQUILER
+											{/*  @ts-ignore*/}
+											{ContractId?.Property?.street} {ContractId?.Property?.number}{' '}{ContractId?.Property?.floor}-{ContractId?.Property?.dept}  {month}   {year.toString()}</span>
+										<span>${rentingAmount}</span>
+
+									</div>
+								)
+							}
+							{
+								values.recharge > 0 && (
+									<div
+										className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+									>
+										<span className=''>PUNITORIOS  {month}   {year.toString()}</span>
+										<span>${recharge}</span>
+
+									</div>
+								)
+							}
+							{selectedExpensesClient.map((evt, index) => (
+								<div
+									key={index}
+									className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
 								>
-									${evt.amount} - {evt.description}
-								</label>
-							</div>
-						))}
-					</div> */}
-				{/* </div> */}
+									<span className=''>{evt.description + ' ' + month + '  ' + year.toString()}</span>
+									<span>${evt.amount}</span>
+
+								</div>
+							))}
+							{selectedEventualities.map((evt, index) => (
+								<div
+									key={index}
+									className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+								>
+									<span className=''>{evt.description}</span>
+									<span>${evt.clientAmount}</span>
+
+								</div>
+							))}
+							{selectedDebts.map((evt, index) => (
+								<div
+									key={index}
+									className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+								>
+									<span className=''>{evt.description}</span>
+									<span>${evt.amount}</span>
+
+								</div>
+							))}
+						</div>
+					</Box>
+				</div>
 			</CreateModal>
 		</div>
 	)
 }
 
 export default ClientPayments
+
+// ? TODO:: print pdf - https://www.npmjs.com/package/react-to-print - revert payment functionality

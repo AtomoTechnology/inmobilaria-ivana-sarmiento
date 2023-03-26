@@ -9,7 +9,7 @@ const GetAllZones = async () => {
 
 export const useVisits = () => {
 	const visitsQuery = useQuery({
-		queryKey: ['zones'],
+		queryKey: ['visits'],
 		queryFn: GetAllZones,
 	})
 

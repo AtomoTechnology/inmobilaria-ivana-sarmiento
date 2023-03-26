@@ -107,9 +107,9 @@ NOTA :: 21/03
 -- validar que las deudas no arrastran mitad de mes, cuando el clinete 
 - pantalla para ver las deudas 
 --pantala para ver las event
--- formato fecha dd-mm-yyyy
--- alqNeta monto actual - %comi prop. 
--- %comProp en property igual para todos sus propiedades 
+-- formato fecha dd-mm-yyyy // TODO:: DONE
+-- alqNeta monto actual - %comi prop. // TODO:: DONE
+-- %comProp en property igual para todos sus propiedades  // TODO:: DONE
 -- nrocarpeta , añoActual ,
 
 deudas mas de dos meses en rojo 

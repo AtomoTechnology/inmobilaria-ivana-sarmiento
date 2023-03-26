@@ -9,7 +9,7 @@ const GetAllClaims = async () => {
 
 export const useClaims = () => {
 	const claimQuery = useQuery({
-		queryKey: ['zones'],
+		queryKey: ['claims'],
 		queryFn: GetAllClaims,
 	})
 

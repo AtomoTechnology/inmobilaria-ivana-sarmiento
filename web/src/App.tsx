@@ -6,67 +6,8 @@ import CheckIcon from './components/icons/CheckIcon'
 import CloseIcon from './components/icons/CloseIcon'
 import logoApp from './assets/images/logo.png'
 import DownAngle from './components/icons/DownAngle'
+import { menuItems } from './helpers/general'
 
-const menuItems = [
-	{
-		to: null,
-		title: 'ABM',
-		subLink: [
-			{ to: 'zones', title: 'Zonas' },
-			{ to: 'payment-methods', title: 'Tipo de pago' },
-			{ to: 'property-types', title: 'Tipo de propiedades' },
-			{ to: 'properties', title: 'Propiedades' },
-		],
-	},
-
-	{
-		to: 'clients',
-		title: 'Inquilinos',
-		subLink: [],
-	},
-	{
-		to: 'owners',
-		title: 'Propietarios',
-		subLink: [],
-	},
-	{
-		to: 'contracts',
-		title: 'Contratos',
-		subLink: [],
-	},
-	{
-		to: null,
-		title: 'Consultas',
-		subLink: [
-			{ to: 'client-payment', title: 'Deptos en venta' },
-			{ to: 'owner-payment', title: 'Deptos en Alquiler' },
-			{ to: 'visits', title: 'Visitas' },
-			{ to: 'claims', title: 'Reclamos' },
-		],
-	},
-	{
-		to: null,
-		title: 'Pagos',
-		subLink: [
-			{ to: 'client-payment', title: 'Cobro a inquilino' },
-			{ to: 'owner-payment', title: 'Pgao a propietario' },
-			{ to: 'properties', title: 'Lista conceptos' },
-			{ to: 'revert-payment', title: 'Revertir cobro' },
-		],
-	},
-	{
-		to: null,
-		title: 'Informes',
-		subLink: [
-			{ to: 'contract-debts-clients', title: 'Deudas x inqulinos' },
-			{ to: 'contract-debts-owners', title: 'Deudas x  propietario' },
-			{ to: 'contracts-expired', title: 'Vto de contratos' },
-			{ to: 'contract-price-historial', title: 'Ajustes % contratos' },
-			{ to: 'client-expenses', title: 'Impuestos inquilinos' },
-			{ to: 'owner-expenses', title: 'Impuestos propietario' },
-		],
-	},
-]
 
 export const ShowModal = ({ title, message, color = 'green' }: { title: string; message: string; color?: string }) => {
 	let gradient = 'bg-gradient-error'
@@ -147,8 +88,7 @@ const App = () => {
 									to={item.to}
 									key={index}
 									className={({ isActive, isPending }) =>
-										`relative items-center  justify-center flex  h-[70px] text-brand2 dark:text-slate-400  dark:hover:text-brand hover:text-brand group p-1 ${
-											isActive ? 'underline !text-brand rounded-md   ' : isPending ? 'pending' : ''
+										`relative items-center  justify-center flex  h-[70px] text-brand2 dark:text-slate-400  dark:hover:text-brand hover:text-brand group p-1 ${isActive ? 'underline !text-brand rounded-md   ' : isPending ? 'pending' : ''
 										}`
 									}
 								>
@@ -169,8 +109,7 @@ const App = () => {
 												key={index}
 												to={sub.to}
 												className={({ isActive, isPending }) =>
-													`text-brand2 dark:text-slate-400 hover:!text-brand ${
-														isActive ? 'underline !text-brand ' : isPending ? 'pending' : ''
+													`text-brand2 dark:text-slate-400 hover:!text-brand ${isActive ? 'underline !text-brand ' : isPending ? 'pending' : ''
 													}`
 												}
 											>

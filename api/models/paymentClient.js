@@ -116,6 +116,12 @@ module.exports = (sequelize, DataTypes) => {
 			},
 		},
 		{
+			indexes: [
+				{
+					unique: true,
+					fields: ['ContractId','month', 'year'],
+				},
+			],
 			paranoid: true,
 			sequelize,
 			modelName: 'PaymentClient',

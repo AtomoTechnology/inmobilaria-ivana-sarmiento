@@ -14,6 +14,8 @@ module.exports = (sequelize, DataTypes) => {
 			Contract.hasMany(models.OwnerExpense)
 			Contract.hasMany(models.PaymentClient)
 			Contract.hasMany(models.PaymentOwner)
+			Contract.hasMany(models.DebtClient)
+			Contract.hasMany(models.DebtOwner)
 		}
 	}
 	Contract.init(

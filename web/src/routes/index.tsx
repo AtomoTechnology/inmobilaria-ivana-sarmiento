@@ -7,10 +7,13 @@ import Owners from '../views/clients/owners'
 import ClientExpenses from '../views/contracts/ClientExpenses'
 import ContractDetail from '../views/contracts/ContractDetail'
 import Contracts from '../views/contracts/Contracts'
+import DebtsClients from '../views/contracts/debtsClients'
+import DebtsOwners from '../views/contracts/debtsOwners'
 import ExpiredContracts from '../views/contracts/ExpiredContracts'
 import HistorialPrices from '../views/contracts/HistorialPrice'
 import OwnerExpenses from '../views/contracts/OwnerExpenses'
 import Claims from '../views/general/Claims'
+import Configurations from '../views/general/configurations'
 import PageNotFound from '../views/general/PageNotFound'
 import Visits from '../views/general/visits'
 import Home from '../views/Home'
@@ -137,6 +140,22 @@ export const router = createBrowserRouter([
 				),
 			},
 			{
+				path: '/contract-debts-clients',
+				element: (
+					<PrivateRoute>
+						<DebtsClients />
+					</PrivateRoute>
+				),
+			},
+			{
+				path: '/contract-debts-owners',
+				element: (
+					<PrivateRoute>
+						<DebtsOwners />
+					</PrivateRoute>
+				),
+			},
+			{
 				path: '/client-payment',
 				element: (
 					<PrivateRoute>
@@ -165,6 +184,14 @@ export const router = createBrowserRouter([
 				element: (
 					<PrivateRoute>
 						<Claims />
+					</PrivateRoute>
+				),
+			},
+			{
+				path: '/configurations',
+				element: (
+					<PrivateRoute>
+						<Configurations />
 					</PrivateRoute>
 				),
 			},

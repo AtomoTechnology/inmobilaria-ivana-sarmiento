@@ -40,15 +40,27 @@ module.exports = (sequelize, DataTypes) => {
 					},
 				},
 			},
-			rentingAmount: {
+			amount: {
 				type: DataTypes.FLOAT,
 				allowNull: false,
 				validate: {
 					notNull: {
-						msg: 'El monto del alquiler  es obligatorio',
+						msg: 'El monto  es obligatorio',
 					},
 					notEmpty: {
-						msg: 'El  monto del alquiler es obligatorio',
+						msg: 'El  monto  es obligatorio',
+					},
+				},
+			},
+			description: {
+				type: DataTypes.STRING,
+				allowNull: false,
+				validate: {
+					notNull: {
+						msg: 'La descripción  es obligatoria',
+					},
+					notEmpty: {
+						msg: 'La descripción  es obligatoria',
 					},
 				},
 			},
@@ -69,21 +81,21 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 				defaultValue: false,
 			},
-			total: {
-				type: DataTypes.FLOAT,
+			rent: {
+				type: DataTypes.BOOLEAN,
 				allowNull: false,
-				defaultValue: 0,
+				defaultValue: false,
 			},
-			expenseDetails: {
-				type: DataTypes.TEXT('long'),
-				get: function () {
-					if (!this.getDataValue('expenseDetails')) return null
-					return JSON.parse(this.getDataValue('expenseDetails'))
-				},
-				set: function (value) {
-					return this.setDataValue('expenseDetails', JSON.stringify(value || ''))
-				},
+			debt: {
+				type: DataTypes.BOOLEAN,
+				allowNull: false,
+				defaultValue: true,
 			},
+			paidDate: {
+				type: DataTypes.DATE,
+				allowNull: true,
+				defaultValue: null,
+			},		
 		},
 		{
 			paranoid: true,

@@ -81,6 +81,11 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 				defaultValue: false,
 			},
+			rent: {
+				type: DataTypes.BOOLEAN,
+				allowNull: false,
+				defaultValue: false,
+			},
 			debt: {
 				type: DataTypes.BOOLEAN,
 				allowNull: false,
@@ -90,23 +95,7 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.DATE,
 				allowNull: true,
 				defaultValue: null,
-			},
-
-			// total: {
-			// 	type: DataTypes.FLOAT,
-			// 	allowNull: false,
-			// 	defaultValue: 0,
-			// },
-			// expenseDetails: {
-			// 	type: DataTypes.TEXT('long'),
-			// 	get: function () {
-			// 		if (!this.getDataValue('expenseDetails')) return null
-			// 		return JSON.parse(this.getDataValue('expenseDetails'))
-			// 	},
-			// 	set: function (value) {
-			// 		return this.setDataValue('expenseDetails', JSON.stringify(value || ''))
-			// 	},
-			// },
+			},		
 		},
 		{
 			paranoid: true,

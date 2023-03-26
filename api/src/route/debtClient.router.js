@@ -11,6 +11,7 @@ router.get('/:id', ctrl.GetById)
 router.post('/', ctrl.Post)
 router.post('/job/monthly', ctrl.jobDebtsClients)
 
+
 //Update
 router.put('/:id', ctrl.Put)
 
