@@ -10,40 +10,90 @@ const {
 	Owner,
 	Eventuality,
 } = require('../../models')
-const { Op } = require('sequelize')
+const {
+	Op
+} = require('sequelize')
 
-const { all, paginate, findOne, update, destroy } = require('../Generic/FactoryGeneric')
+const {
+	all,
+	paginate,
+	findOne,
+	update,
+	destroy
+} = require('../Generic/FactoryGeneric')
 const AppError = require('../../helpers/AppError')
-const { catchAsync } = require('../../helpers/catchAsync')
-const { addDays } = require('../../helpers/date')
+const {
+	catchAsync
+} = require('../../helpers/catchAsync')
+const {
+	addDays
+} = require('../../helpers/date')
 
 exports.GetAll = all(Contract, {
-	include: [{ model: Client }, { model: Property }, { model: PriceHistorial }],
+	include: [{
+		model: Client
+	}, {
+		model: Property
+	}, {
+		model: PriceHistorial
+	}],
 })
 exports.Paginate = paginate(Contract, {
-	include: [{ model: Client }, { model: Property }],
+	include: [{
+		model: Client
+	}, {
+		model: Property
+	}],
 })
 
 exports.Post = catchAsync(async (req, res, next) => {
 	const transact = await sequelize.transaction()
 	try {
-		const { PropertyId, amount, assurances } = req.body
+		const {
+			PropertyId,
+			amount,
+			assurances
+		} = req.body
 
-		const p = await Property.findOne(
-			{ where: { [Op.and]: [{ id: PropertyId }, { state: 'Libre' }] } },
-			{ transaction: transact }
-		)
+		const p = await Property.findOne({
+			where: {
+				[Op.and]: [{
+					id: PropertyId
+				}, {
+					state: 'Libre'
+				}]
+			}
+		}, {
+			transaction: transact
+		})
 		if (!p) return next(new AppError('Existe un contrato vigente para este inmueble', 400))
 		const cont = await Contract.create(req.body)
 
 		if (assurances !== undefined && assurances.length > 0) {
 			for (let j = 0; j < assurances.length; j++) {
 				assurances[j].ContractId = cont.id
-				await Assurance.create(assurances[j], { transaction: transact })
+				await Assurance.create(assurances[j], {
+					transaction: transact
+				})
 			}
 		}
-		await Property.update({ state: 'Ocupado' }, { where: { id: PropertyId } }, { transaction: transact })
-		await PriceHistorial.create({ ContractId: cont.id, amount: amount, year: 1, percent: 0 }, { transaction: transact })
+		await Property.update({
+			state: 'Ocupado'
+		}, {
+			where: {
+				id: PropertyId
+			}
+		}, {
+			transaction: transact
+		})
+		await PriceHistorial.create({
+			ContractId: cont.id,
+			amount: amount,
+			year: 1,
+			percent: 0
+		}, {
+			transaction: transact
+		})
 		// const isExist = await Contract.findOne({
 		// 	where: {
 		// 		[Op.and]: [{ PropertyId: PropertyId }, { state: 'Finalizado' }],
@@ -65,14 +115,27 @@ exports.Post = catchAsync(async (req, res, next) => {
 })
 
 exports.GetById = findOne(Contract, {
-	include: [
-		{ model: Client },
-		{ model: Property },
-		{ model: Assurance },
-		{ model: PriceHistorial },
-		{ model: Eventuality },
-		{ model: ClientExpense },
-		{ model: OwnerExpense },
+	include: [{
+			model: Client
+		},
+		{
+			model: Property
+		},
+		{
+			model: Assurance
+		},
+		{
+			model: PriceHistorial
+		},
+		{
+			model: Eventuality
+		},
+		{
+			model: ClientExpense
+		},
+		{
+			model: OwnerExpense
+		},
 	],
 })
 exports.Put = update(Contract, [
@@ -105,7 +168,14 @@ exports.ExpiredContracts = catchAsync(async (req, res, next) => {
 			},
 		},
 		// attributes : ['id','endDate']
-		include: [{ model: Client }, { model: Property, include: { model: Owner } }],
+		include: [{
+			model: Client
+		}, {
+			model: Property,
+			include: {
+				model: Owner
+			}
+		}],
 	})
 
 	return res.json({
@@ -117,5 +187,12 @@ exports.ExpiredContracts = catchAsync(async (req, res, next) => {
 })
 
 exports.HistorialPrice = all(Contract, {
-	include: [{ model: PriceHistorial }, { model: Property, include: { model: Owner } }],
+	include: [{
+		model: PriceHistorial
+	}, {
+		model: Property,
+		include: {
+			model: Owner
+		}
+	}],
 })
