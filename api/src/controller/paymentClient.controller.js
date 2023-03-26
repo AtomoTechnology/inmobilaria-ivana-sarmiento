@@ -9,14 +9,24 @@ const {
 	sequelize,
 } = require('../../models')
 
-const { all, paginate, create, findOne, update, destroy } = require('../Generic/FactoryGeneric')
-const { catchAsync } = require('../../helpers/catchAsync')
+const {
+	all,
+	paginate,
+	create,
+	findOne,
+	update,
+	destroy
+} = require('../Generic/FactoryGeneric')
+const {
+	catchAsync
+} = require('../../helpers/catchAsync')
 
 exports.GetAll = all(PaymentClient, {
-	include: [
-		{
+	include: [{
 			model: Contract,
-			include: { model: Property },
+			include: {
+				model: Property
+			},
 		},
 		{
 			model: PaymentType,
@@ -24,8 +34,7 @@ exports.GetAll = all(PaymentClient, {
 	],
 })
 exports.Paginate = paginate(PaymentClient, {
-	include: [
-		{
+	include: [{
 			model: Contract,
 		},
 		{
@@ -46,17 +55,27 @@ exports.Post = catchAsync(async (req, res, next) => {
 		if (req.body.expenseDetails.length > 0) {
 			for (let j = 0; j < req.body.expenseDetails.length; j++) {
 				if (req.body.expenseDetails[j].debt) {
-					await DebtClient.update(
-						{ paid: true, paidDate: new Date() },
-						{ where: { id: req.body.expenseDetails[j].id } }
-					)
+					await DebtClient.update({
+						paid: true,
+						paidDate: new Date()
+					}, {
+						where: {
+							id: req.body.expenseDetails[j].id
+						}
+					})
 				}
 			}
 		}
 
 		if (req.body.eventualityDetails.length > 0) {
 			for (let j = 0; j < req.body.eventualityDetails.length; j++) {
-				await Eventuality.update({ clientPaid: true }, { where: { id: req.body.eventualityDetails[j].id } })
+				await Eventuality.update({
+					clientPaid: true
+				}, {
+					where: {
+						id: req.body.eventualityDetails[j].id
+					}
+				})
 			}
 		}
 
@@ -75,8 +94,7 @@ exports.Post = catchAsync(async (req, res, next) => {
 })
 
 exports.GetById = findOne(PaymentClient, {
-	include: [
-		{
+	include: [{
 			model: Contract,
 		},
 		{

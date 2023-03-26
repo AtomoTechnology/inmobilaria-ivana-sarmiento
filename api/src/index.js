@@ -4,12 +4,17 @@ const morgan = require('morgan')
 const cors = require('cors')
 const routeconfig = require('./routeconfig/config')
 const rateLimit = require('express-rate-limit')
-const { globalError } = require('./Generic/errorGeneric')
+const {
+	globalError
+} = require('./Generic/errorGeneric')
 const dotenv = require('dotenv')
 dotenv.config()
-const { sequelize } = require('../models')
-
+const {
+	sequelize
+} = require('../models')
 const bodyParser = require('body-parser')
+const schedule = require('node-schedule');
+const ctrl = require('./controller/debtClient.controller');
 
 const app = express()
 
@@ -61,6 +66,14 @@ app.all('*', (req, res, next) => {
 })
 //Global error
 app.use(globalError)
+
+// * * * * * -- para ejecutar a cada minuto
+// 0 0 1 * * --  se ejecutara todo el primer dia de cada mes a las 12:00 am
+
+schedule.scheduleJob("0 0 1 * *", function () {
+	return ctrl.jobDebtsClients();
+});
+
 //Starting
 app.listen(app.get('port'), () => {
 	console.log(' server on port', app.get('port'), '  MODE : ', process.env.NODE_ENV)
