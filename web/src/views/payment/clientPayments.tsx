@@ -277,7 +277,8 @@ const ClientPayments = () => {
 						amount: Number((qtyDay * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (Number(dp.data.data[0].value) / 100)).toFixed(2)),
 						createdAt: (new Date().getTime().toString()),
 						rent: false,
-						id: new Date().getTime()
+						id: new Date().getTime(),
+						recharge: true
 					}
 					])
 
@@ -735,65 +736,71 @@ const ClientPayments = () => {
 							</button>
 						</section>
 					</form>
-					<Box className="shadow-md rounded-lg border border-gray-200 dark:!from-gray-700 dark:!to-gray-800 dark:!bg-gradient-to-tr p-2">
-						{ContractId && (<h3 className='font-bold mb-2 text-lg '>Lista de conceptos a cobrar</h3>)}
-						<div className='payment-pdf  pt-4 flex-1 gap-y-1 flex flex-col px-1'>
-							{
-								values.rentingAmount > 0 && (
-									<div
-										className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
-									>
-										<span className=''>ALQUILER
-											{/*  @ts-ignore*/}
-											{ContractId?.Property?.street} {ContractId?.Property?.number}{' '}{ContractId?.Property?.floor}-{ContractId?.Property?.dept}  {month}   {year.toString()}</span>
-										<span>${rentingAmount}</span>
 
-									</div>
-								)
-							}
-							{
-								values.recharge > 0 && (
-									<div
-										className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
-									>
-										<span className=''>PUNITORIOS  {month}   {year.toString()}</span>
-										<span>${recharge}</span>
+					{
+						ContractId && (
+							<Box className="shadow-md rounded-lg border border-gray-200 dark:!from-gray-700 dark:!to-gray-800 dark:!bg-gradient-to-tr p-2">
+								<h3 className='font-bold mb-2 text-lg '>Lista de conceptos a cobrar</h3>
+								<div className='payment-pdf  pt-4 flex-1 gap-y-1 flex flex-col px-1'>
+									{
+										values.rentingAmount > 0 && (
+											<div
+												className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+											>
+												<span className=''>ALQUILER
+													{/*  @ts-ignore*/}
+													{ContractId?.Property?.street} {ContractId?.Property?.number}{' '}{ContractId?.Property?.floor}-{ContractId?.Property?.dept}  {month}   {year.toString()}</span>
+												<span>${rentingAmount}</span>
 
-									</div>
-								)
-							}
-							{selectedExpensesClient.map((evt, index) => (
-								<div
-									key={index}
-									className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
-								>
-									<span className=''>{evt.description + ' ' + month + '  ' + year.toString()}</span>
-									<span>${evt.amount}</span>
+											</div>
+										)
+									}
+									{
+										values.recharge > 0 && (
+											<div
+												className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+											>
+												<span className=''>PUNITORIOS  {month}   {year.toString()}</span>
+												<span>${recharge}</span>
 
+											</div>
+										)
+									}
+									{selectedExpensesClient.map((evt, index) => (
+										<div
+											key={index}
+											className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+										>
+											<span className=''>{evt.description + ' ' + month + '  ' + year.toString()}</span>
+											<span>${evt.amount}</span>
+
+										</div>
+									))}
+									{selectedEventualities.map((evt, index) => (
+										<div
+											key={index}
+											className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+										>
+											<span className=''>{evt.description}</span>
+											<span>${evt.clientAmount}</span>
+
+										</div>
+									))}
+									{selectedDebts.map((evt, index) => (
+										<div
+											key={index}
+											className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+										>
+											<span className=''>{evt.description}</span>
+											<span>${evt.amount}</span>
+
+										</div>
+									))}
 								</div>
-							))}
-							{selectedEventualities.map((evt, index) => (
-								<div
-									key={index}
-									className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
-								>
-									<span className=''>{evt.description}</span>
-									<span>${evt.clientAmount}</span>
+							</Box>
+						)
+					}
 
-								</div>
-							))}
-							{selectedDebts.map((evt, index) => (
-								<div
-									key={index}
-									className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
-								>
-									<span className=''>{evt.description}</span>
-									<span>${evt.amount}</span>
-
-								</div>
-							))}
-						</div>
-					</Box>
 				</div>
 			</CreateModal>
 		</div>

@@ -67,7 +67,6 @@ const HistorialPrices = () => {
 		console.log(data)
 		// return
 		updateAll({ ...data })
-		// TODO: fix date  and complete  edit  and show detail
 		setShowCreateModal(true)
 		setEditMode(true)
 		currentPrice.current = data
@@ -519,4 +518,3 @@ const HistorialPrices = () => {
 
 export default HistorialPrices
 
-// TODO: agregar clientExpenses and ownerExpenses for each contract

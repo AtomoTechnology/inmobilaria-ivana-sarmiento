@@ -22,10 +22,14 @@ import { Dropdown } from 'primereact/dropdown'
 import { useProperties } from '../../hooks/useProperties'
 import { Button } from 'primereact/button'
 import AddComment from '../../components/icons/AddComment'
+import { formatDate } from '../../helpers/date'
+import CloseOnClick from '../../components/CloseOnClick'
 
 const Claims = () => {
 	const { showAlert, hideAlert } = useContext(AuthContext)
 	const [showCreateModal, setShowCreateModal] = useState(false)
+	const [showAddCommentModal, setShowAddCommentModal] = useState(false)
+	const [showCommentsModal, setShowCommentsModal] = useState(false)
 	const [show, setShow] = useState(false)
 	const { description, PropertyId, state, details, values, handleInputChange, reset, updateAll } = useForm({
 		description: '',
@@ -33,6 +37,7 @@ const Claims = () => {
 		details: [],
 		PropertyId: 0,
 	})
+	const { comment, values: Cvalues, handleInputChange: ChandleInputChange, reset: Creset } = useForm({ comment: '' })
 	const [errors, setErrors] = useState<any>()
 	const [editMode, setEditMode] = useState(false)
 	const [to, setTo] = useState<any>()
@@ -95,6 +100,16 @@ const Claims = () => {
 		setErrors(error)
 		return ok
 	}
+	const verifyFormAddComment = () => {
+		let ok = true
+		let error: any = {}
+		if (!comment.trim().length) {
+			ok = false
+			error.comment = true
+		}
+		setErrors(error)
+		return ok
+	}
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
@@ -151,9 +166,67 @@ const Claims = () => {
 		setShowCreateModal(false)
 		setErrors({})
 	}
+	const closeAddCommentModal = () => {
+		Creset()
+		setShowAddCommentModal(false)
+		setErrors({})
+	}
 	const handleAddComment = (data: IClaim) => {
 		console.log(data)
+		currentClaim.current = data
+		setShowAddCommentModal(true)
 	}
+	const showComments = (data: IClaim) => {
+		currentClaim.current = data
+		setShowCommentsModal(true)
+	}
+	const handleAddCommentForm = async (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault()
+		if (verifyFormAddComment()) {
+			try {
+				const res = await http.put('/claims/' + currentClaim.current?.id, { details: [...currentClaim.current?.details!, { comment, date: new Date() }] })
+				if (res.data.ok) {
+					data?.data &&
+						(data.data = data?.data.map((z) => {
+							if (z.id === currentClaim.current?.id) {
+								// @ts-expect-error
+								z.details = [...currentClaim.current?.details!, { comment, date: new Date() }]
+							}
+							return z
+						}))
+					closeAddCommentModal()
+					showAndHideModal('Agregado', res.data.message)
+				} else {
+					showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
+				}
+			} catch (error: any) {
+				if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+			}
+		}
+	}
+	const deleteClaimComment = async (date: string) => {
+		try {
+			let dtls = currentClaim.current?.details.filter(c => c.date !== date)
+			const res = await http.put('/claims/' + currentClaim.current?.id, { details: dtls })
+			if (res.data.ok) {
+				data?.data &&
+					(data.data = data?.data.map((z) => {
+						if (z.id === currentClaim.current?.id) {
+							// @ts-expect-error
+							z.details = dtls
+						}
+						return z
+					}))
+				// closeAddCommentModal()
+				showAndHideModal('Borrado', res.data.message)
+			} else {
+				showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
+			}
+		} catch (error: any) {
+			if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+		}
+	}
+
 
 	const actionBodyTemplate = (rowData: IClaim) => {
 		return (
@@ -245,7 +318,7 @@ const Claims = () => {
 								field='details.length'
 								header='Comentarios'
 								sortable
-								// body={(data) => <span>{data.details.length}</span>}
+								body={(data) => (<button disabled={data.details.length === 0} onClick={() => showComments(data)} className=' border-brand border rounded-full shadow px-2  py-1 text-brand'> Ver ({data.details.length}) </button>)}
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 							/>
@@ -282,7 +355,7 @@ const Claims = () => {
 				closeModal={closeCreateModal}
 				overlayClick={false}
 				className='max-w-[700px] w-fit sm:w-[600px]'
-				titleText={editMode ? 'Editar' : 'Crear' + ' reclamos'}
+				titleText={`${editMode ? 'Editar' : 'Iniciar'}  reclamo`}
 			>
 				<form
 					action=''
@@ -360,6 +433,82 @@ const Claims = () => {
 					</section>
 				</form>
 			</CreateModal>
+			<CreateModal
+				show={showAddCommentModal}
+				closeModal={closeAddCommentModal}
+				overlayClick={false}
+				className='max-w-[700px] w-fit sm:w-[600px]'
+				titleText={`${editMode ? 'Editar' : 'Agregar'}  comentario`}
+			>
+				<form
+					action=''
+					onSubmit={handleAddCommentForm}
+				>
+					<fieldset>
+						<label htmlFor='PropertyId'>Reclamo : #{currentClaim.current?.id}</label>
+						<span className='border border-gray-300 p-2'> {currentClaim.current?.description} </span>
+					</fieldset>
+					<fieldset className=''>
+						<label htmlFor='comment'>Comentario</label>
+						<CustmTextArea
+							placeholder='Escribe un comentario...'
+							initialValue={comment}
+							className="min-h-[150px]"
+							onChange={(value) => ChandleInputChange(value, 'comment')}
+						/>
+						{errors?.comment && <FormError text='El comentario es obligatoria.' />}
+					</fieldset>
+
+					<section className='action flex items-center gap-x-3 mt-8'>
+						<button
+							className='btn sec !py-1'
+							onClick={closeAddCommentModal}
+							type='button'
+						>
+							Cerrar
+						</button>
+						<button
+							className='btn gradient  !py-1'
+							type='submit'
+						>
+							Agregar
+						</button>
+					</section>
+				</form>
+			</CreateModal>
+
+			<CreateModal
+				show={showCommentsModal}
+				closeModal={() => setShowCommentsModal(false)}
+				overlayClick={false}
+				className='max-w-[700px] w-fit sm:w-[600px]'
+				titleText='Comentarios'
+			>
+				<CloseOnClick action={() => setShowCommentsModal(false)} />
+				<div className="">
+					<fieldset className='border border-gray-300 p-2 text-sm'>
+						<label htmlFor='PropertyId'>Reclamo : #{currentClaim.current?.id}</label>
+						<span className=''> {currentClaim.current?.description} </span>
+					</fieldset>
+					{
+						currentClaim.current?.details?.length === 0 ? <span className='text-center text-gray-400'>No hay comentarios</span> : (
+							<div className="comments flex flex-col gap-y-2  max-h-[420px] overflow-y-auto">
+								{
+									currentClaim.current?.details?.map((comment) => (
+										<div className="comment bg-gray-200 p-2 pb-5 relative group hover:bg-gray-100 cursor-pointer" key={comment.date}>
+											<span>{comment.comment}</span>
+											<span className='absolute bottom-[2px] right-1 text-xs'> {formatDate(comment.date)} </span>
+											<span className='absolute top-[2px] right-1 text-xs hidden bg-red-100 p-2 rounded-full shadow-lg group-hover:flex'> <DeleteIcon action={() => deleteClaimComment(comment.date)} /> </span>
+										</div>
+									))
+								}
+							</div>
+						)
+					}
+
+				</div>
+			</CreateModal>
+
 		</div>
 	)
 }

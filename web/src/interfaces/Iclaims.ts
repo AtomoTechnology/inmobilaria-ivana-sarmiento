@@ -26,10 +26,9 @@ export interface IClaim {
 }
 
 export interface Detail {
-	text?: string
-	date: number | string
-	id?: number
-	description?: string
+	comment?: string
+	date: string
+	id : string | number	
 }
 
 export enum State {

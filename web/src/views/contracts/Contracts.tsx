@@ -118,7 +118,6 @@ const Contracts = () => {
 		console.log(data)
 		// @ts-expect-error
 		updateAll({ ...data, ClientId: data.Client, PropertyId: data.Property })
-		// TODO: fix date  and complete  edit  and show detail
 		setShowCreateModal(true)
 		setEditMode(true)
 		currentContract.current = data
@@ -1224,4 +1223,4 @@ const Contracts = () => {
 
 export default Contracts
 
-// TODO: finish edit contract and ContractDetails
+// TODO:  ContractDetails

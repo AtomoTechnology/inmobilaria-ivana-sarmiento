@@ -1,8 +1,8 @@
 {
   "development": {
     "username": "root",
-    "password": "516euge94324590",
-    "database": "ivanaDB",
+    "password": "jhm.ok",
+    "database": "ivanadb",
     "host": "127.0.0.1",
     "dialect": "mysql"
   },

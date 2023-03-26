@@ -21,7 +21,7 @@ import FieldsetGroup from '../../components/FieldsetGroup'
 import { Dropdown } from 'primereact/dropdown'
 import { useProperties } from '../../hooks/useProperties'
 import { Button } from 'primereact/button'
-import { formatDate } from '../../helpers/date'
+import { formatDate, formatDateForInput } from '../../helpers/date'
 
 const Visits = () => {
 	const { showAlert, hideAlert } = useContext(AuthContext)
@@ -45,7 +45,7 @@ const Visits = () => {
 
 	const edit = (data: IVisit) => {
 		data.PropertyId = data.Property!
-		updateAll({ ...data, date: formatDate(data.date) })
+		updateAll({ ...data, date: formatDateForInput(data.date) })
 		setShowCreateModal(true)
 		setEditMode(true)
 		currentVisit.current = data
@@ -282,7 +282,7 @@ const Visits = () => {
 				closeModal={closeCreateModal}
 				overlayClick={false}
 				className=''
-				titleText={editMode ? 'Editar' : 'Crear' + ' visita'}
+				titleText={`${editMode ? 'Editar' : 'Agendar'}   visita`}
 			>
 				<form
 					action=''

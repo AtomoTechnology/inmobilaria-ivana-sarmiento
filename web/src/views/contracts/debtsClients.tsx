@@ -67,7 +67,6 @@ const DebtsClients = () => {
 		console.log(data)
 		// return
 		updateAll({ ...data })
-		// TODO: fix date  and complete  edit  and show detail
 		setShowCreateModal(true)
 		setEditMode(true)
 		currentPrice.current = data
@@ -515,4 +514,3 @@ const DebtsClients = () => {
 
 export default DebtsClients
 
-// TODO: agregar clientExpenses and ownerExpenses for each contract
