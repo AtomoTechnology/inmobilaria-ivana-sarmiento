@@ -486,7 +486,7 @@ const ClientPayments = () => {
 											{expenseDetails.map((evt, index) => (
 												<div
 													key={evt.id.toString() + evt.createdAt}
-													className='align-items-center flex items-center flex-auto   border border-gray-300 p-2'
+													className='align-items-center flex items-center flex-auto   border border-gray-300 dark:border-slate-500 p-2'
 												>
 													<Checkbox
 														inputId={evt.id.toString() + evt.createdAt}
@@ -514,7 +514,7 @@ const ClientPayments = () => {
 											{eventualityDetails.map((evt, index) => (
 												<div
 													key={evt.updatedAt + evt.description}
-													className='align-items-center flex items-center flex-auto   border border-gray-300 p-2'
+													className='align-items-center flex items-center flex-auto   border border-gray-300 dark:border-slate-500 p-2'
 												>
 													<Checkbox
 														inputId={evt.updatedAt + evt.description}
@@ -542,7 +542,7 @@ const ClientPayments = () => {
 											{debts.map((evt, index) => (
 												<div
 													key={evt.updatedAt + evt.id}
-													className={`align-items-center flex items-center  flex-wrap border border-gray-300 p-1 ${diffenceBetweenDates(evt.year + '-' + padTo2Digits(evt.month) + '-10', new Date().toString()) > 40 ? ' !border-red-500' : ''}`}
+													className={`align-items-center flex items-center  flex-wrap border border-gray-300 dark:border-slate-500 p-1 ${diffenceBetweenDates(evt.year + '-' + padTo2Digits(evt.month) + '-10', new Date().toString()) > 40 ? ' !border-red-500' : ''}`}
 												>
 													<Checkbox
 														inputId={evt.updatedAt + evt.id}

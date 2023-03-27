@@ -7,7 +7,7 @@ type Props = {
   initialValue?: string;
 };
 
-const CustmTextArea = ({ initialValue = '', placeholder, onChange, className = '' }: Props) => {
+const CustomTextArea = ({ initialValue = '', placeholder, onChange, className = '' }: Props) => {
   const [value, setValue] = useState<string>(initialValue);
 
   return (
@@ -23,4 +23,4 @@ const CustmTextArea = ({ initialValue = '', placeholder, onChange, className = '
   );
 };
 
-export default CustmTextArea;
+export default CustomTextArea;

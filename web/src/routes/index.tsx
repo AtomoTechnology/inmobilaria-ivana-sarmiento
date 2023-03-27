@@ -9,6 +9,7 @@ import ContractDetail from '../views/contracts/ContractDetail'
 import Contracts from '../views/contracts/Contracts'
 import DebtsClients from '../views/contracts/debtsClients'
 import DebtsOwners from '../views/contracts/debtsOwners'
+import Eventualities from '../views/contracts/eventualities'
 import ExpiredContracts from '../views/contracts/ExpiredContracts'
 import HistorialPrices from '../views/contracts/HistorialPrice'
 import OwnerExpenses from '../views/contracts/OwnerExpenses'
@@ -168,6 +169,14 @@ export const router = createBrowserRouter([
 				element: (
 					<PrivateRoute>
 						<SignUp />
+					</PrivateRoute>
+				),
+			},
+			{
+				path: '/eventualities',
+				element: (
+					<PrivateRoute>
+						<Eventualities />
 					</PrivateRoute>
 				),
 			},

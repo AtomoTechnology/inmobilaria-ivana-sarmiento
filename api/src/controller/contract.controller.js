@@ -215,7 +215,10 @@ exports.Destroy = catchAsync(async (req, res, next) => {
       { where: { id: contract.PropertyId } },
       { transaction: transact }
     );
+    await Contract.update({ state: 'Finalizado' }, { where: { id } }, { transaction: transact });
     await Contract.destroy({ where: { id } }, { transaction: transact });
+
+
     await transact.commit();
     return res.json({
       ok: true,

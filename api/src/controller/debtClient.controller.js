@@ -59,7 +59,7 @@ exports.Post = catchAsync(async (req, res, next) => {
 exports.GetById = findOne(DebtClient, {
 	include: [{
 		model: Contract,
-	}, ],
+	},],
 })
 
 exports.Put = update(DebtClient, ['month', 'year', 'ExpenseDetails'])
@@ -69,8 +69,9 @@ exports.Destroy = destroy(DebtClient)
 exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 	console.log("Ingreso en el job")
 	const transact = await sequelize.transaction()
-	const month = new Date().getMonth() + 1
+	const month = new Date().getMonth()
 	const year = new Date().getFullYear()
+	console.log('MONTH ::: ', monthsInSpanish[month - 1])
 
 	try {
 		const docs = await PaymentClient.findAll({
@@ -80,7 +81,6 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 					year,
 				},
 			},
-
 			attributes: [
 				[sequelize.fn('DISTINCT', sequelize.col('ContractId')), 'ContractId']
 			],
@@ -88,17 +88,30 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 			transaction: transact
 		})
 
-		if (docs.length === 0) {
-			await transact.rollback();
-			return;
+
+		// if (docs.length === 0) {
+		// 	console.log('entra acaaa...')
+		// 	await transact.rollback();
+		// 	return;
+		// }
+		console.log('FECHAS ::: ', (new Date(year, month - 1, new Date(year, month, 0).getDate())))
+		console.log('DOCS ::: ', docs)
+
+		let ids = []
+		if (docs.length > 0) {
+			console.log('entreooooooooo')
+			ids.push(docs.map(doc => doc.ContractId))
 		}
-		const ids = docs.map((doc, i) => doc.ContractId)
+		console.log('IDS ::: ', ids)
 
 		const docs2 = await Contract.findAll({
 			where: {
 				id: {
 					[Op.notIn]: ids,
 				},
+				state: 'En curso',
+				startDate: { [Op.lt]: new Date(year, month - 1, new Date(year, month, 0).getDate()) },
+
 			},
 			include: [{
 				model: ClientExpense
@@ -110,9 +123,8 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 		}, {
 			transaction: transact
 		})
-		console.log("docs2: ", docs2)
+
 		for (let k = 0; k < docs2.length; k++) {
-			console.log('first ::: ', k)
 			const exist = await DebtClient.findOne({
 				where: {
 					year,
@@ -122,7 +134,7 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 			})
 			if (!exist) {
 				await DebtClient.create({
-					description: docs2[k].Property.street +
+					description: 'ALQUILER ' + docs2[k].Property.street +
 						' ' +
 						docs2[k].Property.number +
 						' ' +
@@ -137,6 +149,7 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 						.amount,
 					year,
 					month,
+					rent: true,
 					ContractId: docs2[k].id,
 				}, {
 					transaction: transact
@@ -146,7 +159,6 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 						description: docs2[k].ClientExpenses[l].description + ' ' + monthsInSpanish[month - 1] + ' ' + year,
 						amount: docs2[k].ClientExpenses[l].amount,
 						year,
-						rent : true,
 						month,
 						ContractId: docs2[k].id,
 					}, {
@@ -161,12 +173,12 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 			state: 'success'
 		})
 		await transact.commit()
-		// return res.json({
-		// 	ok: true,
-		// 	message: 'Operación realizada con éxito.',
-		// 	result: docs2.length,
-		// 	data: docs2
-		// })
+		return res.json({
+			ok: true,
+			message: 'Operación realizada con éxito.',
+			result: docs2.length,
+			// data: docs2
+		})
 	} catch (error) {
 		await transact.rollback()
 		await JobLog.create({
@@ -174,6 +186,6 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 			state: 'fail',
 			message: error.message || 'Something went wrong.',
 		})
-		throw error
+		// throw error
 	}
 })

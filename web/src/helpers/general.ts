@@ -90,13 +90,14 @@ export const menuItems = [
 			{ to: 'client-payment', title: 'Cobro a inquilino' },
 			{ to: 'owner-payment', title: 'Pgao a propietario' },
 			{ to: 'properties', title: 'Lista conceptos' },
-			{ to: 'revert-payment', title: 'Revertir cobro' },
+			// { to: 'revert-payment', title: 'Revertir cobro' },
 		],
 	},
 	{
 		to: null,
 		title: 'Informes',
 		subLink: [
+			{ to: 'eventualities', title: 'Eventualidades' },
 			{ to: 'contract-debts-clients', title: 'Deudas x inqulinos' },
 			{ to: 'contract-debts-owners', title: 'Deudas x  propietario' },
 			{ to: 'contracts-expired', title: 'Vto de contratos' },
