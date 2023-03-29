@@ -173,12 +173,12 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 			state: 'success'
 		})
 		await transact.commit()
-		return res.json({
-			ok: true,
-			message: 'Operación realizada con éxito.',
-			result: docs2.length,
-			// data: docs2
-		})
+		// return res.json({
+		// 	ok: true,
+		// 	message: 'Operación realizada con éxito.',
+		// 	result: docs2.length,
+		// 	// data: docs2
+		// })
 	} catch (error) {
 		await transact.rollback()
 		await JobLog.create({

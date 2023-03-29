@@ -84,8 +84,17 @@ export const router = createBrowserRouter([
 					</PrivateRoute>
 				),
 			},
+
 			{
 				path: '/properties',
+				element: (
+					<PrivateRoute>
+						<Properties />
+					</PrivateRoute>
+				),
+			},
+			{
+				path: '/properties/:isFor',
 				element: (
 					<PrivateRoute>
 						<Properties />

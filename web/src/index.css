@@ -32,6 +32,26 @@ a:hover {
   color: var(--PrimaryColor);
 } */
 
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #000b1f;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #1e242c;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #132535;
+}
+
 body {
   /* background-color: rgb(0, 10, 19); */
   background-color: var(--AppBg);

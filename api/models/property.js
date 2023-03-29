@@ -115,7 +115,7 @@ module.exports = (sequelize, DataTypes) => {
 					},
 				},
 			},
-			description: DataTypes.STRING,
+			description: DataTypes.TEXT('long'),
 			folderNumber: {
 				allowNull: true,
 				type: DataTypes.STRING,

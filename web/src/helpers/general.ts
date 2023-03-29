@@ -77,8 +77,8 @@ export const menuItems = [
 		to: null,
 		title: 'Consultas',
 		subLink: [
-			{ to: 'client-payment', title: 'Deptos en venta' },
-			{ to: 'owner-payment', title: 'Deptos en Alquiler' },
+			{ to: 'properties/Venta', title: 'Deptos en venta' },
+			{ to: 'properties/Alquiler', title: 'Deptos en Alquiler' },
 			{ to: 'visits', title: 'Visitas' },
 			{ to: 'claims', title: 'Reclamos' },
 		],
@@ -88,7 +88,7 @@ export const menuItems = [
 		title: 'Pagos',
 		subLink: [
 			{ to: 'client-payment', title: 'Cobro a inquilino' },
-			{ to: 'owner-payment', title: 'Pgao a propietario' },
+			{ to: 'owner-payment', title: 'Pago a propietario' },
 			{ to: 'properties', title: 'Lista conceptos' },
 			// { to: 'revert-payment', title: 'Revertir cobro' },
 		],

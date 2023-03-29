@@ -29,8 +29,13 @@ import { useZones } from '../../hooks/useZones'
 import { usePropertyTypes } from '../../hooks/usePropertyTypes'
 import CloseOnClick from '../../components/CloseOnClick'
 import SeeIcon from '../../components/icons/SeeIcon'
+import { useParams } from 'react-router-dom'
+import { BiShareAlt } from 'react-icons/bi'
+import { copyToClipboard } from '../../helpers/general'
 
 const Properties = () => {
+	const { isFor: isForParam } = useParams()
+	console.log(isForParam)
 	const { authState, showAlert, hideAlert } = useContext(AuthContext)
 	// const [selectedProducts2, setSelectedProducts2] = useState<Iproperty[]>();
 	const [showCreateModal, setShowCreateModal] = useState(false)
@@ -84,7 +89,7 @@ const Properties = () => {
 
 	const currentProperty = useRef<Iproperty | null>()
 
-	const { data, isError, isLoading, error, isFetching, refetch } = useProperties()
+	const { data, isError, isLoading, error, isFetching, refetch } = useProperties(isForParam !== undefined ? `isFor=${isForParam}` : '')
 	const zoneQuery = useZones()
 	const propietyType = usePropertyTypes()
 	const ownerQuery = useOwners()
@@ -180,32 +185,6 @@ const Properties = () => {
 					const res = await http.put(`/properties/${currentProperty.current?.id}`, values)
 					if (res.data.ok) {
 						refetch()
-						// data?.data &&
-						//   (data.data = data?.data.map((z) => {
-						//     if (z.id === currentProperty.current?.id) {
-						//       // alert('hello')
-						//       // console.log(z, { ...values })
-						//       z =
-						//       {
-						//         ZoneId: values.ZoneId!,
-						//         Zone: { name: values.ZoneId! },
-						//         PropertyTypeId: values.PropertyTypeId!,
-						//         number: values.number,
-						//         street: values.street,
-						//         OwnerId: values.OwnerId!,
-						//         isFor: values.isFor,
-						//         floor: values.floor,
-						//         dept: values.dept,
-						//         state: values.state,
-						//         description: values.description,
-						//         id: currentProperty.current.id,
-						//         uuid: currentProperty.current.uuid,
-						//         createdAt: currentProperty.current.createdAt,
-						//         updatedAt: currentProperty.current.updatedAt
-						//       };
-						//     }
-						//     return z;
-						//   }));
 						reset()
 						setShowCreateModal(false)
 						showAndHideModal('Editado', res.data.message)
@@ -220,7 +199,6 @@ const Properties = () => {
 					const res = await http.post('/properties', values)
 					if (res.data.ok) {
 						refetch()
-						// data?.data.push(res.data.data);
 						reset()
 						setShowCreateModal(false)
 						showAndHideModal('Guardado', res.data.message)
@@ -268,9 +246,24 @@ const Properties = () => {
 		currentProperty.current = data
 		setShowCreateModal(true)
 	}
+	const handleShareProperty = (data: Iproperty) => {
+		copyToClipboard(
+			`
+${'Tipo de inmueble: '} \n${data.PropertyType?.description}
+
+${'Tipo de operacion : '} \n${data.isFor}
+
+Descripción del inmueble \n${data.description}
+`)
+		showAndHideModal('Copiado', 'Se copio los datos del inmueble al portapapeles')
+		currentProperty.current = data
+	}
+
+
 	const actionBodyTemplate = (rowData: any) => {
 		return (
 			<div className='flex gap-x-3 items-center justify-center'>
+				{isForParam && (<BiShareAlt size={22} onClick={() => handleShareProperty(rowData)} />)}
 				<SeeIcon action={() => ViewItem(rowData)} />
 				<EditIcon action={() => edit(rowData)} />
 				<DeleteIcon action={() => ConfirmDestroy(rowData)} />
@@ -293,7 +286,7 @@ const Properties = () => {
 	return (
 		<div className='container m-auto  flex sm:mx-0  flex-col justify-center sm:justify-center'>
 			<div className='flex gap-x-4 mb-6 mx-3  items-center'>
-				<h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Propiedades</h3>
+				<h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Propiedades {isForParam && ` en ${isForParam}`}</h3>
 				<button
 					onClick={() => {
 						setEditMode(false)
@@ -410,7 +403,7 @@ const Properties = () => {
 					</Box>
 				</>
 			) : (
-				<div className='text-slate-400 mx-3 text-center'>Aún no hay propiedad.</div>
+				<div className='text-slate-400 mx-3 text-center'>Aún no hay propiedad {isForParam && ` en ${isForParam}`}.</div>
 			)}
 
 			{isFetching && (

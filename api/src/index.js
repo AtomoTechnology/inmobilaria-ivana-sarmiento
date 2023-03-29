@@ -73,6 +73,10 @@ schedule.scheduleJob("0 0 1 * *", function () {
   return ctrl.jobDebtsClients();
 });
 
+// schedule.scheduleJob("* * * * *", function () {
+//   return ctrl.jobDebtsClients();
+// });
+
 //Starting
 app.listen(app.get("port"), () => {
   console.log(

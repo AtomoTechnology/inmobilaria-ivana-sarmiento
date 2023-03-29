@@ -110,7 +110,7 @@ const ClientPayments = () => {
 		try {
 			const res = await http.delete('/payment-clients/' + id)
 			if (res.data.ok) {
-				data?.data && (data.data! = data?.data.filter((z) => z.id !== id))
+				data?.data && (data.data! = data?.data.filter((z) => z.id !== id)) // TODO: fix this refecth new items
 				setShow(false)
 				showAndHideModal('Borrado', res.data.message)
 			} else {
@@ -542,7 +542,7 @@ const ClientPayments = () => {
 											{debts.map((evt, index) => (
 												<div
 													key={evt.updatedAt + evt.id}
-													className={`align-items-center flex items-center  flex-wrap border border-gray-300 dark:border-slate-500 p-1 ${diffenceBetweenDates(evt.year + '-' + padTo2Digits(evt.month) + '-10', new Date().toString()) > 40 ? ' !border-red-500' : ''}`}
+													className={`align-items-center flex items-center  flex-wrap border border-gray-300 dark:border-slate-500 p-1 ${diffenceBetweenDates(evt.year + '-' + padTo2Digits(evt.month) + '-10', new Date().toString()) > 70 ? ' !border-red-500' : ''}`}
 												>
 													<Checkbox
 														inputId={evt.updatedAt + evt.id}
@@ -663,7 +663,7 @@ const ClientPayments = () => {
 									<input
 										placeholder='1234.90'
 										name='qteDays'
-										className='w-24'
+										className={`dark:!bg-gray-900 w-24 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
 										min={0}
 										type='number'
 										value={qteDays ?? ''}
@@ -697,6 +697,7 @@ const ClientPayments = () => {
 									placeholder='1234.90'
 									type='number'
 									// disabled={true}
+									className={`dark:!bg-gray-900 w-24 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
 									value={rentingAmount ?? ''}
 									onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
 										handleInputChange(Number(e.target.value), 'rentingAmount')
@@ -741,62 +742,78 @@ const ClientPayments = () => {
 						ContractId && (
 							<Box className="shadow-md rounded-lg border border-gray-200 dark:!from-gray-700 dark:!to-gray-800 dark:!bg-gradient-to-tr p-2">
 								<h3 className='font-bold mb-2 text-lg '>Lista de conceptos a cobrar</h3>
-								<div className='payment-pdf  pt-4 flex-1 gap-y-1 flex flex-col px-1'>
-									{
-										values.rentingAmount > 0 && (
+								<div className="flex justify-between flex-col  h-[95%]">
+
+									<div className='payment-pdf  pt-4 flex-1 gap-y-1 flex flex-col px-1'>
+
+										{
+											values.rentingAmount > 0 && (
+												<div
+													className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+												>
+													<span className=''>ALQUILER
+														{/*  @ts-ignore*/}
+														{ContractId?.Property?.street} {ContractId?.Property?.number}{' '}{ContractId?.Property?.floor}-{ContractId?.Property?.dept}  {month}   {year.toString()}</span>
+													<span>${rentingAmount}</span>
+
+												</div>
+											)
+										}
+										{
+											values.recharge > 0 && (
+												<div
+													className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+												>
+													<span className=''>PUNITORIOS  {month}   {year.toString()}</span>
+													<span>${recharge}</span>
+
+												</div>
+											)
+										}
+										{selectedExpensesClient.map((evt, index) => (
 											<div
+												key={index}
 												className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
 											>
-												<span className=''>ALQUILER
-													{/*  @ts-ignore*/}
-													{ContractId?.Property?.street} {ContractId?.Property?.number}{' '}{ContractId?.Property?.floor}-{ContractId?.Property?.dept}  {month}   {year.toString()}</span>
-												<span>${rentingAmount}</span>
+												<span className=''>{evt.description + ' ' + month + '  ' + year.toString()}</span>
+												<span>${evt.amount}</span>
 
 											</div>
-										)
-									}
-									{
-										values.recharge > 0 && (
+										))}
+										{selectedEventualities.map((evt, index) => (
 											<div
+												key={index}
 												className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
 											>
-												<span className=''>PUNITORIOS  {month}   {year.toString()}</span>
-												<span>${recharge}</span>
+												<span className=''>{evt.description}</span>
+												<span>${evt.clientAmount}</span>
 
 											</div>
-										)
-									}
-									{selectedExpensesClient.map((evt, index) => (
+										))}
+										{selectedDebts.map((evt, index) => (
+											<div
+												key={index}
+												className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+											>
+												<span className=''>{evt.description}</span>
+												<span>${evt.amount}</span>
+
+											</div>
+										))}
+
+
+									</div>
+									<div className="mt-auto">
 										<div
-											key={index}
 											className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
 										>
-											<span className=''>{evt.description + ' ' + month + '  ' + year.toString()}</span>
-											<span>${evt.amount}</span>
+											<span className=''>Total a cobrar </span>
+											<span>${rentingAmount + eventTotal.current + expsTotal.current + recharge}</span>
 
 										</div>
-									))}
-									{selectedEventualities.map((evt, index) => (
-										<div
-											key={index}
-											className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
-										>
-											<span className=''>{evt.description}</span>
-											<span>${evt.clientAmount}</span>
-
-										</div>
-									))}
-									{selectedDebts.map((evt, index) => (
-										<div
-											key={index}
-											className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
-										>
-											<span className=''>{evt.description}</span>
-											<span>${evt.amount}</span>
-
-										</div>
-									))}
+									</div>
 								</div>
+
 							</Box>
 						)
 					}

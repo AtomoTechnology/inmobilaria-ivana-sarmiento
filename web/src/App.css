@@ -140,11 +140,12 @@ input[disabled] {
 	cursor: not-allowed;
 	/* pointer-events: none; */
 }
-#box-app.dark .input:disabled,
-#box-app.dark .input[disabled] {
-	border: 1px solid #d8d7d7;
-	background-color: #020000 !important;
-	cursor: not-allowed;
+#box-app.dark input:disabled,
+#box-app.dark input[disabled] {
+	border: 1px solid #03183600;
+	background-color: rgb(17 24 39 ) ;
+	color: #a6adb8;
+	/* cursor: not-allowed; */
 	/* pointer-events: none; */
 }
 
@@ -294,4 +295,10 @@ form.disabled-all {
 
 .react-responsive-modal-modal {
 	max-width: 100% !important;
+}
+
+#box-app.dark  .action button:nth-child(1){
+	background-color: transparent ;
+	border: 1px solid rgb(65, 92, 110);
+	color: rgb(138, 155, 172);
 }

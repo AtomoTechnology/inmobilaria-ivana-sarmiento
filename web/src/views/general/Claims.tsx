@@ -446,7 +446,7 @@ const Claims = () => {
 				>
 					<fieldset>
 						<label htmlFor='PropertyId'>Reclamo : #{currentClaim.current?.id}</label>
-						<span className='border border-gray-300 p-2'> {currentClaim.current?.description} </span>
+						<span className='border border-gray-300 dark:border-slate-500  p-2'> {currentClaim.current?.description} </span>
 					</fieldset>
 					<fieldset className=''>
 						<label htmlFor='comment'>Comentario</label>
@@ -486,7 +486,7 @@ const Claims = () => {
 			>
 				<CloseOnClick action={() => setShowCommentsModal(false)} />
 				<div className="">
-					<fieldset className='border border-gray-300 p-2 text-sm'>
+					<fieldset className='border border-gray-300 dark:border-slate-500 p-2 text-sm'>
 						<label htmlFor='PropertyId'>Reclamo : #{currentClaim.current?.id}</label>
 						<span className=''> {currentClaim.current?.description} </span>
 					</fieldset>
@@ -495,10 +495,10 @@ const Claims = () => {
 							<div className="comments flex flex-col gap-y-2  max-h-[420px] overflow-y-auto">
 								{
 									currentClaim.current?.details?.map((comment) => (
-										<div className="comment bg-gray-200 p-2 pb-5 relative group hover:bg-gray-100 cursor-pointer" key={comment.date}>
+										<div className="comment bg-gray-200 p-2 pb-5 relative group hover:bg-gray-100 cursor-pointer dark:bg-slate-700" key={comment.date}>
 											<span>{comment.comment}</span>
 											<span className='absolute bottom-[2px] right-1 text-xs'> {formatDate(comment.date)} </span>
-											<span className='absolute top-[2px] right-1 text-xs hidden bg-red-100 p-2 rounded-full shadow-lg group-hover:flex'> <DeleteIcon action={() => deleteClaimComment(comment.date)} /> </span>
+											<span className='absolute top-[2px] right-1 text-xs hidden bg-red-100 dark:bg-gray-800 p-2 rounded-full shadow-lg group-hover:flex'> <DeleteIcon action={() => deleteClaimComment(comment.date)} /> </span>
 										</div>
 									))
 								}

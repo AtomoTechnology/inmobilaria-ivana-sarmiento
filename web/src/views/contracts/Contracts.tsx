@@ -53,6 +53,7 @@ const Contracts = () => {
 	const [assurances, setAssurances] = useState<Iassurance[]>([])
 	const [assuranceItem, setAssuranceItem] = useState<any>()
 	const [editing, setEditing] = useState(false)
+	const [addGaranteeBox, setAddGaranteeBox] = useState(false);
 	const { values, handleInputChange, reset, updateAll } = useForm({
 		ClientId: null,
 		PropertyId: null,
@@ -760,146 +761,156 @@ const Contracts = () => {
 
 					{!editMode && (
 						<>
-							<h1 className='text-lg mb-4 title-form'>Agregar garante(s)</h1>
-
-							<div className='mx-3'>
-								<div className='list-guarantees-to-add flex gap-x-2 flex-wrap gap-y-3'>
-									{assurances?.map((as, index) => (
-										<div
-											className='relative text-sm'
-											key={index}
-										>
-											<span
-												onClick={() => removeAssurance(as)}
-												className='absolute right-2 top-1'
-											>
-												<CloseIcon color='#dd8888' />
-											</span>
-											<div
-												className='cursor-pointer'
-												onClick={() => {
-													setAssuranceItem(as)
-													setEditing(true)
-												}}
-											>
-												<Box className='max-w-[300px] dark:!bg-gray-900'>
-													{/* <h1><span className="font-bold"> ID : </span> {as.id}</h1> */}
-													<h1>
-														<span className='font-bold'> Nombre Completo : </span> {as.fullName}
-													</h1>
-													<h1>
-														<span className='font-bold'> Email : </span>
-														{as.email}
-													</h1>
-													<h1>
-														<span className='font-bold'> CUIT : </span>
-														{as.cuit}
-													</h1>
-													<h1>
-														<span className='font-bold'> Celular : </span>
-														{as.phone}
-													</h1>
-													<h1>
-														<span className='font-bold'> Dirección : </span>
-														{as.address}
-													</h1>
-													<h1>
-														<span className='font-bold'> Observación : </span>
-														{as.obs}
-													</h1>
-												</Box>
-											</div>
+							<h1 className='text-lg mb-4 flex items-center  title-form'>
+								<span>Agregar garante(s)</span>
+								<span>
+									<input type="checkbox" checked={addGaranteeBox} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddGaranteeBox(e.target.checked)} name="showGaranteeModel" id="	" />
+								</span>
+							</h1>
+							{
+								addGaranteeBox && (
+									<div className='mx-3'>
+										<div className='list-guarantees-to-add flex gap-x-2 flex-wrap gap-y-3'>
+											{assurances?.map((as, index) => (
+												<div
+													className='relative text-sm'
+													key={index}
+												>
+													<span
+														onClick={() => removeAssurance(as)}
+														className='absolute right-2 top-1'
+													>
+														<CloseIcon color='#dd8888' />
+													</span>
+													<div
+														className='cursor-pointer'
+														onClick={() => {
+															setAssuranceItem(as)
+															setEditing(true)
+														}}
+													>
+														<Box className='max-w-[300px] dark:!bg-gray-900'>
+															{/* <h1><span className="font-bold"> ID : </span> {as.id}</h1> */}
+															<h1>
+																<span className='font-bold'> Nombre Completo : </span> {as.fullName}
+															</h1>
+															<h1>
+																<span className='font-bold'> Email : </span>
+																{as.email}
+															</h1>
+															<h1>
+																<span className='font-bold'> CUIT : </span>
+																{as.cuit}
+															</h1>
+															<h1>
+																<span className='font-bold'> Celular : </span>
+																{as.phone}
+															</h1>
+															<h1>
+																<span className='font-bold'> Dirección : </span>
+																{as.address}
+															</h1>
+															<h1>
+																<span className='font-bold'> Observación : </span>
+																{as.obs}
+															</h1>
+														</Box>
+													</div>
+												</div>
+											))}
 										</div>
-									))}
-								</div>
-								<div className='guarantees mb-12'>
-									<FieldsetGroup>
-										<fieldset className=''>
-											<label htmlFor='fullname'>Nombre Completo </label>
-											<input
-												className={`dark:!bg-gray-900 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
-												placeholder='Juan Jose'
-												value={assuranceItem?.fullName || ''}
-												onChange={(e) => setAssuranceItem((prev: any) => ({ ...prev, fullName: e.target.value }))}
-											/>
-											{errors?.fullName && <FormError text='El nombre es obligatorio.' />}
-										</fieldset>
-										<fieldset className=''>
-											<label htmlFor='email'>Email </label>
-											<input
-												placeholder='ejemplo@gmail.com'
-												className={`dark:!bg-gray-900 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
-												value={assuranceItem?.email || ''}
-												type='text'
-												onChange={(e) => setAssuranceItem((prev: any) => ({ ...prev, email: e.target.value }))}
-											/>
-											{errors?.email && <FormError text='El correo es obligatorio y debe ser válido.' />}
-										</fieldset>
-									</FieldsetGroup>
-									<FieldsetGroup>
-										<fieldset className=''>
-											<label htmlFor='cuit'>Cuit/Cuil </label>
-											<input
-												placeholder='20-01010101-0'
-												className={`dark:!bg-gray-900 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
-												value={assuranceItem?.cuit || ''}
-												onChange={(e) => setAssuranceItem((prev: any) => ({ ...prev, cuit: e.target.value }))}
-											/>
-											{errors?.cuit && <FormError text='El cuit es obligatorio.' />}
-										</fieldset>
-										<fieldset className=''>
-											<label htmlFor='phone'>Teléfono </label>
-											<input
-												placeholder='3417207882'
-												className={`dark:!bg-gray-900 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
-												value={assuranceItem?.phone || ''}
-												onChange={(e) => setAssuranceItem((prev: any) => ({ ...prev, phone: e.target.value }))}
-											/>
-											{errors?.phone && <FormError text='El teléfono es obligatorio.' />}
-										</fieldset>
-									</FieldsetGroup>
-									<FieldsetGroup>
-										<fieldset className=''>
-											<label htmlFor='address'>Dirección</label>
-											<input
-												placeholder='Sarmiento 190'
-												className={`dark:!bg-gray-900 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
-												value={assuranceItem?.address || ''}
-												onChange={(e) => setAssuranceItem((prev: any) => ({ ...prev, address: e.target.value }))}
-											/>
-											{errors?.address && <FormError text='La dirección es obligatoria.' />}
-										</fieldset>
-									</FieldsetGroup>
-									<fieldset className=''>
-										<label htmlFor='obs'>Observación </label>
-										<textarea
-											placeholder='Escribe una observación ...'
-											className={`dark:!bg-gray-900 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
-											value={assuranceItem?.obs || ''}
-											onChange={(e) => setAssuranceItem((prev: any) => ({ ...prev, obs: e.target.value }))}
-										/>
-									</fieldset>
-									<button
-										type='button'
-										onClick={addAssurance}
-										className='btn !bg-gray-300 !mr-6'
-									>
-										{!editing ? 'Agregar garante' : 'Guardar garante'}
-									</button>
-									{editing && (
-										<button
-											className='btn'
-											type='button'
-											onClick={() => {
-												setEditing(false)
-												setAssuranceItem({})
-											}}
-										>
-											Salir de la edición
-										</button>
-									)}
-								</div>
-							</div>
+										<div className='guarantees mb-12'>
+											<FieldsetGroup>
+												<fieldset className=''>
+													<label htmlFor='fullname'>Nombre Completo </label>
+													<input
+														className={`dark:!bg-gray-900 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
+														placeholder='Juan Jose'
+														value={assuranceItem?.fullName || ''}
+														onChange={(e) => setAssuranceItem((prev: any) => ({ ...prev, fullName: e.target.value }))}
+													/>
+													{errors?.fullName && <FormError text='El nombre es obligatorio.' />}
+												</fieldset>
+												<fieldset className=''>
+													<label htmlFor='email'>Email </label>
+													<input
+														placeholder='ejemplo@gmail.com'
+														className={`dark:!bg-gray-900 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
+														value={assuranceItem?.email || ''}
+														type='text'
+														onChange={(e) => setAssuranceItem((prev: any) => ({ ...prev, email: e.target.value }))}
+													/>
+													{errors?.email && <FormError text='El correo es obligatorio y debe ser válido.' />}
+												</fieldset>
+											</FieldsetGroup>
+											<FieldsetGroup>
+												<fieldset className=''>
+													<label htmlFor='cuit'>Cuit/Cuil </label>
+													<input
+														placeholder='20-01010101-0'
+														className={`dark:!bg-gray-900 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
+														value={assuranceItem?.cuit || ''}
+														onChange={(e) => setAssuranceItem((prev: any) => ({ ...prev, cuit: e.target.value }))}
+													/>
+													{errors?.cuit && <FormError text='El cuit es obligatorio.' />}
+												</fieldset>
+												<fieldset className=''>
+													<label htmlFor='phone'>Teléfono </label>
+													<input
+														placeholder='3417207882'
+														className={`dark:!bg-gray-900 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
+														value={assuranceItem?.phone || ''}
+														onChange={(e) => setAssuranceItem((prev: any) => ({ ...prev, phone: e.target.value }))}
+													/>
+													{errors?.phone && <FormError text='El teléfono es obligatorio.' />}
+												</fieldset>
+											</FieldsetGroup>
+											<FieldsetGroup>
+												<fieldset className=''>
+													<label htmlFor='address'>Dirección</label>
+													<input
+														placeholder='Sarmiento 190'
+														className={`dark:!bg-gray-900 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
+														value={assuranceItem?.address || ''}
+														onChange={(e) => setAssuranceItem((prev: any) => ({ ...prev, address: e.target.value }))}
+													/>
+													{errors?.address && <FormError text='La dirección es obligatoria.' />}
+												</fieldset>
+											</FieldsetGroup>
+											<fieldset className=''>
+												<label htmlFor='obs'>Observación </label>
+												<textarea
+													placeholder='Escribe una observación ...'
+													className={`dark:!bg-gray-900 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
+													value={assuranceItem?.obs || ''}
+													onChange={(e) => setAssuranceItem((prev: any) => ({ ...prev, obs: e.target.value }))}
+												/>
+											</fieldset>
+											<button
+												type='button'
+												onClick={addAssurance}
+												className='btn !bg-gray-300 !mr-6'
+											>
+												{!editing ? 'Agregar garante' : 'Guardar garante'}
+											</button>
+											{editing && (
+												<button
+													className='btn'
+													type='button'
+													onClick={() => {
+														setEditing(false)
+														setAssuranceItem({})
+													}}
+												>
+													Salir de la edición
+												</button>
+											)}
+										</div>
+									</div>
+								)
+							}
+
+
 						</>
 					)}
 
