@@ -20,6 +20,7 @@ import Visits from '../views/general/visits'
 import Home from '../views/Home'
 import AllPaymentTypes from '../views/payment/allPaymentTypes'
 import ClientPayments from '../views/payment/clientPayments'
+import OwnerPayment from '../views/payment/ownerPayment'
 import AllPropertyTypes from '../views/properties/allTypes'
 import Properties from '../views/properties/properties'
 import AllZones from '../views/zones/allZones'
@@ -170,6 +171,14 @@ export const router = createBrowserRouter([
 				element: (
 					<PrivateRoute>
 						<ClientPayments />
+					</PrivateRoute>
+				),
+			},
+			{
+				path: '/owner-payment',
+				element: (
+					<PrivateRoute>
+						<OwnerPayment />
 					</PrivateRoute>
 				),
 			},

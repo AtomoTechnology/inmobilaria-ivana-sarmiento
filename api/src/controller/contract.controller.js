@@ -43,6 +43,43 @@ exports.Paginate = paginate(Contract, {
   ],
 });
 
+exports.GetOwnerContracts = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  console.log('was there brothers....')
+  const properties = await Property.findAll({
+    where: {
+      OwnerId: id,
+    },
+  });
+  const ids = properties.map((p) => p.id);
+  const contracts = await Contract.findAll({
+    where: {
+      PropertyId: {
+        [Op.in]: ids
+      }
+    },
+    include: [
+      { model: PriceHistorial },
+      { model: Client },
+      {
+        model: Property,
+        include: {
+          model: Owner,
+        },
+      },
+    ],
+  });
+  return res.json({
+    code: 200,
+    text: 'was there brothers....',
+    status: "success",
+    ok: true,
+    results: contracts.length,
+    message: "Lista de contratos",
+    data: contracts,
+  });
+});
+
 exports.Post = catchAsync(async (req, res, next) => {
   const transact = await sequelize.transaction();
   try {
