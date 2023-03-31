@@ -34,10 +34,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BIGINT,
         validate: {
           notNull: {
-            msg: "El forma de pago es obligatorio",
+            msg: "El formato de pago es obligatorio",
           },
           notEmpty: {
-            msg: "El forma de pago es obligatorio",
+            msg: "El formato de pago es obligatorio",
           },
         },
       },

@@ -27,45 +27,33 @@ import { useClientPayments } from '../../hooks/useClientPayments'
 import { Idebt, IdebtsResponse } from '../../interfaces/IDebtsResponse'
 import { IClienyPayment } from '../../interfaces/IclientPayments'
 import { IConfigResponse } from '../../interfaces/Iconfig'
-import { diffenceBetweenDates, formatDateDDMMYYYY, padTo2Digits } from '../../helpers/date'
+import { diffenceBetweenDates, formatDate, formatDateDDMMYYYY, padTo2Digits } from '../../helpers/date'
 import { Button } from 'primereact/button'
 import { BsPrinter, BsSkipBackward } from 'react-icons/bs'
 import { TfiBackLeft } from 'react-icons/tfi'
 import { useProperties } from '../../hooks/useProperties'
 import { useOwners } from '../../hooks/useOwners'
+import { useOwnerPayments } from '../../hooks/userOwnerPayment'
 const OwnerPayment = () => {
 	const { showAlert, hideAlert } = useContext(AuthContext)
 	const [showCreateModal, setShowCreateModal] = useState(false)
 	const [show, setShow] = useState(false)
 	const {
 		OwnerId,
-		ContractId,
 		PaymentTypeId,
-		recharge,
-		rentingAmount,
 		month,
 		year,
 		updateAll,
 		total,
 		values,
-		qteDays,
 		handleInputChange,
 		reset,
-		dailyPunitive,
-		isRecharged,
 	} = useForm({
-		extraExpenses: 0,
-		ContractId: null,
 		OwnerId: null,
 		PaymentTypeId: null,
 		month: monthsInSpanish[new Date().getMonth()],
 		year: new Date().getFullYear(),
 		total: 0,
-		recharge: 0,
-		rentingAmount: 0,
-		qteDays: 0,
-		isRecharged: 0,
-		dailyPunitive: 0,
 	})
 	const [errors, setErrors] = useState<any>()
 	const [editMode, setEditMode] = useState(false)
@@ -80,10 +68,11 @@ const OwnerPayment = () => {
 	const [expenseDetails, setExpenseDetails] = useState<IClientExpItem[]>([])
 	const [eventualityDetails, setEventualityDetails] = useState<IEventuality[][]>([])
 	const [debts, setDebts] = useState<Idebt[]>([])
+	const [paymentItems, setPaymentItems] = useState<any>({})
 
 	const [contractRows, setContractRows] = useState<any[]>([])
 
-	const clientPaymentQuery = useClientPayments()
+	const ownerPaymentQuery = useOwnerPayments()
 	const { data, isError, isLoading, error, isFetching } = useOwners()
 	const [loadingExpenses, setLoadingExpenses] = useState(false)
 	// const contractQuery = useContracts()
@@ -114,7 +103,7 @@ const OwnerPayment = () => {
 
 	const destroy = async (id: number) => {
 		try {
-			const res = await http.delete('/payment-clients/' + id)
+			const res = await http.delete('/payment-owners/' + id)
 			if (res.data.ok) {
 				data?.data && (data.data! = data?.data.filter((z) => z.id !== id)) // TODO: fix this refecth new items
 				setShow(false)
@@ -130,9 +119,9 @@ const OwnerPayment = () => {
 	const verifyForm = () => {
 		let ok = true
 		let error: any = {}
-		if (!ContractId) {
+		if (!OwnerId) {
 			ok = false
-			error.ContractId = true
+			error.OwnerId = true
 		}
 		if (!month) {
 			ok = false
@@ -152,15 +141,15 @@ const OwnerPayment = () => {
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		values.total = rentingAmount + eventTotal.current + expsTotal.current + recharge
+		values.total = eventTotal.current + expsTotal.current
 		// console.log({ ...values, expenseDetails: selectedExpensesClient, eventualityDetails: selectedEventualities })
 		// return
 		if (verifyForm()) {
 			if (editMode) {
 				// @ts-expect-error
-				values.ContractId = values.ContractId!.id
+				values.OwnerId = values.OwnerId!.id
 				try {
-					const res = await http.put(`/payment-clients/${currentPayment.current?.id}`, {
+					const res = await http.put(`/payment-owners/${currentPayment.current?.id}`, {
 						...values,
 						expenseDetails: selectedExpensesClient,
 						eventualityDetails: selectedEventualities,
@@ -173,7 +162,7 @@ const OwnerPayment = () => {
 						// 		}
 						// 		return z
 						// 	}))
-						clientPaymentQuery.refetch()
+						ownerPaymentQuery.refetch()
 						reset()
 						// setShowCreateModal(false)
 						closeCreateModal()
@@ -188,15 +177,15 @@ const OwnerPayment = () => {
 			} else {
 				console.log({ ...values, expenseDetails: selectedExpensesClient, eventualityDetails: selectedEventualities })
 				// @ts-expect-error
-				values.ContractId = values.ContractId!.id
+				values.OwnerId = values.OwnerId!.id
 				try {
-					const res = await http.post('/payment-clients', {
+					const res = await http.post('/payment-owners', {
 						...values,
 						expenseDetails: selectedExpensesClient,
 						eventualityDetails: selectedEventualities,
 					})
 					if (res.data.ok) {
-						clientPaymentQuery.refetch()
+						ownerPaymentQuery.refetch()
 						reset()
 						// setShowCreateModal(false)
 						closeCreateModal()
@@ -236,18 +225,44 @@ const OwnerPayment = () => {
 
 	const onExpensesClienteChange = (e: CheckboxChangeEvent) => {
 		let _selectedExps = [...selectedExpensesClient]
-
+		let o: any = {}
 		if (e.checked) _selectedExps.push(e.value)
 		else _selectedExps = _selectedExps.filter((evt) => evt.id !== e.value.id)
 		expsTotal.current = _selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0)
+		_selectedExps.forEach((exp) => {
+			console.log('existe ::: ', o.hasOwnProperty(exp.ContractId))
+			if (o.hasOwnProperty(exp.ContractId)) {
+				console.log('o completo ::: ', o)
+				console.log('contratcid : ', exp.ContractId, ' prev. valor ::: ', o[exp.ContractId])
+				o[exp.ContractId] = o[exp.ContractId].concat(exp)
+			} else {
+
+				o[exp.ContractId] = [exp]
+			}
+		})
+		console.log(o)
+		setPaymentItems(o)
 		setSelectedExpensesClient(_selectedExps)
+
 	}
 	const onEventualityChange = (e: CheckboxChangeEvent) => {
 		let _selectedEvents = [...selectedEventualities]
-
+		let o: any = {}
 		if (e.checked) _selectedEvents.push(e.value)
 		else _selectedEvents = _selectedEvents.filter((evt) => evt.id !== e.value.id)
-		eventTotal.current = _selectedEvents.reduce((acc: any, cur: any) => acc + cur.clientAmount, 0)
+
+		_selectedEvents.forEach((evt) => {
+			console.log(paymentItems.hasOwnProperty(evt.ContractId))
+			if (paymentItems.hasOwnProperty(evt.ContractId)) {
+				console.log(paymentItems[evt.ContractId])
+				paymentItems[evt.ContractId] = paymentItems[evt.ContractId].concat(evt)
+			} else {
+				paymentItems[evt.ContractId] = [evt]
+			}
+		})
+		eventTotal.current = _selectedEvents.reduce((acc: any, cur: any) => acc + cur.ownerAmount, 0)
+		// setPaymentItems((prev: any) => ({ ...prev, ...o }))
+		console.log(_selectedEvents)
 		setSelectedEventualities(_selectedEvents)
 	}
 
@@ -276,9 +291,9 @@ const OwnerPayment = () => {
 			ownerContracts.data.data.map(async (contract: any) => {
 
 
-				const docsExpss = http.get<IClientExpensesResponseSimple>(`/client-expenses?amount=0:gt&ContractId=${contract.id}&include=true`)
-				const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?clientPaid=0&ContractId=${contract.id}&include=true`)
-				const docsDebtss = http.get<IdebtsResponse>(`/debt-clients?paid=0&ContractId=${contract.id}`)
+				const docsExpss = http.get<IClientExpensesResponseSimple>(`/owner-expenses?amount=0:gt&ContractId=${contract.id}&include=true`)
+				const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?ownerPaid=0&ContractId=${contract.id}&include=true`)
+				const docsDebtss = http.get<IdebtsResponse>(`/debt-owners?paid=0&ContractId=${contract.id}`)
 				// const dps = http.get<IConfigResponse>(`/config?key=dailypunitive`)
 
 				const [docsExps, docsEvents, docsDebts] = await Promise.all([docsExpss, docsEventss, docsDebtss])
@@ -360,15 +375,17 @@ const OwnerPayment = () => {
 	}
 	const paginatorLeft = (
 		<Button
-			onClick={() => clientPaymentQuery.refetch()}
+			onClick={() => ownerPaymentQuery.refetch()}
 			type='button'
 			icon='pi pi-refresh'
 			text
 		/>
 	)
 	// @ts-ignore
-	if (clientPaymentQuery.isLoading) return <Loading />
-	if (clientPaymentQuery.isError) return <RequestError error={clientPaymentQuery.error} />
+
+	console.log('PAYMENT ITEMS ::: ', paymentItems)
+	if (ownerPaymentQuery.isLoading) return <Loading />
+	if (ownerPaymentQuery.isError) return <RequestError error={ownerPaymentQuery.error} />
 	// console.log(values)
 	return (
 		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
@@ -385,14 +402,14 @@ const OwnerPayment = () => {
 					<MdAdd size={50} />
 				</button>
 			</div>
-			{clientPaymentQuery?.data?.data.length > 0 ? (
+			{ownerPaymentQuery?.data?.data.length > 0 ? (
 				<>
 					<Box className='!p-0 !overflow-hidden !border-none !mx-4    mb-4 '>
 						<DataTable
 							size='small'
 							emptyMessage='Aún no hay cobro'
 							className='!overflow-hidden   !border-none'
-							value={clientPaymentQuery?.data?.data}
+							value={ownerPaymentQuery?.data?.data}
 							dataKey='id'
 							responsiveLayout='scroll'
 							paginator
@@ -402,14 +419,13 @@ const OwnerPayment = () => {
 							paginatorLeft={paginatorLeft}
 						>
 							<Column
-								field='Contract.Property.street'
+								field='Owner.fullName'
 								body={(data) => (
 									<span>
-										{data.Contract.Property.street} {data.Contract.Property.number} {data.Contract.Property.floor}{' '}
-										{data.Contract.Property.dept}
+										{data.Owner.fullName} {data.Owner.cuit}
 									</span>
 								)}
-								header='Propiedad'
+								header='Propietario'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 								sortable
@@ -428,7 +444,7 @@ const OwnerPayment = () => {
 							/>
 							<Column
 								field='createdAt'
-								body={(data) => <span>{formatDateDDMMYYYY(data.createdAt)}</span>}
+								body={(data) => <span>{formatDate(data.createdAt)}</span>}
 								header='Fecha de Cobro'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
@@ -464,13 +480,13 @@ const OwnerPayment = () => {
 				<div className='text-slate-400 mx-3 text-center'>Aún no hay Cobro.</div>
 			)}
 
-			{clientPaymentQuery.isFetching && (<Loading h={40} w={40} />)}
+			{ownerPaymentQuery.isFetching && (<Loading h={40} w={40} />)}
 
 			<DeleteModal
 				show={show}
 				setShow={setShow}
 				destroy={() => destroy(currentPayment.current?.id!)}
-				text={`El cobro de ${currentPayment.current?.month} - ${currentPayment.current?.year}`}
+				text={`El cobro de  ${currentPayment.current?.Owner.fullName} ${currentPayment.current?.month} - ${currentPayment.current?.year}`}
 			/>
 
 			<CreateModal
@@ -580,7 +596,7 @@ const OwnerPayment = () => {
 																	htmlFor={evt.updatedAt + evt.description}
 																	className='ml-2'
 																>
-																	${evt.clientAmount} - {evt.description}
+																	${evt.ownerAmount} - {evt.description}
 																</label>
 															</div>
 														))}
@@ -689,7 +705,7 @@ const OwnerPayment = () => {
 										type='number'
 										disabled={true}
 										value={eventTotal.current}
-										onChange={(value) => { }}
+										onChange={() => { }}
 									/>
 								</fieldset>
 								<fieldset className=''>
@@ -699,85 +715,24 @@ const OwnerPayment = () => {
 										type='number'
 										disabled={true}
 										value={expsTotal.current}
-										onChange={(value) => { }}
+										onChange={() => { }}
 									/>
 								</fieldset>
 							</FieldsetGroup>
 							<FieldsetGroup className='w-full sm:w-[50%]'>
-								{/* <fieldset className=''>
-							<label htmlFor='isRecharged'>Cobrar recargo (S/N)</label>
-							<input
-								type='checkbox'
-								name='isRecharged'
-								style={{ boxShadow: 'none' }}
-								className='w-12 !border-none !ml-0 !pl-0'
-								id='isRecharged'
-							/>
-						</fieldset> */}
 								<fieldset className=''>
-									<label htmlFor='total'>Días atrasados</label>
-
-									<input
-										placeholder='1234.90'
-										name='qteDays'
-										className={`dark:!bg-gray-900 w-24 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
-										min={0}
-										type='number'
-										value={qteDays ?? ''}
-										onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-											// handleInputChange(e.target.value, 'qteDays')
-											updateAll({
-												...values,
-												qteDays: Number(e.target.value),
-												recharge: Number((Number(e.target.value) * dailyPunitive).toFixed(2)),
-											})
-										}}
-									/>
-								</fieldset>
-								<fieldset className=''>
-									<label htmlFor='recharge'>Totla recargo</label>
+									<label htmlFor='total'>Total a cobrar</label>
 									<input
 										placeholder='1234.90'
 										disabled={true}
 										name='total'
 										type='number'
-										value={Number((qteDays * dailyPunitive).toFixed(2))}
-										onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value, 'recharge')}
+										value={eventTotal.current + expsTotal.current}
+										onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value, 'total')}
 									/>
 								</fieldset>
 							</FieldsetGroup>
 						</FieldsetGroup>
-						<FieldsetGroup className='w-full sm:w-[50%]'>
-							<fieldset className=''>
-								<label htmlFor='rentingAmount'>Valor alquiler</label>
-								<input
-									placeholder='1234.90'
-									type='number'
-									// disabled={true}
-									className={`dark:!bg-gray-900 w-24 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
-									value={rentingAmount ?? ''}
-									onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-										handleInputChange(Number(e.target.value), 'rentingAmount')
-									}}
-								/>
-								{/* {errors?.rentingAmount && <FormError text='EL formato de pago es obligatorio.' />} */}
-							</fieldset>
-							<fieldset className=''>
-								<label htmlFor='total'>Total a cobrar</label>
-								<input
-									placeholder='1234.90'
-									disabled={true}
-									name='total'
-									type='number'
-									value={rentingAmount + eventTotal.current + expsTotal.current + recharge}
-									onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value, 'total')}
-								/>
-							</fieldset>
-						</FieldsetGroup>
-						<FieldsetGroup>
-							<FieldsetGroup className='w-full sm:w-[50%]'></FieldsetGroup>
-						</FieldsetGroup>
-
 						<section className='action flex items-center gap-x-3 mt-8'>
 							<button
 								className='btn sec !py-1'
@@ -798,35 +753,11 @@ const OwnerPayment = () => {
 					{
 						OwnerId && (
 							<Box className="shadow-md rounded-lg border border-gray-200 dark:!from-gray-700 dark:!to-gray-800 dark:!bg-gradient-to-tr p-2">
-								<h3 className='font-bold mb-2 text-lg '>Lista de conceptos a cobrar</h3>
+								<h3 className='font-bold mb-2 text-lg '>Lista de conceptos a pagar</h3>
 								<div className="flex justify-between flex-col  h-[95%]">
 
 									<div className='payment-pdf  pt-4 flex-1 gap-y-1 flex flex-col px-1'>
 
-										{
-											values.rentingAmount > 0 && (
-												<div
-													className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
-												>
-													<span className=''>ALQUILER
-														{/*  @ts-ignore*/}
-														{ContractId?.Property?.street} {ContractId?.Property?.number}{' '}{ContractId?.Property?.floor}-{ContractId?.Property?.dept}  {month}   {year.toString()}</span>
-													<span>${rentingAmount}</span>
-
-												</div>
-											)
-										}
-										{
-											values.recharge > 0 && (
-												<div
-													className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
-												>
-													<span className=''>PUNITORIOS  {month}   {year.toString()}</span>
-													<span>${recharge}</span>
-
-												</div>
-											)
-										}
 										{selectedExpensesClient.map((evt, index) => (
 											<div
 												key={index}
@@ -862,11 +793,10 @@ const OwnerPayment = () => {
 									</div>
 									<div className="mt-auto">
 										<div
-											className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+											className='align-items-center font-bold uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
 										>
-											<span className=''>Total a cobrar </span>
-											<span>${rentingAmount + eventTotal.current + expsTotal.current + recharge}</span>
-
+											<span className=''>Total a pagar </span>
+											<span>${eventTotal.current + expsTotal.current}</span>
 										</div>
 									</div>
 								</div>

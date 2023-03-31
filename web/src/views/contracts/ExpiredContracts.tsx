@@ -7,17 +7,70 @@ import { useContracts } from '../../hooks/useContracts'
 import { Page, Text, View, Document, StyleSheet, PDFViewer, PDFDownloadLink } from '@react-pdf/renderer'
 import Expired from '../../components/contract/Expired'
 import { diffenceBetweenDates, formatDateDDMMYYYY } from '../../helpers/date'
+import { jsPDF } from "jspdf";
+
 
 const ExpiredContracts = () => {
 	const [days, setDays] = useState(60)
 	const { data, isError, error, isLoading, refetch, isFetching } = useContracts(`/expired-contracts/${days}`)
 	console.log(data?.data)
+
+	const downloadPdf = () => {
+		const doc = new jsPDF({
+			orientation: "landscape",
+			unit: "px",
+			format: 'a4',
+			// format: [4, 2]
+		});
+
+		// doc.html(document.getElementById('pdf-download')!, {
+		// 	callback: function (doc) {
+		// 		doc.save();
+		// 	},
+		// 	x: 10,
+		// 	y: 10
+		// });
+
+		doc.setFontSize(30)
+		doc.text(`Contratos a vencer en los próximos ${days} días`, 20, 20)
+		let cleandata: {
+			'Vence el': string;
+			Resta: string;
+			Carpeta: string;
+			Propiedad: string;
+			Propietario: string;
+			Inquilino: string;
+			'Monto Alq.': string;
+			'Alq. Neto': string;
+			Observaciones: string;
+		}[] = data?.data.map((c: any) => ({
+			'Vence el': formatDateDDMMYYYY(c.endDate),
+			Resta: diffenceBetweenDates(new Date().toISOString(), c.endDate,).toString(),
+			Carpeta: c.Property.folderNumber,
+			Propiedad: `${c.Property.street} ${c.Property.number} ${c.Property.dept} - ${c.Property.floor}`,
+			Propietario: c.Property.Owner?.fullName,
+			Inquilino: c.Client.fullName,
+			'Monto Alq.': c.PriceHistorials[c.PriceHistorials.length - 1].amount.toString(),
+			'Alq. Neto': (c.PriceHistorials[c.PriceHistorials.length - 1].amount - (c.PriceHistorials[c.PriceHistorials?.length - 1].amount * (c.Property.Owner.commision / 100))).toString(),
+			Observaciones: c.description,
+
+		}))
+		doc.table(30, 30, cleandata, ['Vence el', 'Resta', 'Carpeta', 'Propiedad', 'Propietario', 'Inquilino', 'Monto Alq.', 'Alq. Neto', 'Observaciones'], { autoSize: true })
+		// doc.text(`Contratos a vencer en los próximos ${days} días`, 10, 10)
+		// doc.text(`Vence el     Resta    Carpeta  Propiedad           Propietario          Inquilino         Monto Alq.	 Alq. Neto	     Observaciones            `, 10, 15)
+		// data?.data.map((c, index) => {
+		// 	doc.text(`${formatDateDDMMYYYY(c.endDate)}   ${diffenceBetweenDates(new Date().toISOString(), c.endDate,)} ${c.Client.fullName}  `, 10, 10 + ((index + 1) * 10));
+
+		// })
+		doc.save(`CONTRATOS_A_VENCER_EN_${days}_DIAS_${formatDateDDMMYYYY(new Date().toISOString())}.pdf`);
+	}
+
 	if (isLoading) return <Loading />
 	if (isError) return <RequestError error={error} />
 	return (
 		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
 
-			<Box className='expired-contracts p-0 m-0 !border-0 !shadow-none !bg-transparent flex items-end gap-x-4'>
+			<Box className='expired-contracts !p-0 !m-0 !border-0 !shadow-none !bg-transparent flex items-end gap-x-4'>
 				<fieldset className='w-fit mb-0 '>
 					<label htmlFor='days'>Cantidad de días</label>
 					<Dropdown
@@ -43,10 +96,10 @@ const ExpiredContracts = () => {
 					</span>
 				</h2>
 				<Box className='!p-0 !m-0'>
-					<div className='overflow-x-auto'>
-						<table className='w-full p-6 text-sm text-left whitespace-nowrap'>
+					<div className='overflow-x-auto' >
+						<table className='w-full p-6 text-sm text-left whitespace-nowrap' id='pdf-download'>
 							<thead className=' rounded-lg  overflow-hidden'>
-								<tr className='bg-gray-200 dark:bg-gray-700'>
+								<tr className='bg-gray-100 dark:bg-slate-700'>
 									<th className='p-3'>Vence el</th>
 									<th className='p-3'>Resta</th>
 									<th className='p-3'>Carpeta</th>
@@ -60,7 +113,7 @@ const ExpiredContracts = () => {
 							</thead>
 							<tbody className=''>
 								{data?.data.map((c: any) => (
-									<tr key={c.id}>
+									<tr key={c.id} className=''>
 										<td className='px-3 py-2'>{formatDateDDMMYYYY(c.endDate)}</td>
 										<td className='px-3 py-2'>{diffenceBetweenDates(new Date().toISOString(), c.endDate,)}</td>
 										<td className='px-3 py-2'>{c.Property.folderNumber}</td>
@@ -90,7 +143,7 @@ const ExpiredContracts = () => {
 					w={60}
 				/>
 			)}
-			<button className='btn gradient  !my-4'>Descargar Planilla</button>
+			<button className='btn gradient  !my-4' onClick={downloadPdf}>Descargar Planilla</button>
 			{/* <PDFDownloadLink
 				document={
 					<Expired

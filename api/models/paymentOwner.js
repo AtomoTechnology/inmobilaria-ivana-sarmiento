@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
   class PaymentOwner extends Model {
     static associate(models) {
       //  Relation
-      PaymentOwner.belongsTo(models.Contract);
+      PaymentOwner.belongsTo(models.Owner);
       PaymentOwner.belongsTo(models.PaymentType);
     }
   }
@@ -17,15 +17,15 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BIGINT,
       autoIncrement: true,
     },
-    ContractId: {
+    OwnerId: {
       allowNull: false,
       type: DataTypes.BIGINT,
       validate: {
         notNull: {
-          msg: 'El contrato es obligatorio',
+          msg: 'El propietario es obligatorio',
         },
         notEmpty: {
-          msg: 'El contrato es obligatorio',
+          msg: 'El propietario es obligatorio',
         },
       },
     },
@@ -41,61 +41,76 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
     },
-    insurance: {
-      type: DataTypes.FLOAT,
+    month: {
+      type: DataTypes.STRING(15),
       allowNull: false,
+      validate: {
+        notNull: {
+          msg: "El mes de pago es obligatorio",
+        },
+        notEmpty: {
+          msg: "El mes de pago es obligatorio",
+        },
+      },
     },
-    water: {
-      type: DataTypes.STRING(30),
+    year: {
+      type: DataTypes.INTEGER,
       allowNull: false,
-    },
-    TGI: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    compensation: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    bankingExpenses: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    admExpenses: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    recharge: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      validate: {
+        notNull: {
+          msg: "El año de pago es obligatorio",
+        },
+        notEmpty: {
+          msg: "El año de pago es obligatorio",
+        },
+      },
     },
     total: {
-      type: DataTypes.STRING,
+      type: DataTypes.FLOAT,
       allowNull: false,
+      validate: {
+        notNull: {
+          msg: "El total de pago es obligatorio",
+        },
+        notEmpty: {
+          msg: "El total de pago es obligatorio",
+        },
+      },
     },
-    totalPro: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    ExpenseDetails: {
-      type: DataTypes.TEXT('long'),
+    expenseDetails: {
+      type: DataTypes.TEXT("long"),
       get: function () {
-        return JSON.parse(this.getDataValue("ExpenseDetails"));
+        if (!this.getDataValue("expenseDetails")) return null;
+        return JSON.parse(this.getDataValue("expenseDetails"));
       },
       set: function (value) {
-        return this.setDataValue("ExpenseDetails", JSON.stringify(value));
-      }
+        return this.setDataValue(
+          "expenseDetails",
+          JSON.stringify(value || "")
+        );
+      },
     },
     eventualityDetails: {
-      type: DataTypes.TEXT('long'),
+      type: DataTypes.TEXT("long"),
       get: function () {
+        if (!this.getDataValue("eventualityDetails")) return null;
         return JSON.parse(this.getDataValue("eventualityDetails"));
       },
       set: function (value) {
-        return this.setDataValue("eventualityDetails", JSON.stringify(value));
-      }
+        return this.setDataValue(
+          "eventualityDetails",
+          JSON.stringify(value || "")
+        );
+      },
     },
+    createdAt: DataTypes.DATEONLY,
   }, {
+    indexes: [
+      {
+        unique: true,
+        fields: ["OwnerId", "month", "year"],
+      },
+    ],
     paranoid: true,
     sequelize,
     modelName: 'PaymentOwner',
