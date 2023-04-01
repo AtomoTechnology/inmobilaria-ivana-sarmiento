@@ -27,13 +27,17 @@ import { useClientPayments } from '../../hooks/useClientPayments'
 import { Idebt, IdebtsResponse } from '../../interfaces/IDebtsResponse'
 import { IClienyPayment } from '../../interfaces/IclientPayments'
 import { IConfigResponse } from '../../interfaces/Iconfig'
-import { diffenceBetweenDates, formatDateDDMMYYYY, padTo2Digits } from '../../helpers/date'
+import { diffenceBetweenDates, formatDateDDMMYYYY, padTo2Digits, padToNDigit } from '../../helpers/date'
 import { Button } from 'primereact/button'
 import { BsPrinter, BsSkipBackward } from 'react-icons/bs'
 import { TfiBackLeft } from 'react-icons/tfi'
+import logoApp from '../../assets/images/logo.png'
+// @ts-expect-error
+import html2pdf from 'html2pdf.js'
 const ClientPayments = () => {
 	const { showAlert, hideAlert } = useContext(AuthContext)
 	const [showCreateModal, setShowCreateModal] = useState(false)
+	const [downloadPdf, setDownloadPdf] = useState(false)
 	const [show, setShow] = useState(false)
 	const {
 		ContractId,
@@ -76,6 +80,7 @@ const ClientPayments = () => {
 	const [expenseDetails, setExpenseDetails] = useState<IClientExpItem[]>([])
 	const [eventualityDetails, setEventualityDetails] = useState<IEventuality[]>([])
 	const [debts, setDebts] = useState<Idebt[]>([])
+	const [loadingPdf, setLoadingPdf] = useState(false)
 
 	const clientPaymentQuery = useClientPayments()
 	const { data, isError, isLoading, error, isFetching } = useContracts()
@@ -88,6 +93,34 @@ const ClientPayments = () => {
 		setShowCreateModal(true)
 		setEditMode(true)
 		currentPayment.current = data
+	}
+	const printPdf = async (data: IClienyPayment) => {
+		currentPayment.current = data
+		setDownloadPdf(true)
+	}
+	const closePrintPdfModal = () => {
+		setDownloadPdf(false)
+		currentPayment.current = null
+	}
+	const handleDownloadPdf = async () => {
+		setLoadingPdf(true)
+		var element = document.getElementById('pdf-download');
+
+		var opt = {
+			margin: [.1, .1],
+			filename: `${currentPayment.current?.Contract.Client.fullName}_${currentPayment.current?.month}_${currentPayment.current?.year}_${formatDateDDMMYYYY(new Date().toISOString())}.pdf`,
+			// image: { type: 'jpeg', quality: 0.98 },
+			html2canvas: { scale: 2 },
+			jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
+		};
+		try {
+
+			await html2pdf().from(element).set(opt).save();
+		} catch (error) {
+			console.log(error)
+		} finally {
+			setLoadingPdf(false)
+		}
 	}
 
 	const ConfirmDestroy = (data: IClienyPayment) => {
@@ -221,7 +254,7 @@ const ClientPayments = () => {
 	const actionBodyTemplate = (rowData: any) => {
 		return (
 			<div className='flex gap-x-3 items-center justify-center'>
-				<BsPrinter title='Imprimir comprobante' size={22} onClick={() => console.log(rowData)} />
+				<BsPrinter title='Imprimir comprobante' size={22} onClick={() => printPdf(rowData)} />
 				{/* <EditIcon action={() => edit(rowData)} /> */}
 				<TfiBackLeft title='Revertir cobro' size={23} onClick={() => ConfirmDestroy(rowData)} />
 			</div>
@@ -422,8 +455,158 @@ const ClientPayments = () => {
 				show={show}
 				setShow={setShow}
 				destroy={() => destroy(currentPayment.current?.id!)}
-				text={`El cobro de ${currentPayment.current?.month} - ${currentPayment.current?.year}`}
+				text={`El cobro de ${currentPayment.current?.month} ${currentPayment.current?.Contract.Client.fullName} - ${currentPayment.current?.year}`}
 			/>
+			<CreateModal
+				show={downloadPdf}
+				closeModal={closePrintPdfModal}
+				overlayClick={false}
+				// className='shadow-none border-0 w-full sm:w-[640px] md:w-[768px] lg:w-[1024px] !p-3'
+				titleText={`Recibo de ${currentPayment.current?.month} - ${currentPayment.current?.year}`}
+				overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
+			>
+				<CloseOnClick action={closePrintPdfModal} />
+
+				<Box className="!shadow-none rounded-lg !p-2 !border-none  border-gray-200 dark:!from-gray-700 dark:!to-gray-800 dark:!bg-gradient-to-tr mt-3">
+					<div id='pdf-download' className="flex gap-x-2 ">
+						{
+							[1, 2].map((pdf, index) => (
+								<div key={index} className="flex justify-between flex-col border border-gray-200 dark:border-slate-600 p-1  h-[95%] w-[500px]">
+									<div className="header-pdf flex justify-between border border-gray-200 dark:border-slate-600  p-2">
+										<div className="left w-[50%] flex items-center flex-col gap-y-2">
+											<div className='logo-app flex items-center'>
+												<img
+													width={100}
+													className='min-w-[100px] object-cover'
+													src={logoApp}
+													alt='LOGO CENTRO'
+												/>
+											</div>
+											<div className="flex flex-col items-center">
+
+												<span className="text-2xl font-semibold uppercase">Centro</span>
+												<span className="text-md font-semibold ">Administracion de  </span>
+												<span className="text-sm font-semibold ">Consorcios y Propiedades</span>
+											</div>
+
+										</div>
+										<div className="right w-[50%] ">
+											<div className="flex flex-col items-center text-sm">
+												<span>Alquileres - Ventas - Tasaciones</span>
+												<span>San Martin 1514  Tel: 4483280</span>
+												<span>2000 - Rosario - Santa Fe </span>
+												<span>inmobilaria@centro.com.ar</span>
+												<span>www.centro.com.ar</span>
+												<div className="">
+													<span className='flex gap-x-2'>
+														<span>Rosario</span>
+														<span>{formatDateDDMMYYYY(new Date().toISOString())}</span>
+													</span>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div className="client-data border border-gray-200 dark:border-slate-600  my-2 p-2 flex ">
+										<div className="flex flex-col gap-y-2 flex-1">
+											<span>
+												<span className="font-semibold">Inquilino: </span>
+												<span>{currentPayment.current?.Contract.Client.fullName}</span>
+											</span>
+											<span>
+												<span className="font-semibold">Domicilio: </span>
+												<span>{currentPayment.current?.Contract.Client.address}</span>
+											</span>
+										</div>
+										<div className="w-30  flex gap-x-4">
+											<div className="">
+
+												<div>C {currentPayment.current?.Contract.Property.folderNumber} </div>
+
+												<div className="">
+													<span className='flex gap-x-2'>
+														<span>Recibo</span>
+														<span className=''>#{padToNDigit(currentPayment.current?.id || 0, 4)}</span>
+													</span>
+												</div>
+											</div>
+											<div className='flex flex-col font-semibold items-center'>
+												<span>Vencimiento</span>
+												<span>
+													del contrato
+												</span>
+												<span>
+													{formatDateDDMMYYYY(currentPayment.current?.Contract.endDate!)}
+												</span>
+											</div>
+										</div>
+									</div>
+
+									<div className='payment-pdf px-2  my-3 pt-4 flex-1 gap-y-1 flex flex-col '>
+										{
+											currentPayment.current?.rentingAmount! > 0 && (
+												<div
+													className='align-items-center uppercase text-sm  flex gap-x-3 items-center dark:border-slate-600  justify-between    border-gray-300'
+												>
+													<span className=''>
+														{/*  @ts-ignore*/}
+														ALQUILER {currentPayment.current?.Contract?.Property?.street} {currentPayment.current?.Contract?.Property?.number}{' '}{currentPayment.current?.Contract?.Property?.floor}-{currentPayment.current?.Contract?.Property?.dept}  {currentPayment.current?.month}   {currentPayment.current?.year.toString()}</span>
+													<span>${currentPayment.current?.rentingAmount}</span>
+
+												</div>
+											)
+										}
+										{
+											currentPayment.current?.recharge! > 0 && (
+												<div
+													className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between dark:border-slate-600    border-gray-300'
+												>
+													<span className=''>PUNITORIOS  {currentPayment.current?.month}   {currentPayment.current?.year.toString()}</span>
+													<span>${currentPayment.current?.recharge}</span>
+												</div>
+											)
+										}
+
+										{currentPayment.current?.expenseDetails.map((evt, index) => (
+											<div
+												key={index}
+												className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
+											>
+												<span className=''>{evt.description}</span>
+												<span>${evt.amount}</span>
+
+											</div>
+										))}
+										{currentPayment.current?.eventualityDetails.map((evt, index) => (
+											<div
+												key={index}
+												className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
+											>
+												<span className=''>{evt.description}</span>
+												<span>${evt.clientAmount}</span>
+
+											</div>
+										))}
+
+									</div>
+									<div className="mt-auto p-2  border border-gray-200 dark:border-slate-600 ">
+										<div
+											className='align-items-center font-semibold uppercase text-sm  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
+										>
+											<span className=''>Total a cobrar </span>
+											<span className=''>${currentPayment.current?.total}</span>
+
+										</div>
+									</div>
+								</div>
+							))
+						}
+					</div>
+					<div className="flex gap-x-2">
+						<button className='btn sec  !my-4' disabled={loadingPdf} onClick={closePrintPdfModal}> Cancelar </button>
+						<button className='btn gradient  !my-4' disabled={loadingPdf} onClick={handleDownloadPdf}> {loadingPdf ? 'Descargando ... ' : 'Descargar recibo'} </button>
+					</div>
+				</Box>
+			</CreateModal>
 
 			<CreateModal
 				show={showCreateModal}
@@ -820,7 +1003,7 @@ const ClientPayments = () => {
 
 				</div>
 			</CreateModal>
-		</div>
+		</div >
 	)
 }
 

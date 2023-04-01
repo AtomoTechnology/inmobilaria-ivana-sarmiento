@@ -23,9 +23,14 @@ exports.GetAll = all(PaymentClient, {
   include: [
     {
       model: Contract,
-      include: {
-        model: Property,
-      },
+      include: [
+        {
+          model: Property,
+        },
+        {
+          model: Client,
+        },
+      ],
     },
     {
       model: PaymentType,
@@ -123,7 +128,7 @@ exports.Put = update(PaymentClient, [
   "eventualityDetails",
   "ExpenseDetails",
 ]);
-exports.allDebt = (req, res, next) => {};
+exports.allDebt = (req, res, next) => { };
 
 exports.Destroy = catchAsync(async (req, res, next) => {
   const transact = await sequelize.transaction();

@@ -33,6 +33,9 @@ export const formatDateForInput = (date: string) => {
 export function padTo2Digits(num: number) {
   return num.toString().padStart(2, '0');
 }
+export function padToNDigit(num: number, n: number) {
+  return num.toString().padStart(n, '0');
+}
 
 export function formatDateDDMMYYYY(date :string) {
 	let d = new Date(date)
