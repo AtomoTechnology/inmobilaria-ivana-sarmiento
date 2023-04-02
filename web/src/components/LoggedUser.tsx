@@ -5,6 +5,8 @@ import { NavLink } from 'react-router-dom'
 import { AuthState } from '../context/authContext'
 import DefaultAvatar from './DefaultAvatar'
 import { BsSun, BsFillMoonFill } from 'react-icons/bs'
+import { menuItems } from '../helpers/general'
+import DownAngle from './icons/DownAngle'
 
 type Props = {
 	authState: AuthState
@@ -57,7 +59,7 @@ const LoggedUser = ({ authState, signOut, handleToggleTheme, darkTheme }: Props)
 						) : (
 							<DefaultAvatar />
 						)}
-						<span className='ml-1'>{user?.fullName?.split(' ')[0]}</span>
+						<span className='ml-1 username-logged'>{user?.fullName?.split(' ')[0]}</span>
 						<FaAngleDown size={20} />
 					</button>
 				</div>
@@ -74,16 +76,47 @@ const LoggedUser = ({ authState, signOut, handleToggleTheme, darkTheme }: Props)
 						className='py-1 flex flex-col  gap-1'
 						role='none'
 					>
-						<NavLink
-							to='/dashboard'
-							className='hover:text-red-600 flex items-center gap-1 rounded-xl  hover:bg-gray-100  text-gray-700  px-2 py-2 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-brand'
-							role='menuitem'
-							tabIndex={-1}
-							id='menu-item-1'
-						>
-							<AiOutlineDashboard />
-							<span>Dashboard</span>
-						</NavLink>
+
+						<ul className='flex lg:hidden items-start flex-col gap-x-2 text-white'>
+							{menuItems.map((item, index) =>
+								item.to !== null ? (
+									<NavLink
+										to={item.to}
+										key={index}
+										className={({ isActive, isPending }) =>
+											`relative items-center  justify-center flex  h-[70px] text-brand2 dark:text-slate-400  dark:hover:text-brand hover:text-brand group p-1 ${isActive ? 'underline !text-brand rounded-md   ' : isPending ? 'pending' : ''
+											}`
+										}
+									>
+										{item.title}
+									</NavLink>
+								) : (
+									<li
+										key={index}
+										className={`relative dark:text-slate-400  items-center  justify-center flex  h-[70px]  dark:hover:text-brand  text-brand2 hover:text-brand group p-1`}
+									>
+										{item.title} <DownAngle />
+										<ul
+											style={{ zIndex: 900000 }}
+											className=' top-[60px] !left-0 p-3 w-fit hidden transition-colors duration-1000 group-hover:flex bg-white border dark:bg-slate-800 dark:border-slate-700  border-gray-100  flex-col gap-y-2 rounded-b-md shadow '
+										>
+											{item.subLink.map((sub, index) => (
+												<NavLink
+													key={index}
+													to={sub.to}
+													className={({ isActive, isPending }) =>
+														`text-brand2 dark:text-slate-400 hover:!text-brand ${isActive ? 'underline !text-brand ' : isPending ? 'pending' : ''
+														}`
+													}
+												>
+													{sub.title}
+												</NavLink>
+											))}
+										</ul>
+									</li>
+								)
+							)}
+						</ul>
 
 						<div className='border-b border-gray-200 dark:border-slate-700 rounded-full my-1 w-full'></div>
 						<button

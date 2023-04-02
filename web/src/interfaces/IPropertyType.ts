@@ -8,7 +8,6 @@ export interface IpropertyResponse {
 
 export interface IpropertyType {
   id: number;
-  uuid?: string;
   description: string;
   createdAt?: string;
   updatedAt?: string;

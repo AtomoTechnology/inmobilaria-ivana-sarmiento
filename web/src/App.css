@@ -218,6 +218,10 @@ form.disabled-all {
 .p-datatable-header {
   background: #000 !important;
 } */
+
+.p-paginator{
+	padding: 0 !important;
+}
 .p-datatable-thead tr th {
 	/* background: var(--SecondaryColor) !important; */
 	background: rgb(51 65 85) !important;

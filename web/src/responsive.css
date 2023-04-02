@@ -3,3 +3,8 @@
 		display: none;
 	}
 }
+@media (max-width: 300px) {
+	.username-logged {
+		display: none;
+	}
+}

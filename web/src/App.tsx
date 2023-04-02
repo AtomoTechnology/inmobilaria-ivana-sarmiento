@@ -29,7 +29,7 @@ export const ShowModal = ({ title, message, color = 'green' }: { title: string; 
 	return (
 		<div
 			style={{ zIndex: 1010 }}
-			className={`alert-app ${gradient} sign-success  fixed w-[400px] bottom-10 right-6 flex items-center gap-x-4 dark:text-white from-white   shadow-xl p-4 rounded-md border border-gray-100 `}
+			className={`alert-app ${gradient} sign-success  fixed w-full sm:w-[400px] bottom-0 right-0 sm:bottom-10  sm:right-6 flex items-center gap-x-4 dark:text-white from-white   shadow-xl p-4 rounded-none sm:rounded-lg transition-all duration-300 ease-in-out `}
 		>
 			<CheckIcon color={color} />
 			<div className='sign-description'>
@@ -37,14 +37,14 @@ export const ShowModal = ({ title, message, color = 'green' }: { title: string; 
 				<span className='text-sm text-gray-500 relative '>{message}</span>
 			</div>
 			<button
-				className='absolute top-2 right-3'
+				className='absolute top-1 right-1'
 				onClick={() => {
 					document.querySelector('.alert-app')?.classList.add('hidden')
 				}}
 			>
 				<CloseIcon
-					color='gray'
-					size={30}
+					color='#4a5f7a'
+					size={25}
 				/>
 			</button>
 		</div>
@@ -135,7 +135,6 @@ const App = () => {
 			<main className='my-6  sm:grid  items-center justify-center'>
 				<Outlet />
 			</main>
-			{/*  */}
 			<footer className='mt-auto bg-gray-100  bg-gradient-to-r from-brand2 to-brand  dark:bg-[#061122]  p-6 '>
 				<div className='container m-auto'>
 					<section className='py-6'>
