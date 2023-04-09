@@ -19,6 +19,7 @@ import { EmptyData } from '../../components/EmptyData';
 import RefreshData from '../../components/RefreshData';
 import FormActionBtns from '../../components/FormActionBtns';
 import CustomTextArea from '../../components/CustomTextArea';
+import BoxContainerPage from '../../components/BoxContainerPage';
 
 const AllPropertyTypes = () => {
 
@@ -27,7 +28,7 @@ const AllPropertyTypes = () => {
   const [errors, setErrors] = useState<any>({});
   const [editMode, setEditMode] = useState(false)
   const currentPropertyType = useRef<IpropertyType | null>();
-
+  const [savingOrUpdating, setSavingOrUpdating] = useState(false)
   const { description, values, handleInputChange, reset } = useForm({ description: '' })
   const { data, isError, isLoading, error, isFetching, refetch } = usePropertyTypes()
   const { showAndHideModal } = useShowAndHideModal()
@@ -46,6 +47,7 @@ const AllPropertyTypes = () => {
 
   const destroy = async (id: number) => {
     try {
+      setSavingOrUpdating(true)
       const res = await http.delete('/propertytypes/' + id);
       if (res.data.ok) {
         data?.data && (data.data! = data?.data.filter(z => z.id !== id));
@@ -56,6 +58,8 @@ const AllPropertyTypes = () => {
       }
     } catch (error: any) {
       if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+    } finally {
+      setSavingOrUpdating(false)
     }
   };
 
@@ -66,6 +70,7 @@ const AllPropertyTypes = () => {
     if (!ok) return false
     if (editMode) {
       try {
+        setSavingOrUpdating(true)
         const res = await http.put(`/propertytypes/${currentPropertyType.current?.id}`, values);
         if (res.data.ok) {
           data?.data && (data.data = data?.data.map(z => {
@@ -82,9 +87,12 @@ const AllPropertyTypes = () => {
         }
       } catch (error: any) {
         if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+      } finally {
+        setSavingOrUpdating(false)
       }
     } else {
       try {
+        setSavingOrUpdating(true)
         const res = await http.post('/propertytypes', values);
         if (res.data.ok) {
           data?.data.unshift(res.data.data)
@@ -96,6 +104,8 @@ const AllPropertyTypes = () => {
         }
       } catch (error: any) {
         if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+      } finally {
+        setSavingOrUpdating(false)
       }
     }
   }
@@ -125,11 +135,11 @@ const AllPropertyTypes = () => {
   if (isError) return <RequestError error={error} />
 
   return (
-    <div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
+    <BoxContainerPage >
       <HeaderData action={openCreateOrEditModel} text='Tipos de propiedades' />
       {
         data.data.length > 0 ? (
-          <Box className='!p-0 !overflow-hidden !border-none    sm:w-[500px] mb-4 '>
+          <Box className='!p-0 !overflow-hidden !border-none  sm:mx-0  sm:w-[500px] mb-4 '>
             <DataTable
               size='small' emptyMessage='Aún no hay tipo de propiedad' className='!overflow-hidden !border-none'
               value={data?.data} dataKey='id' paginator rows={10} paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
@@ -146,6 +156,7 @@ const AllPropertyTypes = () => {
 
       <DeleteModal
         show={show}
+        savingOrUpdating={savingOrUpdating}
         setShow={setShow}
         destroy={() => destroy(currentPropertyType.current?.id!)}
         text={`${currentPropertyType.current?.description}`}
@@ -169,10 +180,10 @@ const AllPropertyTypes = () => {
             hasError={errors?.description}
             errorText='La descripción es obligatoria.'
           />
-          <FormActionBtns onClose={closeCreateModal} />
+          <FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
         </form>
       </CreateModal>
-    </div>
+    </BoxContainerPage>
   );
 };
 

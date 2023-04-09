@@ -30,6 +30,7 @@ exports.GetAll = all(Contract, {
     { model: Client },
     { model: Property, include: { model: Owner } },
     { model: PriceHistorial },
+    { model: Assurance, },
   ],
 });
 exports.Paginate = paginate(Contract, {
@@ -49,7 +50,9 @@ exports.GetOwnerContracts = catchAsync(async (req, res, next) => {
   const properties = await Property.findAll({
     where: {
       OwnerId: id,
+      // TODO ::: state: 'Ocupado' should i add this?
     },
+    attributes: ['id']
   });
   const ids = properties.map((p) => p.id);
   const contracts = await Contract.findAll({
@@ -270,16 +273,43 @@ exports.Destroy = catchAsync(async (req, res, next) => {
 
 exports.ExpiredContracts = catchAsync(async (req, res, next) => {
   const days = req.params.days * 1;
+  // get diffDays 
 
   const docs = await Contract.findAll({
     where: {
-      endDate: {
-        [Op.and]: {
-          [Op.gt]: Date(),
-          [Op.lte]: addDays(new Date().toDateString(), days),
-        },
-      },
+      [Op.or]: [
+        sequelize.where(
+          sequelize.fn(
+            "datediff",
+            sequelize.fn("NOW"),
+            sequelize.col("startDate")
+          ),
+          {
+            [Op.between]: [366, 730],// restar qte de dias a cada uno de los rangos [306, 670] (-60)
+          }
+        ),
+        sequelize.where(
+          sequelize.fn(
+            "datediff",
+            sequelize.fn("NOW"),
+            sequelize.col("startDate")
+          ),
+          {
+            [Op.between]: [731, 1095],
+          }
+        ),
+      ],
+      state: "En curso",
     },
+    // where: {
+
+    //   endDate: {
+    //     [Op.and]: {
+    //       [Op.gt]: Date(),
+    //       [Op.lte]: addDays(new Date().toDateString(), days),
+    //     },
+    //   },
+    // },
     // attributes : ['id','endDate']
     include: [
       { model: Client },

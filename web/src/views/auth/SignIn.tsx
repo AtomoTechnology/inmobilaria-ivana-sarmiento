@@ -48,6 +48,7 @@ const SignIn = () => {
           setLoginError(r.data.message);
         }
       } catch (error: any) {
+        console.log(error)
         if (error.response) {
           setLoginError(error.response.data.message);
           setTimeout(() => {

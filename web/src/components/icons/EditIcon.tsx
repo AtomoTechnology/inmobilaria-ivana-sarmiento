@@ -10,7 +10,7 @@ interface Props {
 }
 const EditIcon = ({ size = 25, color, action }: Props) => {
   return (
-    <CiEdit size={size} color={color} onClick={action} />
+    <CiEdit title='Editar' size={size} color={color} onClick={action} />
   )
 }
 

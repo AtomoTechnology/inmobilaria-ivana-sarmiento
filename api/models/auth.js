@@ -70,7 +70,9 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		{
 			sequelize,
+            tableName: 'auths',
 			modelName: 'Auth',
+
 			paranoid: true,
 		}
 	)

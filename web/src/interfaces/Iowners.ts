@@ -12,7 +12,6 @@ export interface IownersResponse {
 
 export interface IPerson {
 	id: number
-	uuid: string
 	fullName: string
 	address: string
 	phone: string

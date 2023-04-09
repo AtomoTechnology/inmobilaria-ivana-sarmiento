@@ -212,6 +212,7 @@ const OwnerPayment = () => {
 		setSelectedExpensesClient([])
 		setEventualityDetails([])
 		setExpenseDetails([])
+		setContractRows([])
 		setDebts([])
 		eventTotal.current = 0
 		expsTotal.current = 0
@@ -282,6 +283,7 @@ const OwnerPayment = () => {
 		setSelectedEventualities([])
 		setSelectedExpensesClient([])
 		setEventualityDetails([])
+		setContractRows([])
 
 		setContractRows([])
 		eventTotal.current = 0
@@ -309,7 +311,7 @@ const OwnerPayment = () => {
 
 					expenseDetails: [{
 						amount: contract.PriceHistorials[contract.PriceHistorials?.length - 1]?.amount - (contract.PriceHistorials[contract.PriceHistorials?.length - 1]?.amount * e.value.commision / 100),
-						description: 'ALQUILER ' + contract?.Property?.street + ' ' + contract?.Property?.number + ' ' + contract?.Property?.floor + '-' + contract?.Property?.dept,
+						description: 'ALQUILER ' + contract?.Property?.street + ' ' + contract?.Property?.number + ' ' + contract?.Property?.floor + '-' + contract?.Property?.dept + ' ' + month + '/' + year,
 						id: new Date().getTime(),
 						ContractId: contract.id,
 						createdAt: new Date().toISOString(),
@@ -716,11 +718,23 @@ const OwnerPayment = () => {
 						)}
 						<FieldsetGroup>
 							<FieldsetGroup className='w-full sm:w-[50%]'>
-								<fieldset>
-									<label htmlFor='month'>Mes de pago</label>
-									<Dropdown
+								{/* <fieldset>
+									<label htmlFor='month'>Mes de pago</label> */}
+								<CustomInput
+									initialValue={month || ''}
+									placeholder='Elija un mes'
+									label='Mes de pago'
+									onChange={(val) => handleInputChange(val, 'month')}
+									required
+									disabled
+									hasError={errors?.month}
+									errorText='El mes de pago es obligatorio.'
+
+								/>
+								{/* <Dropdown
 										value={month || ''}
 										placeholder='Elija un mes'
+										disabled
 										filterPlaceholder='Busca mes'
 										options={monthsInSpanish}
 										onChange={(event: DropdownChangeEvent) => handleInputChange(event.value, 'month')}
@@ -728,8 +742,8 @@ const OwnerPayment = () => {
 										className='h-[42px] items-center !border-gray-200 shadow'
 									/>
 									{errors?.month && <FormError text='El mes de pago es obligatorio.' />}
-								</fieldset>
-								<fieldset>
+								</fieldset> */}
+								{/* <fieldset>
 									<label htmlFor='year'>Año de pago</label>
 									<Dropdown
 										placeholder='Elija un año'
@@ -739,7 +753,18 @@ const OwnerPayment = () => {
 										className='h-[42px] items-center !border-gray-200 shadow'
 									/>
 									{errors?.year && <FormError text='El año de pago es obligatorio.' />}
-								</fieldset>
+								</fieldset> */}
+								<CustomInput
+									initialValue={year || ''}
+									placeholder='Elija un ano'
+									label='Año de pago'
+									onChange={(val) => handleInputChange(val, 'year')}
+									required
+									disabled
+									hasError={errors?.year}
+									errorText='El año de pago es obligatorio.'
+
+								/>
 							</FieldsetGroup>
 							<FieldsetGroup className='w-full sm:w-[50%]'>
 								<fieldset className=''>

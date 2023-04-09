@@ -74,6 +74,7 @@ module.exports = (sequelize, DataTypes) => {
 			],
 			sequelize,
 			modelName: 'PriceHistorial',
+			tableName : 'pricehistorials',
 			// paranoid: true,
 		}
 	)

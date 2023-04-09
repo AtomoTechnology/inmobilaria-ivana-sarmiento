@@ -1,6 +1,7 @@
 export const PrimaryColor = '#f16fa1'
 export const SecondaryColor = '#8b55f5'
 export const DelayAlertToHide = 7000
+export const RowsToShow = 10
 export const monthsInSpanish = [
 	'Enero',
 	'Febrero',

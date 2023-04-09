@@ -1,7 +1,19 @@
-const { DebtOwner, Contract, sequelize } = require('../../models')
+const {
+	DebtOwner,
+	Contract,
+	sequelize,
+	Property,
+	PriceHistorial,
+	PaymentOwner,
+	Owner,
+	OwnerExpense,
+	JobLog,
+} = require("../../models");
 
-const { all, findOne, update, destroy } = require('../Generic/FactoryGeneric')
-const { catchAsync } = require('../../helpers/catchAsync')
+const { all, findOne, update, destroy } = require("../Generic/FactoryGeneric");
+const { catchAsync } = require("../../helpers/catchAsync");
+const { monthsInSpanish } = require("../../helpers/variablesAndConstantes");
+const { Op } = require("sequelize");
 
 exports.GetAll = all(DebtOwner, {
 	include: [
@@ -9,28 +21,28 @@ exports.GetAll = all(DebtOwner, {
 			model: Contract,
 		},
 	],
-})
+});
 
 exports.Post = catchAsync(async (req, res, next) => {
-	const transact = await sequelize.transaction()
+	const transact = await sequelize.transaction();
 	try {
 		const cont = await DebtOwner.create(req.body, {
 			transaction: transact,
-		})
+		});
 
-		await transact.commit()
+		await transact.commit();
 		return res.json({
 			code: 200,
-			status: 'success',
+			status: "success",
 			ok: true,
-			message: 'El registro fue guardado con exito',
+			message: "El registro fue guardado con exito",
 			data: cont,
-		})
+		});
 	} catch (error) {
-		await transact.rollback()
-		throw error
+		await transact.rollback();
+		throw error;
 	}
-})
+});
 
 exports.GetById = findOne(DebtOwner, {
 	include: [
@@ -38,8 +50,202 @@ exports.GetById = findOne(DebtOwner, {
 			model: Contract,
 		},
 	],
-})
+});
 
-exports.Put = update(DebtOwner, ['month', 'year', 'ExpenseDetails'])
+exports.Put = update(DebtOwner, ["month", "year", "ExpenseDetails"]);
 
-exports.Destroy = destroy(DebtOwner)
+exports.Destroy = destroy(DebtOwner);
+
+exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
+	console.log("Ingreso en el job");
+	const transact = await sequelize.transaction();
+	const month = new Date().getMonth();
+	const year = new Date().getFullYear();
+	console.log("MONTH ::: ", monthsInSpanish[month - 1]);
+
+	try {
+		const docs = await PaymentOwner.findAll(
+			{
+				where: {
+					[Op.and]: {
+						month: monthsInSpanish[month - 1],
+						year,
+					},
+				},
+				attributes: [
+					[sequelize.fn("DISTINCT", sequelize.col("OwnerId")), "OwnerId"],
+				],
+			},
+			{
+				transaction: transact,
+			}
+		);
+		// console.log("DOCS ::: ", docs);
+		let ids = [];
+		if (docs.length > 0) {
+			console.log("entreooooooooo");
+			ids.push(docs.map((doc) => doc.OwnerId));
+		}
+		// id OWNERS QUE COBRARON EN EL MES ANTERIOR
+		console.log("IDS11 OWNERS QUE COBRARON EN EL MES ANTERIOR ::: ", ids);
+
+		// get owner who did receive payment last month
+		const docs2 = await Owner.findAll(
+			{
+				where: {
+					id: {
+						[Op.notIn]: ids,
+					},
+				},
+				include: [
+					{
+						model: Property,
+					},
+				],
+			},
+			{
+				transaction: transact,
+			}
+		);
+		// ids  de los owners que no recibieron pago
+		let ids2 = [];
+		if (docs2.length > 0) {
+			console.log("entreooooooooo2222222222");
+			ids2.push(docs2.map((doc) => doc.id));
+		}
+
+		console.log("IDS222 OWNERS QUE  NOOO COBRARON EN EL MES ANTERIOR ::: ", ids2);
+
+
+		const properties = await Property.findAll({
+			where: {
+				OwnerId: {
+					[Op.in]: ids2,
+				},
+				// TODO ::: state: 'Ocupado' should i add this?
+			},
+			attributes: ['id', 'street', 'number', 'dept', 'floor']
+		})
+
+
+		// las propiedades impagas de los owners que no recibieron pago
+		let ids3 = [];
+		if (properties.length > 0) {
+			console.log("entreooooooooo3333");
+			ids3.push(properties.map((doc) => doc.id));
+		}
+		console.log("IDS3333 propiedades QUE NOOO  COBRARON EN EL MES ANTERIOR ::: ", ids3);
+		const contractNotPaid = await Contract.findAll(
+			{
+				where: {
+					PropertyId: {
+						[Op.in]: ids3,
+					},
+					state: "En curso",
+					startDate: {
+						[Op.lt]: new Date(
+							year,
+							month - 1,
+							new Date(year, month, 0).getDate()
+						),
+					},
+					// TODO ::: endDate should i add this? endDate < Date().now()
+				},
+				include: [
+					{
+						model: OwnerExpense,
+					},
+					{
+						model: Property,
+					},
+					{
+						model: PriceHistorial,
+					},
+				],
+			},
+			{
+				transaction: transact,
+			}
+		);
+
+		for (let k = 0; k < contractNotPaid.length; k++) {
+			const exist = await DebtOwner.findOne({
+				where: {
+					year,
+					month,
+					ContractId: contractNotPaid[k].id,
+				},
+			});
+			if (!exist) {
+				await DebtOwner.create(
+					{
+						description:
+							"ALQUILER " +
+							contractNotPaid[k].Property.street +
+							" " +
+							contractNotPaid[k].Property.number +
+							" " +
+							contractNotPaid[k].Property.dept +
+							"-" +
+							contractNotPaid[k].Property.floor +
+							" " +
+							monthsInSpanish[month - 1] +
+							" " +
+							year,
+						amount: contractNotPaid[k].PriceHistorials.sort(
+							(a, b) => a.amount - b.amount
+						)[contractNotPaid[k].PriceHistorials.length - 1].amount,
+						year,
+						month,
+						rent: true,
+						ContractId: contractNotPaid[k].id,
+					},
+					{
+						transaction: transact,
+					}
+				);
+				for (let l = 0; l < contractNotPaid[k].OwnerExpenses.length; l++) {
+					await DebtOwner.create(
+						{
+							description:
+								contractNotPaid[k].OwnerExpenses[l].description +
+								" " +
+								monthsInSpanish[month - 1] +
+								" " +
+								year,
+							amount: contractNotPaid[k].OwnerExpenses[l].amount,
+							year,
+							month,
+							ContractId: contractNotPaid[k].id,
+						},
+						{
+							transaction: transact,
+						}
+					);
+				}
+			}
+		}
+		// return res.json({ docs, docs2, properties, contractNotPaid });	
+
+		await JobLog.create({
+			type: "debts",
+			state: "success",
+			message: "DEBTS OWNER JOB DONE SUCCESSFULLY.",
+		});
+		await transact.commit();
+		// return res.json({
+		// 	ok: true,
+		// 	message: 'Operación realizada con éxito.',
+		// 	result: docs2.length,
+		// 	// data: docs2
+		// })
+	} catch (error) {
+		await transact.rollback();
+		await JobLog.create({
+			type: "debts",
+			state: "fail",
+			message: error.message || "Something went wrong.",
+		});
+		// throw error
+	}
+});

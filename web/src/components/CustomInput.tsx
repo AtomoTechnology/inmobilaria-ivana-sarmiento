@@ -16,6 +16,7 @@ type Props = {
 	required?: boolean
 	hasError?: boolean
 	errorText?: string
+	optional?: boolean
 }
 
 const CustomInput = ({
@@ -32,13 +33,13 @@ const CustomInput = ({
 	hasError = false,
 	maxLength = undefined,
 	minLength = undefined,
-	errorText = 'El campo es obligatorio'
+	errorText = 'El campo es obligatorio',
+	optional = false
 }: Props) => {
 	const [value, setValue] = useState<string | number>(initialValue)
-	console.log(required)
 	return (
 		<fieldset>
-			{label && (<label htmlFor={label}>{label}</label>)}
+			{label && (<label htmlFor={label?.replaceAll(' ', '_')}>{label} {optional && (<span className='text-xs opacity-50'>(opcional)</span>)} </label>)}
 			<input
 				onChange={(e) => {
 					setValue(e.target.value)
@@ -50,7 +51,7 @@ const CustomInput = ({
 				maxLength={maxLength}
 				minLength={minLength}
 				max={max}
-				name={label}
+				name={label?.replaceAll(' ', '_')}
 				required={required}
 				min={min}
 				type={type}

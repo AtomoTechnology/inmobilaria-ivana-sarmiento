@@ -9,7 +9,6 @@ export interface IpaymentTypeResponse {
 
 export interface IpaymentType {
   id: number;
-  uuid: string;
   name: string;
   createdAt?: string;
   updatedAt?: string;

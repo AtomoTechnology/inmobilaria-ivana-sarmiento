@@ -67,6 +67,11 @@ module.exports = (sequelize, DataTypes) => {
 					notEmpty: {
 						msg: 'La calle es obligatoria',
 					},
+					len: {
+						args: [1, 100],
+						msg: 'La calle debe tener entre 1 y 100 caracteres',
+
+					}
 				},
 			},
 			number: {
@@ -79,6 +84,10 @@ module.exports = (sequelize, DataTypes) => {
 					notEmpty: {
 						msg: 'El número de la calle es obligatorio',
 					},
+					len: {
+						args: [1, 5],
+						msg: 'El número de la calle debe tener entre 1 y 5 caracteres',
+					}
 				},
 			},
 			floor: {
@@ -91,37 +100,49 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			isFor: {
 				allowNull: false,
-				type: DataTypes.STRING,
+				type: DataTypes.STRING(8),
 				defaultValue: 'Alquiler',
 				validate: {
 					isIn: {
 						args: [['Venta', 'Alquiler']],
 						msg: 'El valor ingresado no está permitido.',
 					},
+					len: {
+						args: [1, 8],
+						msg: 'El para debe tener entre 1 y 8 caracteres.',
+					}
 				},
 			},
-			nroPartWater: DataTypes.STRING,
-			nroPartMuni: DataTypes.STRING,
-			nroPartAPI: DataTypes.STRING,
-			nroPartGas: DataTypes.STRING,
+			nroPartWater: DataTypes.STRING(50),
+			nroPartMuni: DataTypes.STRING(50),
+			nroPartAPI: DataTypes.STRING(50),
+			nroPartGas: DataTypes.STRING(50),
 			state: {
 				allowNull: false,
-				type: DataTypes.STRING,
+				type: DataTypes.STRING(7),
 				defaultValue: 'Libre',
 				validate: {
 					isIn: {
 						args: [['Libre', 'Ocupado']],
 						msg: 'El estado ingresado no está permitido.',
 					},
+					len: {
+						args: [1, 7],
+						msg: 'El estado debe tener entre 1 y 7 caracteres.',
+					}
 				},
 			},
 			description: DataTypes.TEXT('long'),
 			folderNumber: {
 				allowNull: true,
-				type: DataTypes.STRING,
+				type: DataTypes.STRING(10),
 				unique: {
 					msg: 'El número de carpeta debe ser único.',
 				},
+				len: {
+					args: [1, 10],
+					msg: 'El número de carpeta debe tener entre 1 y 10 caracteres.'
+				}
 			},
 		},
 		{
@@ -135,6 +156,7 @@ module.exports = (sequelize, DataTypes) => {
 			sequelize,
 			modelName: 'Property',
 			paranoid: true,
+			tableName: 'properties',
 		}
 	)
 	return Property

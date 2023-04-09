@@ -1,7 +1,6 @@
-export {}
-
 export const formatDate = (date: string) => {
 	let now = new Date(date)
+	now.setHours(now.getHours() - 3);
 	return (
 		now.getUTCDate().toString().padStart(2, '0') +
 		'-' +
@@ -9,7 +8,7 @@ export const formatDate = (date: string) => {
 		'-' +
 		now.getUTCFullYear().toString() +
 		' ' +
-		(now.getUTCHours() - 3).toString().padStart(2, '0') +
+		(now.getUTCHours()).toString().padStart(2, '0') +
 		':' +
 		now.getUTCMinutes().toString().padStart(2, '0')
 	)
@@ -17,6 +16,7 @@ export const formatDate = (date: string) => {
 
 export const formatDateForInput = (date: string) => {
 	let now = new Date(date)
+	now.setHours(now.getHours() - 3);
 	return (
 		now.getUTCFullYear().toString() +
 		'-' +
@@ -24,26 +24,26 @@ export const formatDateForInput = (date: string) => {
 		'-' +
 		now.getUTCDate().toString().padStart(2, '0') +
 		' ' +
-		(now.getUTCHours() - 3).toString().padStart(2, '0') +
+		(now.getUTCHours()).toString().padStart(2, '0') +
 		':' +
 		now.getUTCMinutes().toString().padStart(2, '0')
 	)
 }
 
 export function padTo2Digits(num: number) {
-  return num.toString().padStart(2, '0');
+	return num.toString().padStart(2, '0');
 }
 export function padToNDigit(num: number, n: number) {
-  return num.toString().padStart(n, '0');
+	return num.toString().padStart(n, '0');
 }
 
-export function formatDateDDMMYYYY(date :string) {
+export function formatDateDDMMYYYY(date: string) {
 	let d = new Date(date)
-  return [
-    padTo2Digits(d.getUTCDate()),
-    padTo2Digits(d.getUTCMonth() + 1),
-    d.getUTCFullYear(),
-  ].join('-');
+	return [
+		padTo2Digits(d.getUTCDate()),
+		padTo2Digits(d.getUTCMonth() + 1),
+		d.getUTCFullYear(),
+	].join('-');
 }
 
 

@@ -7,6 +7,7 @@ interface Props {
 const DownAngle = ({ size = 25, color = localStorage.theme === 'dark' ? 'gray' : 'SecondaryColor' }: Props) => {
 	return (
 		<BiChevronDown
+			title='Deslizar para abajo'
 			size={size}
 			color={color}
 		/>

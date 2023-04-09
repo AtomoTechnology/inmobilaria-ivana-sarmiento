@@ -10,7 +10,7 @@ interface Props {
 }
 const DeleteIcon = ({ size = 25, color = '#f96e6e', action }: Props) => {
   return (
-    <AiOutlineDelete size={size} color={color} onClick={action} />
+    <AiOutlineDelete title='Eliminar' size={size} color={color} onClick={action} />
   )
 }
 

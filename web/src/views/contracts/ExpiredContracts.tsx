@@ -143,6 +143,7 @@ const ExpiredContracts = () => {
 									<th className='p-3'>Inquilino</th>
 									<th className='p-3'>Monto Alq.</th>
 									<th className='p-3'>Alq. Neto</th>
+									<th className='p-3'>Año</th>
 									<th className='p-3'>Observaciones</th>
 								</tr>
 							</thead>
@@ -159,6 +160,8 @@ const ExpiredContracts = () => {
 										<td className='px-3 py-2'> {c.Client.fullName}</td>
 										<td className='px-3 py-2'>${c.PriceHistorials[c.PriceHistorials.length - 1].amount}</td>
 										<td className='px-3 py-2'>${c.PriceHistorials[c.PriceHistorials.length - 1].amount - (c.PriceHistorials[c.PriceHistorials?.length - 1].amount * (c.Property.Owner.commision / 100))}</td>
+										<td className='px-3 py-2'>{c.PriceHistorials[c.PriceHistorials.length - 1].year}</td>
+
 										<td
 											className='px-3 py-2'
 											title={c.description}

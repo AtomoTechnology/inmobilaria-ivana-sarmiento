@@ -132,6 +132,7 @@ module.exports = (sequelize, DataTypes) => {
       paranoid: true,
       sequelize,
       modelName: "PaymentClient",
+      tableName : 'paymentclients',
     }
   );
   return PaymentClient;

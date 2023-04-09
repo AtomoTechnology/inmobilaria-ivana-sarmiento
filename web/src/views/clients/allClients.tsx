@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import Box from '../../components/Box'
@@ -8,28 +8,29 @@ import DeleteModal from '../../components/DeleteModal'
 import Loading from '../../components/Loading'
 import http from '../../api/axios'
 import CreateModal from '../../components/CreateModal'
-import { AuthContext } from '../../context/authContext'
-import { MdAdd } from 'react-icons/md'
 import CustomInput from '../../components/CustomInput'
 import { useForm } from '../../hooks/useForm'
-import FormError from '../../components/FormError'
 import RequestError from '../../components/RequestError'
-import { DelayAlertToHide } from '../../helpers/variableAndConstantes'
 import FieldsetGroup from '../../components/FieldsetGroup'
 import { IPerson } from '../../interfaces/Iowners'
 import { Dropdown } from 'primereact/dropdown'
 import { provinces } from '../../api/provinces'
-import { Button } from 'primereact/button'
 import { FilterMatchMode } from 'primereact/api'
 import CloseOnClick from '../../components/CloseOnClick'
-import { validateMail } from '../../helpers/general'
 import { useClients } from '../../hooks/useClients'
+import useShowAndHideModal from '../../hooks/useShowAndHideModal'
+import { validateForm } from '../../helpers/form'
+import HeaderData from '../../components/HeaderData'
+import RefreshData from '../../components/RefreshData'
+import FormActionBtns from '../../components/FormActionBtns'
+import { EmptyData } from '../../components/EmptyData'
+import CustomTextArea from '../../components/CustomTextArea'
 
 const Clients = () => {
-	const { showAlert, hideAlert, authState } = useContext(AuthContext)
 	const [showCreateModal, setShowCreateModal] = useState(false)
 	const [show, setShow] = useState(false)
-	const [isSaving, setIsSaving] = useState(false)
+	const [savingOrUpdating, setSavingOrUpdating] = useState(false)
+
 	const { values, handleInputChange, reset, updateAll } = useForm({
 		fullName: '',
 		email: '',
@@ -52,9 +53,9 @@ const Clients = () => {
 		fullName: { value: null, matchMode: FilterMatchMode.CONTAINS },
 		cuit: { value: null, matchMode: FilterMatchMode.CONTAINS },
 	})
-	const [to, setTo] = useState<any>()
 
 	const currentOwner = useRef<IPerson | null>()
+	const { showAndHideModal } = useShowAndHideModal()
 	const { data, isError, isLoading, error, isFetching, refetch } = useClients()
 
 	const edit = (data: IPerson) => {
@@ -70,105 +71,72 @@ const Clients = () => {
 		currentOwner.current = data
 	}
 
-	const verifyForm = () => {
-		let ok = true
-		let error: any = {}
-		if (!fullName.trim().length) {
-			ok = false
-			error.fullName = true
-		}
-		if (!email.trim().length || !validateMail(email.trim())) {
-			ok = false
-			error.email = true
-		}
-
-		if (!cuit.trim().length) {
-			ok = false
-			error.cuit = true
-		}
-		if (!phone.trim().length) {
-			ok = false
-			error.phone = true
-		}
-		if (!address.trim().length) {
-			ok = false
-			error.address = true
-		}
-		setErrors(error)
-		return ok
-	}
-
-	const showAndHideModal = (
-		title: string,
-		message: string,
-		color: string = 'green',
-		delay: number = DelayAlertToHide
-	) => {
-		clearTimeout(to)
-		showAlert({ title, message, color, show: true })
-		setTo(setTimeout(hideAlert, delay))
-	}
-
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		if (verifyForm()) {
-			setIsSaving(true)
-			if (editMode) {
-				try {
-					const res = await http.put(`/clients/${currentOwner.current?.id}`, values)
-					if (res.data.ok) {
-						data?.data &&
-							(data.data = data?.data.map((z) => {
-								if (z.id === currentOwner.current?.id) {
-									z = {
-										fullName: values.fullName,
-										email: values.email,
-										phone: values.phone,
-										cuit: values.cuit,
-										province: values.province,
-										city: values.city,
-										address: values.address,
-										codePostal: values.codePostal,
-										fixedPhone: values.fixedPhone,
-										obs: values.obs,
-										id: currentOwner.current.id,
-										uuid: currentOwner.current.uuid,
-										createdAt: currentOwner.current.createdAt,
-										updatedAt: currentOwner.current.updatedAt,
-									}
+		const { error, ok } = validateForm({ ...values }, ['obs', 'fixedPhone', 'codePostal', 'city', 'province'])
+		setErrors(error)
+		if (!ok) return false
+		if (editMode) {
+			try {
+				setSavingOrUpdating(true)
+				const res = await http.put(`/clients/${currentOwner.current?.id}`, values)
+				if (res.data.ok) {
+					data?.data &&
+						(data.data = data?.data.map((z) => {
+							if (z.id === currentOwner.current?.id) {
+								z = {
+									fullName: values.fullName,
+									email: values.email,
+									phone: values.phone,
+									cuit: values.cuit,
+									province: values.province,
+									city: values.city,
+									address: values.address,
+									codePostal: values.codePostal,
+									fixedPhone: values.fixedPhone,
+									obs: values.obs,
+									id: currentOwner.current.id,
+									createdAt: currentOwner.current.createdAt,
+									updatedAt: currentOwner.current.updatedAt,
 								}
-								return z
-							}))
-						reset()
-						setShowCreateModal(false)
-						showAndHideModal('Editado', res.data.message)
-					} else {
-						showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
-					}
-				} catch (error: any) {
-					if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+							}
+							return z
+						}))
+					reset()
+					setShowCreateModal(false)
+					showAndHideModal('Editado', res.data.message)
+				} else {
+					showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
 				}
-			} else {
-				try {
-					const res = await http.post('/clients', values)
-					if (res.data.ok) {
-						data?.data.unshift(res.data.data)
-						reset()
-						setShowCreateModal(false)
-						showAndHideModal('Guardado', res.data.message)
-					} else {
-						showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
-					}
-				} catch (error: any) {
-					if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
-				}
+			} catch (error: any) {
+				if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+			} finally {
+				setSavingOrUpdating(false)
 			}
-			setIsSaving(false)
+		} else {
+			try {
+				setSavingOrUpdating(true)
+				const res = await http.post('/clients', values)
+				if (res.data.ok) {
+					data?.data.unshift(res.data.data)
+					reset()
+					setShowCreateModal(false)
+					showAndHideModal('Guardado', res.data.message)
+				} else {
+					showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
+				}
+			} catch (error: any) {
+				if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+			} finally {
+				setSavingOrUpdating(false)
+			}
 		}
+
 	}
 
 	const destroy = async (id: number) => {
 		try {
+			setSavingOrUpdating(true)
 			const res = await http.delete('/clients/' + id)
 			if (res.data.ok) {
 				data?.data && (data.data! = data?.data.filter((z) => z.id !== id))
@@ -179,6 +147,8 @@ const Clients = () => {
 			}
 		} catch (error: any) {
 			if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+		} finally {
+			setSavingOrUpdating(false)
 		}
 	}
 	const closeCreateModal = () => {
@@ -186,15 +156,15 @@ const Clients = () => {
 		setShowCreateModal(false)
 		setErrors({})
 	}
-	const onGlobalFilterChange = (e: any) => {
-		const value = e.target.value
+
+	const onGlobalFilterChange = (val: any) => {
+		const value = val
 		let _filters = { ...filters }
-
 		_filters['global'].value = value
-
 		setFilters(_filters)
 		setGlobalFilterValue(value)
 	}
+
 	const actionBodyTemplate = (rowData: any) => {
 		return (
 			<div className='flex gap-x-3 items-center justify-center'>
@@ -211,43 +181,29 @@ const Clients = () => {
 		const c = await resp.json()
 		setCities(c.localidades)
 	}
+	const openCreateOrEditModel = () => {
+		setEditMode(false)
+		currentOwner.current = null
+		setShowCreateModal(true)
+	}
 
-	const paginatorLeft = (
-		<Button
-			onClick={() => refetch()}
-			type='button'
-			icon='pi pi-refresh'
-			text
-		/>
-	)
 	if (isLoading) return <Loading />
 	if (isError) return <RequestError error={error} />
 
 	return (
 		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
-			<div className='flex gap-x-4 mb-6 mx-3  items-center'>
-				<h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Inquilinos</h3>
-				<button
-					onClick={() => {
-						setEditMode(false)
-						currentOwner.current = null
-						setShowCreateModal(true)
-					}}
-					className='btn !w-10 !h-10 !p-0 gradient !rounded-full'
-				>
-					<MdAdd size={50} />
-				</button>
-			</div>
+			<HeaderData action={openCreateOrEditModel} text='Inquilinos' />
 			{data.data.length > 0 ? (
 				<>
-					<input
-						onChange={onGlobalFilterChange}
-						className={`dark:!bg-gray-900 dark:text-slate-400 border dark:!border-slate-700 m-auto w-[92%] !mx-[10px] sm:mx-0 sm:w-96 ml-0 sm:ml-[10px] mb-4`}
-						value={globalFilterValue}
-						placeholder='Buscar inquilino por nombre o cuit'
+					<CustomInput
+						onChange={(val) => onGlobalFilterChange(val)}
+						className=' w-auto mx-2 sm:mx-0 sm:w-96'
+						initialValue={globalFilterValue}
+						placeholder='Buscar inquilino'
 						type='search'
 					/>
-					<Box className={`!p-0 !overflow-hidden !border-none  mb-4 `}>
+
+					<Box className={`!p-0 !overflow-hidden !border-none sm:mx-0 mb-4 `}>
 						<DataTable
 							size='small'
 							emptyMessage='Aún no hay inquilino'
@@ -255,18 +211,11 @@ const Clients = () => {
 							value={data?.data}
 							paginator
 							rows={10}
-							// header={renderHeader}
 							filters={filters}
 							globalFilterFields={['fullName', 'cuit']}
-							// rowsPerPageOptions={[5, 10, 25, 50]}
 							paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
 							currentPageReportTemplate='{first} al {last} de {totalRecords}'
-							paginatorLeft={paginatorLeft}
-							// paginatorRight={paginatorRight}
-							// paginator
-							// selectionMode='checkbox'
-							// selection={selectedProducts2}
-							// onSelectionChange={(e: any) => setSelectedProducts2(e.value)}
+							paginatorLeft={<RefreshData action={refetch} />}
 							dataKey='id'
 							responsiveLayout='scroll'
 						>
@@ -300,8 +249,7 @@ const Clients = () => {
 								field='address'
 								body={(data) => (
 									<span>
-										{' '}
-										{data.city || '-'} {data.province || '-'} , {data.address}{' '}
+										{data.city || '-'} {data.province || '-'} , {data.address}
 									</span>
 								)}
 								header='Dirección'
@@ -320,18 +268,14 @@ const Clients = () => {
 					</Box>
 				</>
 			) : (
-				<div className='text-slate-400 mx-3 text-center'>Aún no hay inquilino.</div>
+				<EmptyData text='Aún no hay inquilino.' />
 			)}
 
-			{isFetching && (
-				<Loading
-					h={40}
-					w={40}
-				/>
-			)}
+			{isFetching && (<Loading h={40} w={40} />)}
 
 			<DeleteModal
 				show={show}
+				savingOrUpdating={savingOrUpdating}
 				setShow={setShow}
 				destroy={() => destroy(currentOwner.current?.id!)}
 				text={`${currentOwner.current?.fullName} | ${currentOwner.current?.cuit}`}
@@ -344,58 +288,62 @@ const Clients = () => {
 			>
 				<form
 					onSubmit={handleSave}
-					className={`${isSaving && 'disabled-all'}`}
+					className={`${savingOrUpdating && 'disabled-all'}`}
 				>
 					<CloseOnClick action={closeCreateModal} />
 					<FieldsetGroup>
-						<fieldset className=''>
-							<label htmlFor='fullname'>Nombre Completo </label>
-							<CustomInput
-								placeholder='Juan Jose'
-								initialValue={fullName || ''}
-								onChange={(value) => handleInputChange(value, 'fullName')}
-							/>
-							{errors?.fullName && <FormError text='El nombre es obligatorio.' />}
-						</fieldset>
-						<fieldset className=''>
-							<label htmlFor='email'>Email </label>
-							<CustomInput
-								placeholder='example@gmail.com'
-								initialValue={email || ''}
-								type='email'
-								onChange={(value) => handleInputChange(value, 'email')}
-							/>
-							{errors?.email && <FormError text='El correo es obligatorio.' />}
-						</fieldset>
+						<CustomInput
+							placeholder='Juan Jose'
+							initialValue={fullName || ''}
+							onChange={(value) => handleInputChange(value, 'fullName')}
+							maxLength={100}
+							label='Nombre Completo'
+							required
+							hasError={errors?.fullName}
+							errorText='El nombre es obligatorio.'
+						/>
+						<CustomInput
+							placeholder='example@gmail.com'
+							initialValue={email || ''}
+							type='email'
+							onChange={(value) => handleInputChange(value, 'email')}
+							maxLength={255}
+							label='Email'
+							required
+							hasError={errors?.email}
+							errorText='El correo es obligatorio.'
+						/>
 					</FieldsetGroup>
 
 					<FieldsetGroup>
-						<fieldset className=''>
-							<label htmlFor='cuit'>Cuit/Cuil </label>
-							<CustomInput
-								placeholder='20909239120'
-								initialValue={cuit || ''}
-								onChange={(value) => handleInputChange(value, 'cuit')}
-							/>
-							{errors?.cuit && <FormError text='El cuit es obligatorio.' />}
-						</fieldset>
-						<fieldset className=''>
-							<label htmlFor='phone'>Teléfono </label>
-							<CustomInput
-								placeholder='3417207882'
-								initialValue={phone || ''}
-								onChange={(value) => handleInputChange(value, 'phone')}
-							/>
-							{errors?.phone && <FormError text='El teléfono es obligatorio.' />}
-						</fieldset>
-						<fieldset className=''>
-							<label htmlFor='fixedPhone'>Teléfono fijo </label>
-							<CustomInput
-								placeholder='3417207882'
-								initialValue={fixedPhone || ''}
-								onChange={(value) => handleInputChange(value, 'fixedPhone')}
-							/>
-						</fieldset>
+						<CustomInput
+							placeholder='20909239120'
+							initialValue={cuit || ''}
+							onChange={(value) => handleInputChange(value, 'cuit')}
+							maxLength={255}
+							label='Cuit/Cuil'
+							required
+							hasError={errors?.cuit}
+							errorText='El cuit/cuil es obligatorio.'
+						/>
+						<CustomInput
+							placeholder='3417207882'
+							initialValue={phone || ''}
+							onChange={(value) => handleInputChange(value, 'phone')}
+							maxLength={20}
+							label='Teléfono'
+							required
+							hasError={errors?.phone}
+							errorText='El teléfono es obligatorio.'
+						/>
+						<CustomInput
+							placeholder='3417207882'
+							initialValue={fixedPhone || ''}
+							onChange={(value) => handleInputChange(value, 'fixedPhone')}
+							maxLength={20}
+							label='Teléfono fijo'
+							optional
+						/>
 					</FieldsetGroup>
 
 					<FieldsetGroup>
@@ -437,59 +385,39 @@ const Clients = () => {
 					</FieldsetGroup>
 
 					<FieldsetGroup>
-						<fieldset className=''>
-							<label htmlFor='address'>Dirección</label>
-							<CustomInput
-								placeholder='Sarmiento 1247'
-								initialValue={address || ''}
-								onChange={(value) => handleInputChange(value, 'address')}
-							/>
-							{errors?.address && <FormError text='La dirección es obligatoria.' />}
-						</fieldset>
-						<fieldset className=''>
-							<label htmlFor='codePostal'>
-								Código Postal <span className='text-xs opacity-50'>(opcional)</span>{' '}
-							</label>
-							<CustomInput
-								placeholder='1232421241212'
-								initialValue={codePostal || ''}
-								onChange={(value) => handleInputChange(value, 'codePostal')}
-							/>
-						</fieldset>
-					</FieldsetGroup>
-
-					<fieldset className=''>
-						<label htmlFor='obs'>
-							Observación <span className='text-xs opacity-50'>(opcional)</span>{' '}
-						</label>
 						<CustomInput
-							placeholder='escribe una observación o nota de algo...'
-							initialValue={obs || ''}
-							onChange={(value) => handleInputChange(value, 'obs')}
+							placeholder='Sarmiento 1247'
+							initialValue={address || ''}
+							onChange={(value) => handleInputChange(value, 'address')}
+							maxLength={100}
+							label='Dirección'
+							required
+							hasError={errors?.address}
+							errorText='La dirección es obligatoria.'
 						/>
-					</fieldset>
 
-					<section className='action flex items-center gap-x-3 mt-8'>
-						<button
-							className='btn sec !py-1'
-							onClick={closeCreateModal}
-							disabled={isSaving}
-							type='button'
-						>
-							Cerrar
-						</button>
-						<button
-							className='btn gradient  !py-1'
-							disabled={isSaving}
-							type='submit'
-						>
-							{isSaving && '....'} Guardar
-						</button>
-					</section>
+						<CustomInput
+							placeholder='2000'
+							initialValue={codePostal || ''}
+							onChange={(value) => handleInputChange(value, 'codePostal')}
+							label='Código Postal'
+							optional
+						/>
+					</FieldsetGroup>
+					<CustomTextArea
+						placeholder='escribe una observación o nota de algo...'
+						initialValue={obs || ''}
+						onChange={(value) => handleInputChange(value, 'obs')}
+						label='Observación'
+						optional
+						className='h-16'
+					/>
+					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
 				</form>
 			</CreateModal>
 		</div>
 	)
+
 }
 
 export default Clients

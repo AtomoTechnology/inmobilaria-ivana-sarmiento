@@ -89,6 +89,8 @@ module.exports = (sequelize, DataTypes) => {
 		{
 			sequelize,
 			modelName: 'Eventuality',
+            tableName: 'eventualities',
+
 			paranoid: true,
 		}
 	)

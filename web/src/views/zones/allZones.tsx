@@ -19,6 +19,7 @@ import RefreshData from '../../components/RefreshData'
 import HeaderData from '../../components/HeaderData'
 import { EmptyData } from '../../components/EmptyData'
 import FormActionBtns from '../../components/FormActionBtns'
+import BoxContainerPage from '../../components/BoxContainerPage'
 
 const AllZones = () => {
 
@@ -26,6 +27,7 @@ const AllZones = () => {
 	const [show, setShow] = useState<boolean>(false)
 	const [errors, setErrors] = useState<any>({})
 	const [editMode, setEditMode] = useState(false)
+	const [savingOrUpdating, setSavingOrUpdating] = useState(false)
 	const currentZone = useRef<Izone | null>()
 
 	const { data, isError, isLoading, error, isFetching, refetch } = useZones()
@@ -45,6 +47,7 @@ const AllZones = () => {
 	}
 
 	const destroy = async (id: number) => {
+		setSavingOrUpdating(true)
 		try {
 			const res = await http.delete('/zones/' + id)
 			if (res.data.ok) {
@@ -56,6 +59,8 @@ const AllZones = () => {
 			}
 		} catch (error: any) {
 			if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+		} finally {
+			setSavingOrUpdating(false)
 		}
 	}
 
@@ -66,6 +71,7 @@ const AllZones = () => {
 		if (!ok) return false
 		if (editMode) {
 			try {
+				setSavingOrUpdating(true)
 				const res = await http.put(`/zones/${currentZone.current?.id}`, values)
 				if (res.data.ok) {
 					data?.data &&
@@ -83,9 +89,13 @@ const AllZones = () => {
 				}
 			} catch (error: any) {
 				if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+			} finally {
+				setSavingOrUpdating(false)
 			}
 		} else {
 			try {
+				setSavingOrUpdating(true)
+
 				const res = await http.post('/zones', values)
 				if (res.data.ok) {
 					data?.data.unshift(res.data.data)
@@ -97,6 +107,8 @@ const AllZones = () => {
 				}
 			} catch (error: any) {
 				if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+			} finally {
+				setSavingOrUpdating(false)
 			}
 		}
 
@@ -128,10 +140,10 @@ const AllZones = () => {
 	if (isError) return <RequestError error={error} />
 
 	return (
-		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
+		<BoxContainerPage >
 			<HeaderData action={openCreateOrEditModel} text='Zonas' />
 			{data.data.length > 0 ? (
-				<Box className='!p-0 !overflow-hidden !border-none !mx-4   sm:w-[500px] mb-4 '>
+				<Box className='!p-0 !overflow-hidden !border-none  sm:mx-0  sm:w-[500px] mb-4 '>
 					<DataTable
 						size='small'
 						emptyMessage='Aún no hay zona'
@@ -157,6 +169,7 @@ const AllZones = () => {
 
 			<DeleteModal
 				show={show}
+				savingOrUpdating={savingOrUpdating}
 				setShow={setShow}
 				destroy={() => destroy(currentZone.current?.id!)}
 				text={`La zona ${currentZone.current?.name}`}
@@ -181,10 +194,10 @@ const AllZones = () => {
 						hasError={errors?.name}
 						errorText='El nombre es obligatorio.'
 					/>
-					<FormActionBtns onClose={closeCreateModal} />
+					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
 				</form>
 			</CreateModal>
-		</div>
+		</BoxContainerPage>
 	)
 }
 

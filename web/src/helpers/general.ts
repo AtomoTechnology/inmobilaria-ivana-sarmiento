@@ -1,46 +1,46 @@
 export const getColorBox = (text: string): string => {
-  let color: string = '';
-  switch (text) {
-    case 'CE':
-      color = '#016dbe';
-      break;
-    case 'MJ':
-      color = '#e340ff';
-      break;
-    case 'EE':
-      color = '#afaaaa';
-      break;
-    case 'VR':
-      color = '#74c714';
-      break;
-    case 'HC':
-      color = '#ff9800';
-      break;
-    case 'RN':
-      color = '#00a495';
-      break;
-    case 'GA':
-      color = '#016dbe';
-      break;
+	let color: string = '';
+	switch (text) {
+		case 'CE':
+			color = '#016dbe';
+			break;
+		case 'MJ':
+			color = '#e340ff';
+			break;
+		case 'EE':
+			color = '#afaaaa';
+			break;
+		case 'VR':
+			color = '#74c714';
+			break;
+		case 'HC':
+			color = '#ff9800';
+			break;
+		case 'RN':
+			color = '#00a495';
+			break;
+		case 'GA':
+			color = '#016dbe';
+			break;
 
-    default:
-      color = '#016dbe';
-      break;
-  }
+		default:
+			color = '#016dbe';
+			break;
+	}
 
-  return color;
+	return color;
 };
 export async function copyToClipboard(text: string) {
-  try {
-    await navigator.clipboard.writeText(text);
-    console.log('Text copied to clipboard');
-  } catch (err) {
-    console.error('Failed to copy text: ', err);
-  }
+	try {
+		await navigator.clipboard.writeText(text);
+		console.log('Text copied to clipboard');
+	} catch (err) {
+		console.error('Failed to copy text: ', err);
+	}
 }
 
 export const validateMail = (mail: string): boolean => {
-  return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(mail);
+	return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(mail);
 };
 
 
@@ -48,31 +48,18 @@ export const validateMail = (mail: string): boolean => {
 export const menuItems = [
 	{
 		to: null,
-		title: 'ABM',
+		title: 'Informes',
 		subLink: [
-			{ to: 'zones', title: 'Zonas' },
-			{ to: 'payment-methods', title: 'Tipo de pago' },
-			{ to: 'property-types', title: 'Tipo de propiedades' },
-			{ to: 'properties', title: 'Propiedades' },
-			{ to: 'configurations', title: 'Infos general' },
+			{ to: 'eventualities', title: 'Eventualidades' },
+			{ to: 'contract-debts-clients', title: 'Deudas x inqulinos' },
+			{ to: 'contract-debts-owners', title: 'Deudas x  propietario' },
+			{ to: 'contracts-expired', title: 'Vto de contratos' },
+			{ to: 'contract-price-historial', title: 'Ajustes % contratos' },
+			{ to: 'client-expenses', title: 'Impuestos inquilinos' },
+			{ to: 'owner-expenses', title: 'Impuestos propietario' },
 		],
 	},
 
-	{
-		to: 'clients',
-		title: 'Inquilinos',
-		subLink: [],
-	},
-	{
-		to: 'owners',
-		title: 'Propietarios',
-		subLink: [],
-	},
-	{
-		to: 'contracts',
-		title: 'Contratos',
-		subLink: [],
-	},
 	{
 		to: null,
 		title: 'Consultas',
@@ -93,17 +80,32 @@ export const menuItems = [
 			// { to: 'revert-payment', title: 'Revertir cobro' },
 		],
 	},
+
+
+	{
+		to: 'clients',
+		title: 'Inquilinos',
+		subLink: [],
+	},
+	{
+		to: 'owners',
+		title: 'Propietarios',
+		subLink: [],
+	},
+	{
+		to: 'contracts',
+		title: 'Contratos',
+		subLink: [],
+	},
 	{
 		to: null,
-		title: 'Informes',
+		title: 'ABM',
 		subLink: [
-			{ to: 'eventualities', title: 'Eventualidades' },
-			{ to: 'contract-debts-clients', title: 'Deudas x inqulinos' },
-			{ to: 'contract-debts-owners', title: 'Deudas x  propietario' },
-			{ to: 'contracts-expired', title: 'Vto de contratos' },
-			{ to: 'contract-price-historial', title: 'Ajustes % contratos' },
-			{ to: 'client-expenses', title: 'Impuestos inquilinos' },
-			{ to: 'owner-expenses', title: 'Impuestos propietario' },
+			{ to: 'zones', title: 'Zonas' },
+			{ to: 'payment-methods', title: 'Tipo de pago' },
+			{ to: 'property-types', title: 'Tipo de propiedades' },
+			{ to: 'properties', title: 'Propiedades' },
+			{ to: 'configurations', title: 'Infos general' },
 		],
 	},
 ]

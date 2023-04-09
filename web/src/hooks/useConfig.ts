@@ -2,10 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import http from '../api/axios';
 import { IConfigResponse } from '../interfaces/Iconfig';
 
-const GetAllConfig = async () => {
-  const { data } = await http.get<IConfigResponse>('/config?sort=key');
-  return data;
-};
+const GetAllConfig = async () => await http.get<IConfigResponse>('/config?sort=key').then((res) => res.data)
 
 export const useConfig = () => {
   const configQuery = useQuery({

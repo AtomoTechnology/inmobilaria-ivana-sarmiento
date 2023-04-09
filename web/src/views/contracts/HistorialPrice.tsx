@@ -1,35 +1,31 @@
-import React, { useContext, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { DataTable, DataTableExpandedRows } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import Box from '../../components/Box'
-import DeleteIcon from '../../components/icons/DeleteIcon'
 import DeleteModal from '../../components/DeleteModal'
 import Loading from '../../components/Loading'
 import http from '../../api/axios'
 import CreateModal from '../../components/CreateModal'
-import { AuthContext } from '../../context/authContext'
-import { MdAdd, MdOutlineAttachMoney } from 'react-icons/md'
+import { MdOutlineAttachMoney } from 'react-icons/md'
 import CustomInput from '../../components/CustomInput'
 import { useForm } from '../../hooks/useForm'
 import FormError from '../../components/FormError'
 import RequestError from '../../components/RequestError'
-import { DelayAlertToHide } from '../../helpers/variableAndConstantes'
+import { RowsToShow } from '../../helpers/variableAndConstantes'
 import FieldsetGroup from '../../components/FieldsetGroup'
 import { Dropdown } from 'primereact/dropdown'
-import { Button } from 'primereact/button'
 import { FilterMatchMode } from 'primereact/api'
 import { useContracts } from '../../hooks/useContracts'
-import SeeIcon from '../../components/icons/SeeIcon'
 import { Contract, IHistorialPrice } from '../../interfaces/Icontracts'
-import { useNavigate } from 'react-router-dom'
-import { TbReportMoney } from 'react-icons/tb'
-import CloseOnClick from '../../components/CloseOnClick'
 import EditIcon from '../../components/icons/EditIcon'
-import { formatDateDDMMYYYY } from '../../helpers/date'
+import { formatDate, formatDateDDMMYYYY } from '../../helpers/date'
+import useShowAndHideModal from '../../hooks/useShowAndHideModal'
+import { validateForm } from '../../helpers/form'
+import HeaderData from '../../components/HeaderData'
+import RefreshData from '../../components/RefreshData'
+import FormActionBtns from '../../components/FormActionBtns'
 
 const HistorialPrices = () => {
-	const { authState, showAlert, hideAlert } = useContext(AuthContext)
-	// const [selectedProducts2, setSelectedProducts2] = useState<Contract[]>();
 	const [showCreateModal, setShowCreateModal] = useState(false)
 	const [show, setShow] = useState(false)
 	const {
@@ -47,7 +43,9 @@ const HistorialPrices = () => {
 		year: 0,
 		percent: 0,
 	})
+	const { showAndHideModal } = useShowAndHideModal()
 
+	const [savingOrUpdating, setSavingOrUpdating] = useState(false)
 	const [globalFilterValue, setGlobalFilterValue] = useState('')
 	const [errors, setErrors] = useState<any>()
 	const [editMode, setEditMode] = useState(false)
@@ -56,7 +54,6 @@ const HistorialPrices = () => {
 		'Client.fullName': { value: null, matchMode: FilterMatchMode.CONTAINS },
 		'PropertyType.description': { value: null, matchMode: FilterMatchMode.CONTAINS },
 	})
-	const navigate = useNavigate()
 	const currentContract = useRef<Contract | null>()
 	const currentPrice = useRef<IHistorialPrice | null>()
 	const [expandedRows, setExpandedRows] = useState<DataTableExpandedRows>()
@@ -64,8 +61,6 @@ const HistorialPrices = () => {
 	const { data, isError, isLoading, error, isFetching, refetch } = useContracts()
 
 	const edit = (data: IHistorialPrice) => {
-		console.log(data)
-		// return
 		updateAll({ ...data })
 		setShowCreateModal(true)
 		setEditMode(true)
@@ -76,37 +71,9 @@ const HistorialPrices = () => {
 		currentPrice.current = data
 	}
 
-	const verifyForm = () => {
-		let ok = true
-		let error: any = {}
-		if (!amount) {
-			ok = false
-			error.amount = true
-		}
-		if (!year) {
-			ok = false
-			error.year = true
-		}
-		if (percent < 0 || percent > 150) {
-			ok = false
-			error.percent = true
-		}
-		setErrors(error)
-		return ok
-	}
-
-	const showAndHideModal = (
-		title: string,
-		message: string,
-		color: string = 'green',
-		delay: number = DelayAlertToHide
-	) => {
-		showAlert({ title, message, color, show: true })
-		setTimeout(hideAlert, delay)
-	}
-
 	const destroy = async (id: number) => {
 		try {
+			setSavingOrUpdating(true)
 			const res = await http.delete('/price-historial/' + id)
 			if (res.data.ok) {
 				refetch()
@@ -117,10 +84,11 @@ const HistorialPrices = () => {
 			}
 		} catch (error: any) {
 			if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+		} finally {
+			setSavingOrUpdating(false)
 		}
 	}
 	const openModalAddPrice = (data: Contract) => {
-		// alert('hello')
 		reset()
 		currentPrice.current = null
 		console.log(currentPrice)
@@ -135,13 +103,10 @@ const HistorialPrices = () => {
 		setShowCreateModal(false)
 		setErrors({})
 	}
-
-	const onGlobalFilterChange = (e: any) => {
-		const value = e.target.value
+	const onGlobalFilterChange = (val: any) => {
+		const value = val
 		let _filters = { ...filters }
-
 		_filters['global'].value = value
-
 		setFilters(_filters)
 		setGlobalFilterValue(value)
 	}
@@ -155,7 +120,7 @@ const HistorialPrices = () => {
 						className='btn-add-price '
 						title='Ajustar precio siguiente año'
 					>
-						<MdOutlineAttachMoney size={25} />
+						<MdOutlineAttachMoney title='Ajustar precio' size={25} />
 					</div>
 				)}
 			</div>
@@ -164,54 +129,59 @@ const HistorialPrices = () => {
 
 	const handleAddPrice = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		if (verifyForm()) {
-			if (editMode) {
-				try {
-					const res = await http.put(`/price-historial/${currentPrice.current?.id}`, { ...values })
-					if (res.data.ok) {
-						refetch()
-						reset()
-						setShowCreateModal(false)
-						showAndHideModal('Editado', res.data.message)
-					} else {
-						showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
-					}
-				} catch (error: any) {
-					if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+		const { error, ok } = validateForm({ ...values })
+		setErrors(error)
+		if (!ok) return false
+		if (editMode) {
+			try {
+				setSavingOrUpdating(true)
+				const res = await http.put(`/price-historial/${currentPrice.current?.id}`, { ...values })
+				if (res.data.ok) {
+					refetch()
+					reset()
+					setShowCreateModal(false)
+					showAndHideModal('Editado', res.data.message)
+				} else {
+					showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
 				}
-			} else {
-				console.log('hereeee')
-				try {
-					const res = await http.post('/price-historial', { ...values })
-					if (res.data.ok) {
-						refetch()
-						reset()
-						setShowCreateModal(false)
-						showAndHideModal('Guardado', res.data.message)
-					} else {
-						showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
-					}
-				} catch (error: any) {
-					if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+			} catch (error: any) {
+				if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+			} finally {
+				setSavingOrUpdating(false)
+			}
+		} else {
+			try {
+				setSavingOrUpdating(true)
+				const res = await http.post('/price-historial', { ...values })
+				if (res.data.ok) {
+					refetch()
+					reset()
+					setShowCreateModal(false)
+					showAndHideModal('Guardado', res.data.message)
+				} else {
+					showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
 				}
+			} catch (error: any) {
+				if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+			} finally {
+				setSavingOrUpdating(false)
 			}
 		}
 	}
-	const paginatorLeft = (
-		<Button
-			onClick={() => refetch()}
-			type='button'
-			icon='pi pi-refresh'
-			text
-		/>
-	)
+
 	const allowExpansion = (rowData: Contract) => rowData?.PriceHistorials.length > 0 || false
 
 	const rowExpansionTemplate = (data: Contract) => {
 		return (
 			<div className='p-3'>
 				<h2 className='text-lg font-semibold'>Histórico de precio</h2>
-				<DataTable value={data.PriceHistorials}>
+				<DataTable
+					size='small'
+					dataKey='id'
+					className='!overflow-hidden   !border-none'
+					responsiveLayout='scroll'
+					value={data.PriceHistorials}
+				>
 					<Column
 						field='amount'
 						body={(data) => <span> $ {data.amount} </span>}
@@ -237,7 +207,7 @@ const HistorialPrices = () => {
 						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 						field='createdAt'
-						body={(data) => <span> {formatDateDDMMYYYY(data.createdAt.slice(0, 10))} </span>}
+						body={(data) => <span> {formatDate(data.createdAt)} </span>}
 						header='Fecha'
 					></Column>
 					<Column
@@ -252,11 +222,11 @@ const HistorialPrices = () => {
 		)
 	}
 
-	const actionBodyTemplate2 = (rowData: any) => {
+	const actionBodyTemplate2 = (rowData: IHistorialPrice) => {
 		return (
 			<div className='flex gap-x-3 items-center justify-center'>
 				<EditIcon action={() => edit(rowData)} />
-				<DeleteIcon action={() => ConfirmDestroy(rowData)} />
+				{/* <DeleteIcon action={() => ConfirmDestroy(rowData)} /> */}
 			</div>
 		)
 	}
@@ -265,29 +235,16 @@ const HistorialPrices = () => {
 
 	return (
 		<div className='container m-auto  flex sm:mx-0  flex-col justify-center sm:justify-center'>
-			<div className='flex gap-x-4 mb-6 mx-3  items-center'>
-				<h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>
-					Histórico de precio de los Contratos
-				</h3>
-				{/* <button
-					onClick={() => {
-						setEditMode(false)
-						currentContract.current = null
-						setShowCreateModal(true)
-					}}
-					className='btn !w-10 !h-10 !p-0 gradient !rounded-full'
-				>
-					<MdAdd size={50} />
-				</button> */}
-			</div>
-			<input
-				onChange={onGlobalFilterChange}
-				className={`dark:!bg-gray-900 dark:text-slate-400 border dark:!border-slate-700 m-auto w-[92%] !mx-[10px] sm:mx-0 sm:w-96 ml-0 sm:ml-[10px] mb-4`}
-				value={globalFilterValue}
-				placeholder='Busca contrato'
+			<HeaderData showBtn={false} action={() => { }} text='Histórico de precio de los Contratos' />
+			<CustomInput
+				onChange={(val) => onGlobalFilterChange(val)}
+				className=' w-auto mx-2 sm:mx-0 sm:w-96'
+				initialValue={globalFilterValue}
+				placeholder='Buscar contrato'
 				type='search'
 			/>
-			<Box className='!p-0 !overflow-hidden !border-none    mb-4 '>
+
+			<Box className='!p-0 !overflow-hidden !border-none sm:mx-0   mb-4 '>
 				<DataTable
 					expandedRows={expandedRows}
 					onRowToggle={(e: any) => setExpandedRows(e.data)}
@@ -299,10 +256,10 @@ const HistorialPrices = () => {
 					filters={filters}
 					globalFilterFields={['Property.street', 'Client.fullName']}
 					paginator
-					rows={10}
+					rows={RowsToShow}
 					paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
 					currentPageReportTemplate='{first} al {last} de {totalRecords}'
-					paginatorLeft={paginatorLeft}
+					paginatorLeft={<RefreshData action={refetch} />}
 					dataKey='id'
 					responsiveLayout='scroll'
 				>
@@ -379,8 +336,8 @@ const HistorialPrices = () => {
 						field=''
 						header='Monto Actual'
 						body={(data) => (
-							<span className={`font-bold ${data.state === 'En curso' ? 'text-green-500' : 'text-red-500'}`}>
-								${data.PriceHistorials[data.PriceHistorials.length - 1]?.amount}
+							<span >
+								$ {data.PriceHistorials[data.PriceHistorials.length - 1]?.amount}
 							</span>
 						)}
 						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
@@ -397,16 +354,12 @@ const HistorialPrices = () => {
 				</DataTable>
 			</Box>
 
-			{isFetching && (
-				<Loading
-					h={40}
-					w={40}
-				/>
-			)}
+			{isFetching && (<Loading h={40} w={40} />)}
 
 			<DeleteModal
 				show={show}
 				setShow={setShow}
+				savingOrUpdating={savingOrUpdating}
 				destroy={() => destroy(currentPrice.current?.id!)}
 				text={` El precio del ${currentPrice.current?.year} año con el monto de  $ ${currentPrice.current?.amount}`}
 			/>
@@ -417,74 +370,72 @@ const HistorialPrices = () => {
 				overlayClick={false}
 				titleText='Ajustar precio'
 				className='shadow-none border-0 max-w-[500px]'
-			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
-				<form
-					onSubmit={handleAddPrice}
-					className='!relative'
-				>
+
+				<form onSubmit={handleAddPrice}				>
 					<FieldsetGroup>
-						<fieldset className=''>
-							<label htmlFor='ContractId'>Contrato </label>
-							<CustomInput
-								disabled={true}
-								initialValue={
-									editMode
-										? currentPrice.current?.ContractId
-										: currentContract.current?.Client.fullName +
-										' - ' +
-										currentContract.current?.Client.cuit +
-										'  | ' +
-										currentContract.current?.Property.street +
-										' ' +
-										currentContract.current?.Property.number +
-										' '
-								}
-								onChange={(val) => { }}
-								placeholder=''
-							/>
-						</fieldset>
-					</FieldsetGroup>
-					<fieldset className=''>
-						<label htmlFor='percent'>Porcentaje de aumento</label>
 						<CustomInput
-							placeholder='40'
-							type='number'
-							initialValue={percent}
-							onChange={(value) => {
-								// handleInputChange(value, 'percent')
-								// updateAll({ ...values, percent: Number(value) })
-								if (currentContract.current?.PriceHistorials) {
-									let prevValue =
-										currentContract.current?.PriceHistorials[currentContract.current?.PriceHistorials.length! - 1]
-											.amount
-									let v = prevValue * (Number(value) / 100)
-									// console.log(v)
-									updateAll({ ...values, amount: v + prevValue, percent: Number(value) })
-									// handleInputChange(v + prevValue, 'amount')
-								} else {
-									handleInputChange(value, 'percent')
-								}
-							}}
+							disabled={true}
+							initialValue={
+								editMode
+									? currentPrice.current?.ContractId
+									: currentContract.current?.Client.fullName +
+									' - ' +
+									currentContract.current?.Client.cuit +
+									'  | ' +
+									currentContract.current?.Property.street +
+									' ' +
+									currentContract.current?.Property.number +
+									' '
+							}
+							label='Contrato'
+							onChange={(val) => { }}
+							placeholder=''
 						/>
-						{errors?.percent && <FormError text='El porcentaje  es obligatorio.[0,100]' />}
-					</fieldset>
+					</FieldsetGroup>
+					<CustomInput
+						placeholder='40'
+						type='number'
+						initialValue={percent}
+						label='Porcentaje de aumento'
+						onChange={(value) => {
+							// handleInputChange(value, 'percent')
+							// updateAll({ ...values, percent: Number(value) })
+							console.log('estayyyy')
+							if (currentContract.current?.PriceHistorials) {
+								let prevValue =
+									currentContract.current?.PriceHistorials[currentContract.current?.PriceHistorials.length! - 1]
+										.amount
+								let v = prevValue * (Number(value) / 100)
+								// console.log(v)
+								updateAll({ ...values, amount: Number(v.toFixed(2)) + prevValue, percent: Number(value) })
+								// handleInputChange(v + prevValue, 'amount')
+							} else {
+								handleInputChange(value, 'percent')
+							}
+						}}
+						hasError={errors?.percent}
+						errorText='El porcentaje  es obligatorio.[1,100]'
+					/>
+
 					<FieldsetGroup>
-						<fieldset className=''>
-							<label htmlFor='amount'>Monto</label>
+						<fieldset>
+							<label htmlFor="amount">Monto</label>
 							<input
 								placeholder='123.99'
-								disabled={editMode ? false : true}
+								disabled={!editMode}
 								type='number'
 								value={amount}
 								onChange={(e: any) => handleInputChange(e.target.value, 'amount')}
 							/>
 							{errors?.amount && <FormError text='El monto del cliente es obligatorio.' />}
 						</fieldset>
+
 						<fieldset className=''>
 							<label htmlFor='year'>Año</label>
 							<Dropdown
 								value={year}
+								disabled={!editMode}
 								onChange={(e) => handleInputChange(e.value, 'year')}
 								options={[1, 2, 3]}
 								placeholder='Elije el año'
@@ -494,22 +445,7 @@ const HistorialPrices = () => {
 							{errors?.year && <FormError text='El año  es obligatorio.' />}
 						</fieldset>
 					</FieldsetGroup>
-
-					<section className='action flex items-center gap-x-3 mt-4'>
-						<button
-							className='btn !py-1'
-							onClick={closeCreateModal}
-							type='button'
-						>
-							Cerrar
-						</button>
-						<button
-							className='btn gradient  !py-1'
-							type='submit'
-						>
-							Guardar
-						</button>
-					</section>
+					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
 				</form>
 			</CreateModal>
 		</div>

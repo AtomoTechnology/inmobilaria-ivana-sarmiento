@@ -9,6 +9,7 @@ router.get('/:id', ctrl.GetById)
 
 //Create
 router.post('/', ctrl.Post)
+router.post('/job/monthly', ctrl.jobDebtsOwner)
 
 //Update
 router.put('/:id', ctrl.Put)

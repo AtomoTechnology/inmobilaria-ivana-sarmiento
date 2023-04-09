@@ -170,7 +170,9 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 
 		await JobLog.create({
 			type: 'debts',
-			state: 'success'
+			state: 'success',
+			message: 'DEBTS CLIENT JOB DONE SUCCESSFULLY.',
+
 		})
 		await transact.commit()
 		// return res.json({

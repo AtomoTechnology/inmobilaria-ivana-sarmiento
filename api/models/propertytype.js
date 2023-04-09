@@ -27,12 +27,17 @@ module.exports = (sequelize, DataTypes) => {
         },
         notEmpty: {
           msg: 'La descripcion no puede ser vacia.'
+        },
+        len: {
+          args: [1, 255],
+          msg: 'La descripcion debe tener entre 1 y 255 caracteres.'
         }
       }
     }
   }, {
     sequelize,
     modelName: 'PropertyType',
+     tableName: 'propertytypes',
   });
   return PropertyType;
 };

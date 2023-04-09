@@ -2,16 +2,16 @@
 
 export interface IConfigResponse {
   results: number;
-  code:    number;
-  status:  string;
-  ok:      boolean;
-  data:    IConfig[];
+  code: number;
+  status: string;
+  ok: boolean;
+  data: IConfig[];
 }
 
 export interface IConfig {
-  id:        number;
-  key:       string;
-  value:     string;
+  id: number;
+  key: string;
+  value: string;
   createdAt: string;
   updatedAt: string;
   deletedAt: null;

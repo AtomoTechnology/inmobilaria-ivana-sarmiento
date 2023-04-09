@@ -8,7 +8,7 @@ interface Props {
 }
 const CloseIcon = ({ size = 25, color = localStorage.theme === 'dark' ? '#ce93d8' : SecondaryColor, action }: Props) => {
   return (
-    <RiCloseLine size={size} color={color} onClick={action} />
+    <RiCloseLine title='Cerrar ventana' size={size} color={color} onClick={action} />
   )
 }
 

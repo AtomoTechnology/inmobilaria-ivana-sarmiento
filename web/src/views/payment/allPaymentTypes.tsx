@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import Box from '../../components/Box';
@@ -8,28 +8,32 @@ import DeleteModal from '../../components/DeleteModal';
 import Loading from '../../components/Loading';
 import http from '../../api/axios';
 import CreateModal from '../../components/CreateModal';
-import { AuthContext } from '../../context/authContext';
-import { MdAdd } from 'react-icons/md';
 import CustomInput from '../../components/CustomInput';
 import { useForm } from '../../hooks/useForm';
-import FormError from '../../components/FormError';
 import RequestError from '../../components/RequestError';
 import { usePaymentTypes } from '../../hooks/usePaymentTypes';
 import { IpaymentType } from '../../interfaces/IpaymentType';
-import { DelayAlertToHide } from '../../helpers/variableAndConstantes';
+import useShowAndHideModal from '../../hooks/useShowAndHideModal';
+import { validateForm } from '../../helpers/form';
+import HeaderData from '../../components/HeaderData';
+import RefreshData from '../../components/RefreshData';
+import { EmptyData } from '../../components/EmptyData';
+import FormActionBtns from '../../components/FormActionBtns';
+import BoxContainerPage from '../../components/BoxContainerPage';
 
 const AllPaymentTypes = () => {
 
-  const { showAlert, hideAlert } = useContext(AuthContext);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [show, setShow] = useState(false);
-  const { name, values, handleInputChange, reset } = useForm({ name: '' })
   const [errors, setErrors] = useState<any>();
   const [editMode, setEditMode] = useState(false)
+  const [savingOrUpdating, setSavingOrUpdating] = useState(false)
 
+
+  const { name, values, handleInputChange, reset } = useForm({ name: '' })
   const currentPaymentType = useRef<IpaymentType | null>();
-
-  const { data, isError, isLoading, error, isFetching, } = usePaymentTypes();
+  const { data, isError, isLoading, error, isFetching, refetch } = usePaymentTypes();
+  const { showAndHideModal } = useShowAndHideModal()
 
   const edit = (data: IpaymentType) => {
     handleInputChange(data.name, 'name');
@@ -43,65 +47,58 @@ const AllPaymentTypes = () => {
     currentPaymentType.current = data;
   };
 
-  const verifyForm = () => {
-    let ok = true;
-    let error: any = {};
-    if (!name.trim().length) {
-      ok = false;
-      error.name = true;
-    }
-    setErrors(error);
-    return ok;
-  };
-
-  const showAndHideModal = (title: string, message: string, color: string = 'green', delay: number = DelayAlertToHide) => {
-    showAlert({ title, message, color, show: true })
-    setTimeout(hideAlert, delay)
-  }
-
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (verifyForm()) {
-      if (editMode) {
-        try {
-          const res = await http.put(`/paymenttypes/${currentPaymentType.current?.id}`, values);
-          if (res.data.ok) {
-            data?.data && (data.data = data?.data.map(z => {
-              if (z.id === currentPaymentType.current?.id) {
-                z.name = values.name
-              }
-              return z;
-            }))
-            reset();
-            setShowCreateModal(false);
-            showAndHideModal('Editado', res.data.message)
-          } else {
-            showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
-          }
-        } catch (error: any) {
-          if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+    const { error, ok } = validateForm(values)
+    setErrors(error)
+    if (!ok) return false
+    if (editMode) {
+      try {
+        setSavingOrUpdating(true)
+        const res = await http.put(`/paymenttypes/${currentPaymentType.current?.id}`, values);
+        if (res.data.ok) {
+          data?.data && (data.data = data?.data.map(z => {
+            if (z.id === currentPaymentType.current?.id) {
+              z.name = values.name
+            }
+            return z;
+          }))
+          reset();
+          setShowCreateModal(false);
+          showAndHideModal('Editado', res.data.message)
+        } else {
+          showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
         }
-      } else {
-        try {
-          const res = await http.post('/paymenttypes', values);
-          if (res.data.ok) {
-            data?.data.unshift(res.data.data)
-            reset();
-            setShowCreateModal(false);
-            showAndHideModal('Guardado', res.data.message)
-          } else {
-            showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
-          }
-        } catch (error: any) {
-          if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
-        }
+      } catch (error: any) {
+        if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+      } finally {
+        setSavingOrUpdating(false)
       }
-
+    } else {
+      try {
+        setSavingOrUpdating(true)
+        const res = await http.post('/paymenttypes', values);
+        if (res.data.ok) {
+          data?.data.unshift(res.data.data)
+          reset();
+          setShowCreateModal(false);
+          showAndHideModal('Guardado', res.data.message)
+        } else {
+          showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
+        }
+      } catch (error: any) {
+        if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+      } finally {
+        setSavingOrUpdating(false)
+      }
     }
+
+
   }
 
   const destroy = async (id: number) => {
     try {
+      setSavingOrUpdating(true)
       const res = await http.delete('/paymenttypes/' + id);
       if (res.data.ok) {
         data?.data && (data.data! = data?.data.filter(z => z.id !== id));
@@ -112,8 +109,11 @@ const AllPaymentTypes = () => {
       }
     } catch (error: any) {
       if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+    } finally {
+      setSavingOrUpdating(false)
     }
   };
+
   const closeCreateModal = () => {
     reset();
     setShowCreateModal(false);
@@ -129,40 +129,40 @@ const AllPaymentTypes = () => {
     );
   };
 
+  const openCreateOrEditModel = () => {
+    setShowCreateModal(true);
+    setEditMode(false)
+    currentPaymentType.current = null;
+  }
+
   if (isLoading) return <Loading />;
   if (isError) return <RequestError error={error} />;
 
 
   return (
-    <div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
-
-
-      <div className='flex gap-x-4 mb-6 mx-3  items-center'>
-        <h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Tipos de pagos</h3>
-        <button onClick={() => { setEditMode(false); currentPaymentType.current = null; setShowCreateModal(true) }} className='btn !w-10 !h-10 !p-0 gradient !rounded-full'>
-          <MdAdd size={50} />
-        </button>
-      </div>
-
-
+    <BoxContainerPage>
+      <HeaderData action={openCreateOrEditModel} text='Tipos de pagos' />
       {
         data.data.length > 0 ? (
-          <Box className='!p-0 !overflow-hidden !border-none    sm:w-[500px] mb-4 '>
+          <Box className='!p-0 !overflow-hidden !border-none sm:mx-0   sm:w-[500px] mb-4 '>
             <DataTable
               size='small'
               emptyMessage='Aún no hay tipos de pago'
               className='!overflow-hidden   !border-none'
               value={data?.data}
               dataKey='id'
-              responsiveLayout='scroll'
-            >
+              paginator
+              rows={10}
+              paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+              currentPageReportTemplate='{first} al {last} de {totalRecords}'
+              paginatorLeft={<RefreshData action={refetch} />}
+              responsiveLayout='scroll'            >
               <Column field='name' header='Nombre' headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' />
               <Column body={actionBodyTemplate} headerClassName='!border-none dark:!bg-gray-800' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' exportable={false} style={{ width: 90 }} />
             </DataTable>
           </Box>
         ) : (
-          <div className='text-slate-400 mx-3 text-center'>Aún no hay tipo de pago.</div>
-
+          <EmptyData text='Aún no hay tipo de pago.' />
         )
       }
 
@@ -170,6 +170,7 @@ const AllPaymentTypes = () => {
 
       <DeleteModal
         show={show}
+        savingOrUpdating={savingOrUpdating}
         setShow={setShow}
         destroy={() => destroy(currentPaymentType.current?.id!)}
         text={`${currentPaymentType.current?.name}`}
@@ -178,27 +179,26 @@ const AllPaymentTypes = () => {
       <CreateModal
         show={showCreateModal}
         closeModal={closeCreateModal}
-        className='max-w-[400px]  sm:w-fit'
+        className='max-w-[400px]  sm:w-[400px] w-fit'
         titleText={`${editMode ? 'Editar' : 'Crear'} tipo de pago `}
       >
-        <form
-          onSubmit={handleSave}>
-          <fieldset className=''>
-            <CustomInput placeholder='Débito,Crédito,Efectivo' initialValue={name} onChange={(value) => handleInputChange(value, 'name')} />
-            {errors?.name && <FormError text='El nombre es obligatorio.' />}
-          </fieldset>
-          <section className='action flex items-center gap-x-3 mt-8'>
-            <button className='btn sec !py-1' onClick={closeCreateModal} type='button'>
-              Cerrar
-            </button>
-            <button className='btn gradient  !py-1' type='submit'>
-              Guardar
-            </button>
-          </section>
+        <form onSubmit={handleSave}>
+          <CustomInput
+            placeholder='Débito,Crédito,Efectivo'
+            initialValue={name}
+            onChange={(value) => handleInputChange(value, 'name')}
+            maxLength={80}
+            label='Nombre'
+            required
+            minLength={1}
+            hasError={errors?.name}
+            errorText='El nombre es obligatorio.'
+          />
+          <FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
         </form>
 
       </CreateModal>
-    </div>
+    </BoxContainerPage>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import Box from '../../components/Box'
@@ -8,25 +8,26 @@ import DeleteModal from '../../components/DeleteModal'
 import Loading from '../../components/Loading'
 import http from '../../api/axios'
 import CreateModal from '../../components/CreateModal'
-import { AuthContext } from '../../context/authContext'
-import { MdAdd } from 'react-icons/md'
-import CustomInput from '../../components/CustomInput'
 import { useForm } from '../../hooks/useForm'
 import FormError from '../../components/FormError'
 import RequestError from '../../components/RequestError'
-import { DelayAlertToHide } from '../../helpers/variableAndConstantes'
 import { useClaims } from '../../hooks/useClaims'
 import { IClaim } from '../../interfaces/Iclaims'
 import CustmTextArea from '../../components/CustomTextArea'
 import { Dropdown } from 'primereact/dropdown'
 import { useProperties } from '../../hooks/useProperties'
-import { Button } from 'primereact/button'
 import AddComment from '../../components/icons/AddComment'
-import { formatDate } from '../../helpers/date'
+import { formatDate, formatDateDDMMYYYY } from '../../helpers/date'
 import CloseOnClick from '../../components/CloseOnClick'
+import useShowAndHideModal from '../../hooks/useShowAndHideModal'
+import { validateForm } from '../../helpers/form'
+import HeaderData from '../../components/HeaderData'
+import RefreshData from '../../components/RefreshData'
+import { EmptyData } from '../../components/EmptyData'
+import FormActionBtns from '../../components/FormActionBtns'
+import FieldsetGroup from '../../components/FieldsetGroup'
 
 const Claims = () => {
-	const { showAlert, hideAlert } = useContext(AuthContext)
 	const [showCreateModal, setShowCreateModal] = useState(false)
 	const [showAddCommentModal, setShowAddCommentModal] = useState(false)
 	const [showCommentsModal, setShowCommentsModal] = useState(false)
@@ -40,10 +41,10 @@ const Claims = () => {
 	const { comment, values: Cvalues, handleInputChange: ChandleInputChange, reset: Creset } = useForm({ comment: '' })
 	const [errors, setErrors] = useState<any>()
 	const [editMode, setEditMode] = useState(false)
-	const [to, setTo] = useState<any>()
 
 	const currentClaim = useRef<IClaim | null>()
-
+	const { showAndHideModal } = useShowAndHideModal()
+	const [savingOrUpdating, setSavingOrUpdating] = useState(false)
 	const { data, isError, isLoading, error, refetch, isFetching } = useClaims()
 	const propertyQuery = useProperties()
 
@@ -60,19 +61,9 @@ const Claims = () => {
 		currentClaim.current = data
 	}
 
-	const showAndHideModal = (
-		title: string,
-		message: string,
-		color: string = 'green',
-		delay: number = DelayAlertToHide
-	) => {
-		clearTimeout(to)
-		showAlert({ title, message, color, show: true })
-		setTo(setTimeout(hideAlert, delay))
-	}
-
 	const destroy = async (id: number) => {
 		try {
+			setSavingOrUpdating(true)
 			const res = await http.delete('/claims/' + id)
 			if (res.data.ok) {
 				data?.data && (data.data! = data?.data.filter((z) => z.id !== id))
@@ -83,23 +74,11 @@ const Claims = () => {
 			}
 		} catch (error: any) {
 			if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+		} finally {
+			setSavingOrUpdating(false)
 		}
 	}
 
-	const verifyForm = () => {
-		let ok = true
-		let error: any = {}
-		if (!description.trim().length) {
-			ok = false
-			error.description = true
-		}
-		if (!PropertyId) {
-			ok = false
-			error.PropertyId = true
-		}
-		setErrors(error)
-		return ok
-	}
 	const verifyFormAddComment = () => {
 		let ok = true
 		let error: any = {}
@@ -113,51 +92,51 @@ const Claims = () => {
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		if (verifyForm()) {
-			if (editMode) {
-				try {
-					const res = await http.put(`/claims/${currentClaim.current?.id}`, {
-						...values,
-						// @ts-expect-error
-						PropertyId: values.PropertyId.id,
-					})
-					if (res.data.ok) {
-						data?.data &&
-							(data.data = data?.data.map((z) => {
-								if (z.id === currentClaim.current?.id) {
-									// @ts-expect-error
-									z = { ...values }
-								}
-								return z
-							}))
-						reset()
-						setShowCreateModal(false)
-						showAndHideModal('Editado', res.data.message)
-					} else {
-						showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
-					}
-				} catch (error: any) {
-					if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+		const { error, ok } = validateForm({ ...values }, ['state', 'details'])
+		setErrors(error)
+		if (!ok) return false
+		if (editMode) {
+			try {
+				setSavingOrUpdating(true)
+				const res = await http.put(`/claims/${currentClaim.current?.id}`, { ...values })
+				if (res.data.ok) {
+					data?.data &&
+						(data.data = data?.data.map((z) => {
+							if (z.id === currentClaim.current?.id) {
+								// @ts-expect-error
+								z = { ...values, Property: propertyQuery.data?.data.find((p) => p.id === PropertyId) }
+							}
+							return z
+						}))
+					reset()
+					setShowCreateModal(false)
+					showAndHideModal('Editado', res.data.message)
+				} else {
+					showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
 				}
-			} else {
-				try {
-					const res = await http.post('/claims', {
-						...values,
-						// @ts-expect-error
-						PropertyId: values.PropertyId.id,
-					})
-					if (res.data.ok) {
-						data?.data.unshift({ ...res.data.data, Property: values.PropertyId })
-						reset()
-						setShowCreateModal(false)
-						showAndHideModal('Guardado', res.data.message)
-					} else {
-						showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
-					}
-				} catch (error: any) {
-					if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
-				}
+			} catch (error: any) {
+				if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+			} finally {
+				setSavingOrUpdating(false)
 			}
+		} else {
+			try {
+				setSavingOrUpdating(true)
+				const res = await http.post('/claims', { ...values })
+				if (res.data.ok) {
+					data?.data.unshift({ ...res.data.data, Property: propertyQuery.data?.data.find((p) => p.id === PropertyId) })
+					reset()
+					setShowCreateModal(false)
+					showAndHideModal('Guardado', res.data.message)
+				} else {
+					showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
+				}
+			} catch (error: any) {
+				if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+			} finally {
+				setSavingOrUpdating(false)
+			}
+
 		}
 	}
 
@@ -184,6 +163,7 @@ const Claims = () => {
 		e.preventDefault()
 		if (verifyFormAddComment()) {
 			try {
+				setSavingOrUpdating(true)
 				const res = await http.put('/claims/' + currentClaim.current?.id, { details: [...currentClaim.current?.details!, { comment, date: new Date() }] })
 				if (res.data.ok) {
 					data?.data &&
@@ -201,11 +181,15 @@ const Claims = () => {
 				}
 			} catch (error: any) {
 				if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+			} finally {
+				setSavingOrUpdating(false)
 			}
+
 		}
 	}
 	const deleteClaimComment = async (date: string) => {
 		try {
+			setSavingOrUpdating(true)
 			let dtls = currentClaim.current?.details.filter(c => c.date !== date)
 			const res = await http.put('/claims/' + currentClaim.current?.id, { details: dtls })
 			if (res.data.ok) {
@@ -224,9 +208,10 @@ const Claims = () => {
 			}
 		} catch (error: any) {
 			if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+		} finally {
+			setSavingOrUpdating(false)
 		}
 	}
-
 
 	const actionBodyTemplate = (rowData: IClaim) => {
 		return (
@@ -237,35 +222,22 @@ const Claims = () => {
 			</div>
 		)
 	}
-	const paginatorLeft = (
-		<Button
-			onClick={() => refetch()}
-			type='button'
-			icon='pi pi-refresh'
-			text
-		/>
-	)
+
+	const openCreateOrEditModel = () => {
+		setEditMode(false)
+		currentClaim.current = null
+		setShowCreateModal(true)
+	}
+
 	if (isLoading) return <Loading />
 	if (isError) return <RequestError error={error} />
 
 	return (
 		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
-			<div className='flex gap-x-4 mb-6 mx-4  items-center justify-between sm:justify-start'>
-				<h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Reclamos</h3>
-				<button
-					onClick={() => {
-						setEditMode(false)
-						currentClaim.current = null
-						setShowCreateModal(true)
-					}}
-					className='btn !w-10 !h-10 !p-0 gradient !rounded-full'
-				>
-					<MdAdd size={50} />
-				</button>
-			</div>
+			<HeaderData action={openCreateOrEditModel} text='Reclamos' />
 			{data.data.length > 0 ? (
 				<>
-					<Box className='!p-0 !overflow-hidden !border-none !mx-4    mb-4 '>
+					<Box className='!p-0 !overflow-hidden !border-none sm:mx-0    mb-4 '>
 						<DataTable
 							size='small'
 							emptyMessage='Aún no hay reclamo'
@@ -275,7 +247,7 @@ const Claims = () => {
 							rows={10}
 							paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
 							currentPageReportTemplate='{first} al {last} de {totalRecords}'
-							paginatorLeft={paginatorLeft}
+							paginatorLeft={<RefreshData action={refetch} />}
 							dataKey='id'
 							responsiveLayout='scroll'
 						>
@@ -315,6 +287,14 @@ const Claims = () => {
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 							/>
 							<Column
+								field='date'
+								header='Fecha Inicio'
+								body={(data) => <span>{formatDateDDMMYYYY(data.createdAt)}</span>}
+								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+								sortable
+							/>
+							<Column
 								field='details.length'
 								header='Comentarios'
 								sortable
@@ -333,23 +313,18 @@ const Claims = () => {
 					</Box>
 				</>
 			) : (
-				<div className='text-slate-400 mx-3 text-center'>Aún no hay reclamo.</div>
+				<EmptyData text='Aún no hay reclamo' />
 			)}
 
-			{isFetching && (
-				<Loading
-					h={40}
-					w={40}
-				/>
-			)}
+			{isFetching && (<Loading h={40} w={40} />)}
 
 			<DeleteModal
 				show={show}
+				savingOrUpdating={savingOrUpdating}
 				setShow={setShow}
 				destroy={() => destroy(currentClaim.current?.id!)}
 				text={`${currentClaim.current?.description}`}
 			/>
-
 			<CreateModal
 				show={showCreateModal}
 				closeModal={closeCreateModal}
@@ -357,80 +332,68 @@ const Claims = () => {
 				className='max-w-[700px] w-fit sm:w-[600px]'
 				titleText={`${editMode ? 'Editar' : 'Iniciar'}  reclamo`}
 			>
-				<form
-					action=''
-					onSubmit={handleSave}
-				>
-					<fieldset>
-						<label htmlFor='PropertyId'>Propiedad</label>
-						<Dropdown
-							value={editMode ? propertyQuery.data?.data.find((p) => p.id === PropertyId) : PropertyId}
-							onChange={(e) => handleInputChange(e.value, 'PropertyId')}
-							options={propertyQuery.data?.data}
-							optionLabel='street'
-							showClear
-							disabled={editMode ? true : false}
-							filterPlaceholder='Busca propiedad'
-							// optionValue='id'
-							placeholder='elije una propiedad'
-							filter
-							valueTemplate={(data, props) => {
-								if (!data) return props.placeholder
-								return (
-									<span>
-										{data.street} {data.number} {data.floor}-{data.dept}
-									</span>
-								)
-							}}
-							itemTemplate={(data) => {
-								return (
-									<span>
-										{data.street} {data.number} {data.floor}-{data.dept}
-									</span>
-								)
-							}}
-							className='h-[42px] items-center !border-gray-200 shadow'
-						/>
-						{errors?.PropertyId && <FormError text='La propiedad es obligatoria.' />}
-					</fieldset>
-					<fieldset className=''>
-						<label htmlFor='description'>Descripción</label>
-						<CustmTextArea
-							placeholder='Escribe una descripción...'
-							initialValue={description}
-							onChange={(value) => handleInputChange(value, 'description')}
-						/>
-						{errors?.description && <FormError text='La descripción es obligatoria.' />}
-					</fieldset>
-					{editMode && (
+				<form onSubmit={handleSave}				>
+					<FieldsetGroup>
 						<fieldset className=''>
+							<label htmlFor='PropertyId'>Propiedad</label>
 							<Dropdown
-								value={state}
-								onChange={(e) => handleInputChange(e.value, 'state')}
-								options={['Abierto', 'Cerrado']}
-								filterPlaceholder='Busca estado'
-								placeholder='elije una estado'
+								value={PropertyId}
+								onChange={(e) => handleInputChange(e.value, 'PropertyId')}
+								options={propertyQuery.data?.data}
+								optionLabel='street'
+								disabled={editMode}
+								showClear
+								filterPlaceholder='Busca propiedad'
+								optionValue='id'
+								filterBy='street,number,dept,floor'
+								placeholder='elije una propiedad'
+								filter
+								valueTemplate={(data, props) => {
+									if (!data) return props.placeholder
+									return (
+										<span>
+											{data.street} {data.number} {data.floor}-{data.dept}
+										</span>
+									)
+								}}
+
+								itemTemplate={(data) => (<span> {data.street} {data.number} {data.floor}-{data.dept} </span>)}
 								className='h-[42px] items-center !border-gray-200 shadow'
 							/>
-							{errors?.state && <FormError text='El estado es obligatorio.' />}
+							{PropertyId !== 0 && (
+								<span className='text-blue-600 dark:text-blue-400 text-sm ' >
+									Propietario :  {propertyQuery.data?.data.find((p) => p.id === PropertyId)?.Owner?.fullName}
+								</span>
+							)}
+							{errors?.PropertyId && <FormError text='La propiedad es obligatoria.' />}
 						</fieldset>
-					)}
+						{editMode && (
+							<fieldset className='w-full sm:w-[30%]'>
+								<label htmlFor="state">Estado</label>
+								<Dropdown
+									value={state}
+									onChange={(e) => handleInputChange(e.value, 'state')}
+									options={['Abierto', 'Cerrado']}
+									placeholder='elije una estado'
+									className='h-[42px] items-center !border-gray-200 shadow'
+								/>
+								{errors?.state && <FormError text='El estado es obligatorio.' />}
+							</fieldset>
+						)}
+					</FieldsetGroup>
+					<CustmTextArea
+						placeholder='Escribe una descripción...'
+						initialValue={description}
+						onChange={(value) => handleInputChange(value, 'description')}
+						maxLength={255}
+						className='h-24'
+						label='Descripción'
+						required
+						hasError={errors?.description}
+						errorText='La descripción es obligatoria.'
+					/>
+					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
 
-					<section className='action flex items-center gap-x-3 mt-8'>
-						<button
-							className='btn sec !py-1'
-							onClick={closeCreateModal}
-							type='button'
-						>
-							Cerrar
-						</button>
-						<button
-							className='btn gradient  !py-1'
-							type='submit'
-						>
-							Guardar
-						</button>
-					</section>
 				</form>
 			</CreateModal>
 			<CreateModal
@@ -440,43 +403,25 @@ const Claims = () => {
 				className='max-w-[700px] w-fit sm:w-[600px]'
 				titleText={`${editMode ? 'Editar' : 'Agregar'}  comentario`}
 			>
-				<form
-					action=''
-					onSubmit={handleAddCommentForm}
-				>
+				<form onSubmit={handleAddCommentForm}				>
 					<fieldset>
 						<label htmlFor='PropertyId'>Reclamo : #{currentClaim.current?.id}</label>
 						<span className='border border-gray-300 dark:border-slate-500  p-2'> {currentClaim.current?.description} </span>
 					</fieldset>
-					<fieldset className=''>
-						<label htmlFor='comment'>Comentario</label>
-						<CustmTextArea
-							placeholder='Escribe un comentario...'
-							initialValue={comment}
-							className="min-h-[150px]"
-							onChange={(value) => ChandleInputChange(value, 'comment')}
-						/>
-						{errors?.comment && <FormError text='El comentario es obligatoria.' />}
-					</fieldset>
+					<CustmTextArea
+						placeholder='Escribe un comentario...'
+						initialValue={comment}
+						className="min-h-[150px]"
+						onChange={(value) => ChandleInputChange(value, 'comment')}
+						label='Comentario'
+						required
+						hasError={errors?.comment}
+						errorText='El comentario es obligatorio.'
+					/>
+					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeAddCommentModal} />
 
-					<section className='action flex items-center gap-x-3 mt-8'>
-						<button
-							className='btn sec !py-1'
-							onClick={closeAddCommentModal}
-							type='button'
-						>
-							Cerrar
-						</button>
-						<button
-							className='btn gradient  !py-1'
-							type='submit'
-						>
-							Agregar
-						</button>
-					</section>
 				</form>
 			</CreateModal>
-
 			<CreateModal
 				show={showCommentsModal}
 				closeModal={() => setShowCommentsModal(false)}
@@ -491,24 +436,26 @@ const Claims = () => {
 						<span className=''> {currentClaim.current?.description} </span>
 					</fieldset>
 					{
-						currentClaim.current?.details?.length === 0 ? <span className='text-center text-gray-400'>No hay comentarios</span> : (
-							<div className="comments flex flex-col gap-y-2  max-h-[420px] overflow-y-auto">
+						currentClaim.current?.details?.length === 0 ? <div className='text-center text-gray-400 my-6'>No hay comentarios</div> : (
+							<div className="comments flex flex-col gap-y-2  max-h-[420px] my-4 overflow-y-auto">
 								{
 									currentClaim.current?.details?.map((comment) => (
 										<div className="comment bg-gray-200 p-2 pb-5 relative group hover:bg-gray-100 cursor-pointer dark:bg-slate-700" key={comment.date}>
 											<span>{comment.comment}</span>
 											<span className='absolute bottom-[2px] right-1 text-xs'> {formatDate(comment.date)} </span>
-											<span className='absolute top-[2px] right-1 text-xs hidden bg-red-100 dark:bg-gray-800 p-2 rounded-full shadow-lg group-hover:flex'> <DeleteIcon action={() => deleteClaimComment(comment.date)} /> </span>
+											<button
+												disabled={savingOrUpdating}
+												className='absolute top-[2px] right-1 text-xs hidden bg-red-100 dark:bg-gray-800 p-2 rounded-full shadow-lg group-hover:flex'>
+												<DeleteIcon action={() => deleteClaimComment(comment.date)} />
+											</button>
 										</div>
 									))
 								}
 							</div>
 						)
 					}
-
 				</div>
 			</CreateModal>
-
 		</div>
 	)
 }

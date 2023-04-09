@@ -12,6 +12,7 @@ type Props = {
   required?: boolean
   hasError?: boolean
   errorText?: string
+  optional?: boolean
 };
 
 const CustomTextArea = (
@@ -24,13 +25,14 @@ const CustomTextArea = (
     hasError = false,
     maxLength = undefined,
     minLength = undefined,
-    errorText = 'El campo es obligatorio'
+    errorText = 'El campo es obligatorio',
+    optional = false
   }: Props) => {
   const [value, setValue] = useState<string>(initialValue);
 
   return (
     <fieldset>
-      {label && (<label htmlFor={label}>{label}</label>)}
+      {label && (<label htmlFor={label?.replaceAll(' ', '_')}>{label} {optional && (<span className='text-xs opacity-50'>(opcional)</span>)}</label>)}
       <textarea
         onChange={(e) => {
           setValue(e.target.value);
@@ -41,7 +43,7 @@ const CustomTextArea = (
         maxLength={maxLength}
         required={required}
         minLength={minLength}
-        name={label}
+        name={label?.replaceAll(' ', '_')}
         placeholder={placeholder}
       />
       {hasError && <FormError text={errorText} />}

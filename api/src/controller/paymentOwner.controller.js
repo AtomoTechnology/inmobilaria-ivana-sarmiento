@@ -50,7 +50,6 @@ exports.Paginate = paginate(PaymentOwner, {
 
 exports.Post = catchAsync(async (req, res, next) => {
 	const transact = await sequelize.transaction();
-	console.log(req.body)
 	try {
 		const payment = await PaymentOwner.create(req.body, {
 			transaction: transact,
@@ -59,6 +58,7 @@ exports.Post = catchAsync(async (req, res, next) => {
 		if (req.body.expenseDetails.length > 0) {
 			for (let j = 0; j < req.body.expenseDetails.length; j++) {
 				if (req.body.expenseDetails[j].debt) {
+					console.log('fue una deudas la expensas : ', req.body.expenseDetails[j].description)
 					await DebtOwner.update(
 						{
 							paid: true,

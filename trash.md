@@ -113,3 +113,7 @@ NOTA :: 21/03
 -- nrocarpeta , añoActual ,
 
 deudas mas de dos meses en rojo 
+
+db_name = novaitfl_ivanadb
+ db_user = novaitfl_ivanadb
+ db_password = ivana.2023

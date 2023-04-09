@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import Box from '../../components/Box'
@@ -8,28 +8,29 @@ import DeleteModal from '../../components/DeleteModal'
 import Loading from '../../components/Loading'
 import http from '../../api/axios'
 import CreateModal from '../../components/CreateModal'
-import { AuthContext } from '../../context/authContext'
-import { MdAdd } from 'react-icons/md'
 import CustomInput from '../../components/CustomInput'
 import { useForm } from '../../hooks/useForm'
 import FormError from '../../components/FormError'
 import RequestError from '../../components/RequestError'
-import { DelayAlertToHide } from '../../helpers/variableAndConstantes'
-import { useClientExpenses } from '../../hooks/useClientExpenses'
 import { useContracts } from '../../hooks/useContracts'
 import FieldsetGroup from '../../components/FieldsetGroup'
 import { Dropdown } from 'primereact/dropdown'
-import { Button } from 'primereact/button'
 import { FilterMatchMode } from 'primereact/api'
 import { useEventualities } from '../../hooks/useEventualities'
 import { IEventuality } from '../../interfaces/Ieventualities'
 import CustomTextArea from '../../components/CustomTextArea'
 import { diffenceBetweenDates, formatDateDDMMYYYY } from '../../helpers/date'
+import useShowAndHideModal from '../../hooks/useShowAndHideModal'
+import { validateForm } from '../../helpers/form'
+import HeaderData from '../../components/HeaderData'
+import RefreshData from '../../components/RefreshData'
+import { EmptyData } from '../../components/EmptyData'
+import CloseOnClick from '../../components/CloseOnClick'
+import FormActionBtns from '../../components/FormActionBtns'
 
 
 
 const Eventualities = () => {
-	const { showAlert, hideAlert } = useContext(AuthContext)
 	const [showCreateModal, setShowCreateModal] = useState(false)
 	const [show, setShow] = useState(false)
 	const { description, clientAmount, expiredDate, ownerAmount, ContractId, values, handleInputChange, reset, updateAll } = useForm({
@@ -37,11 +38,11 @@ const Eventualities = () => {
 		clientAmount: 0,
 		ownerAmount: 0,
 		description: '',
-		expiredDate: '',
+		expiredDate: new Date().toISOString().slice(0, 10),
 	})
+	const [savingOrUpdating, setSavingOrUpdating] = useState(false)
 	const [errors, setErrors] = useState<any>()
 	const [editMode, setEditMode] = useState(false)
-	const [to, setTo] = useState<any>()
 	const [globalFilterValue, setGlobalFilterValue] = useState('')
 	const [filters, setFilters] = useState({
 		global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -49,7 +50,7 @@ const Eventualities = () => {
 		'Contract.Property.street': { value: null, matchMode: FilterMatchMode.CONTAINS },
 	})
 	const currentEventuality = useRef<IEventuality | null>()
-
+	const { showAndHideModal } = useShowAndHideModal()
 	const { data, isError, isLoading, error, isFetching, refetch } = useEventualities()
 	const contractQuery = useContracts()
 
@@ -64,28 +65,18 @@ const Eventualities = () => {
 		setShow(!show)
 		currentEventuality.current = data
 	}
-	const onGlobalFilterChange = (e: any) => {
-		const value = e.target.value
+
+	const onGlobalFilterChange = (val: any) => {
+		const value = val
 		let _filters = { ...filters }
-
 		_filters['global'].value = value
-
 		setFilters(_filters)
 		setGlobalFilterValue(value)
-	}
-	const showAndHideModal = (
-		title: string,
-		message: string,
-		color: string = 'green',
-		delay: number = DelayAlertToHide
-	) => {
-		clearTimeout(to)
-		showAlert({ title, message, color, show: true })
-		setTo(setTimeout(hideAlert, delay))
 	}
 
 	const destroy = async (id: number) => {
 		try {
+			setSavingOrUpdating(true)
 			const res = await http.delete('/eventualities/' + id)
 			if (res.data.ok) {
 				data?.data && (data.data! = data?.data.filter((z) => z.id !== id))
@@ -96,81 +87,55 @@ const Eventualities = () => {
 			}
 		} catch (error: any) {
 			if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
-		}
-	}
-
-	const verifyForm = () => {
-		let ok = true
-		let error: any = {}
-		if (!description.trim().length) {
-			ok = false
-			error.description = true
-		}
-		if (!expiredDate.trim().length) {
-			ok = false
-			error.expiredDate = true
-		}
-		if (!clientAmount) {
-			ok = false
-			error.clientAmount = true
-		}
-		if (!ownerAmount) {
-			ok = false
-			error.ownerAmount = true
-		}
-		if (!ContractId) {
-			ok = false
-			error.ContractId = true
-		}
-		setErrors(error)
-		return ok
+		} finally { setSavingOrUpdating(false) }
 	}
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		if (verifyForm()) {
-
-			if (editMode) {
-				try {
-					// @ts-expect-error
-					const res = await http.put(`/eventualities/${currentEventuality.current?.id}`, { ...values, ContractId: values.ContractId.id })
-					if (res.data.ok) {
-						// refetch()
-						data?.data &&
-							(data.data = data?.data.map((z) => {
-								if (z.id === currentEventuality.current?.id) {
-									// @ts-expect-error
-									z = { ...values }
-									// eslint-disable-line no-use-before-define
-								}
-								return z
-							}))
-						reset()
-						setShowCreateModal(false)
-						showAndHideModal('Editado', res.data.message)
-					} else {
-						showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
-					}
-				} catch (error: any) {
-					if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+		const { error, ok } = validateForm({ ...values }, ['clientPaid', 'ownerPaid'])
+		setErrors(error)
+		if (!ok) return false
+		if (editMode) {
+			try {
+				setSavingOrUpdating(true)
+				const res = await http.put(`/eventualities/${currentEventuality.current?.id}`, { ...values })
+				if (res.data.ok) {
+					// refetch()
+					data?.data &&
+						(data.data = data?.data.map((z) => {
+							if (z.id === currentEventuality.current?.id) {
+								// @ts-expect-error
+								z = { ...values }
+								// eslint-disable-line no-use-before-define
+							}
+							return z
+						}))
+					reset()
+					setShowCreateModal(false)
+					showAndHideModal('Editado', res.data.message)
+				} else {
+					showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
 				}
-			} else {
-				try {
-					// @ts-expect-error
-					const res = await http.post('/eventualities', { ...values, ContractId: values.ContractId.id })
-					if (res.data.ok) {
-						refetch()
-						reset()
-						setShowCreateModal(false)
-						showAndHideModal('Guardado', res.data.message)
-					} else {
-						showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
-					}
-				} catch (error: any) {
-					if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+			} catch (error: any) {
+				if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+			} finally { setSavingOrUpdating(false) }
+		} else {
+			try {
+				setSavingOrUpdating(true)
+				const res = await http.post('/eventualities', { ...values })
+				if (res.data.ok) {
+					refetch()
+					reset()
+					setShowCreateModal(false)
+					showAndHideModal('Guardado', res.data.message)
+				} else {
+					showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
 				}
-			}
+			} catch (error: any) {
+				if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+			} finally { setSavingOrUpdating(false) }
 		}
+
 	}
 
 	const closeCreateModal = () => {
@@ -187,56 +152,40 @@ const Eventualities = () => {
 			</div>
 		)
 	}
-	const paginatorLeft = (
-		<Button
-			onClick={() => refetch()}
-			type='button'
-			icon='pi pi-refresh'
-			text
-		/>
-	)
+	const openCreateOrEditModel = () => {
+		setEditMode(false)
+		currentEventuality.current = null
+		setShowCreateModal(true)
+	}
 
 	if (isLoading) return <Loading />
 	if (isError) return <RequestError error={error} />
 
 	return (
 		<div className='container m-auto  flex sm:mx-0  flex-col justify-center sm:justify-center'>
-			<div className='flex gap-x-4 mb-6 mx-4  items-center justify-between sm:justify-start'>
-				<h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Eventualidades</h3>
-				<button
-					onClick={() => {
-						setEditMode(false)
-						currentEventuality.current = null
-						setShowCreateModal(true)
-					}}
-					className='btn !w-10 !h-10 !p-0 gradient !rounded-full'
-				>
-					<MdAdd size={50} />
-				</button>
-			</div>
-
+			<HeaderData action={openCreateOrEditModel} text='Eventualidades' />
 			{data.data.length > 0 ? (
 				<>
-					<input
-						onChange={onGlobalFilterChange}
-						className={`dark:!bg-gray-900 dark:text-slate-400 border dark:!border-slate-700 m-auto w-[92%] !mx-[15px] sm:mx-0 sm:w-96 ml-0 sm:ml-[10px] mb-4`}
-						value={globalFilterValue}
-						placeholder='Busca eventualidad'
+					<CustomInput
+						onChange={(val) => onGlobalFilterChange(val)}
+						className=' w-auto mx-2 sm:mx-0 sm:w-96'
+						initialValue={globalFilterValue}
+						placeholder='Buscar eventualidad'
 						type='search'
 					/>
-					<Box className='!p-0 !overflow-hidden !border-none !mx-4    mb-4 '>
+					<Box className='!p-0 !overflow-hidden !border-none sm:mx-0  mb-4 '>
 						<DataTable
 							size='small'
 							emptyMessage='Aún no hay eventualidad'
 							className='!overflow-hidden   !border-none'
 							value={data?.data}
-							paginator
 							filters={filters}
 							globalFilterFields={['Contract.Property.street', 'description']}
-							rows={10}
-							paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-							currentPageReportTemplate='{first} al {last} de {totalRecords}'
-							paginatorLeft={paginatorLeft}
+							// paginator
+							// rows={10}
+							// paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+							// currentPageReportTemplate='{first} al {last} de {totalRecords}'
+							// paginatorLeft={<RefreshData action={refetch} />}
 							dataKey='id'
 							responsiveLayout='scroll'
 						>
@@ -257,7 +206,7 @@ const Eventualities = () => {
 								field='clientAmount'
 								body={(data) => <span>$ {data.clientAmount}</span>}
 								sortable
-								header='Monto Cliente'
+								header='Monto inquilino'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 							/>
@@ -265,7 +214,7 @@ const Eventualities = () => {
 								field='ownerAmount'
 								body={(data) => <span>$ {data.ownerAmount}</span>}
 								sortable
-								header='Monto inq'
+								header='Monto Propietario'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 							/>
@@ -291,14 +240,14 @@ const Eventualities = () => {
 							<Column
 								field='ownerPaid'
 								body={(data) => <span className={` ${data.ownerPaid ? 'text-green-500' : 'text-red-400'} `}>{data.ownerPaid ? 'Si' : 'No'}</span>}
-								header='Dueño Pago'
+								header='Propietario Pago'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 							/>
 							<Column
 								field='expiredDate'
 								sortable
-								body={(data) => <span className={` ${diffenceBetweenDates(data.expiredDate, new Date().toString()) < 0 ? 'text-green-500' : 'text-red-500'} `}>{formatDateDDMMYYYY(data.expiredDate)}</span>}
+								body={(data) => <span className={` ${diffenceBetweenDates(data.expiredDate, new Date().toISOString().slice(0, 10)) < 0 ? 'text-green-500' : 'text-red-500'} `}>{formatDateDDMMYYYY(data.expiredDate)}</span>}
 								header='Fecha Vencimiento'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
@@ -315,12 +264,13 @@ const Eventualities = () => {
 					</Box>
 				</>
 			) : (
-				<div className='text-slate-400 mx-3 text-center'>Aún no hay eventualidad.</div>
+				<EmptyData text='Aún no hay eventualidad' />
 			)}
 
 			{isFetching && (<Loading h={40} w={40} />)}
 
 			<DeleteModal
+				savingOrUpdating={savingOrUpdating}
 				show={show}
 				setShow={setShow}
 				destroy={() => destroy(currentEventuality.current?.id!)}
@@ -333,42 +283,23 @@ const Eventualities = () => {
 				overlayClick={false}
 				titleText='Agregar  eventualidad'
 				className='shadow-none border-0 max-w-[500px]'
-			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
-				<form
-					onSubmit={handleSave}
-					className='!relative'
-				>
+				<CloseOnClick action={closeCreateModal} />
+				<form onSubmit={handleSave}				>
 					<FieldsetGroup>
 						<fieldset className=''>
 							<label htmlFor='ContractId'>Contrato </label>
-							{/* {JSON.stringify(editMode ? contractQuery.data?.data.find((p) => p.id === currentEventuality.current?.ContractId) : ContractId)} */}
 							<Dropdown
-								value={editMode ? contractQuery.data?.data.find((p) => p.id === currentEventuality.current?.ContractId) : ContractId}
+								value={ContractId}
 								onChange={(e) => handleInputChange(e.value, 'ContractId')}
 								options={contractQuery.data?.data}
 								optionLabel='street'
 								showClear
-								disabled={editMode}
-								valueTemplate={(data, props) => {
-									if (!data) return props.placeholder
-									return (
-										<span>
-											{data.Client.fullName} | {data.Property.street} {data.Property.number} {data.Property.floor}-
-											{data.Property.dept}
-										</span>
-									)
-								}}
-								itemTemplate={(data) => {
-									return (
-										<span>
-											{data.Client.fullName} | {data.Property.street} {data.Property.number} {data.Property.floor}-
-											{data.Property.dept}
-										</span>
-									)
-								}}
+								// disabled={editMode}
+								valueTemplate={(data, props) => !data ? props.placeholder : (<span> {data.Client.fullName} | {data.Property.street} {data.Property.number} {data.Property.floor}-{data.Property.dept} </span>)}
+								itemTemplate={(data) => (<span> {data.Client.fullName} | {data.Property.street} {data.Property.number} {data.Property.floor}-{data.Property.dept} </span>)}
 								filterBy='Client.fullName,Property.street,Property.number,Property.floor,Property.dept'
-								// optionValue='id'
+								optionValue='id'
 								placeholder='elije contrato'
 								filter
 								filterPlaceholder='Busca contrato'
@@ -378,61 +309,48 @@ const Eventualities = () => {
 						</fieldset>
 					</FieldsetGroup>
 					<FieldsetGroup>
-						<fieldset className=''>
-							<label htmlFor='clientAmount'>Monto Inquilino</label>
-							<CustomInput
-								placeholder='123.99'
-								type='number'
-								initialValue={clientAmount || ''}
-								onChange={(value) => handleInputChange(value, 'clientAmount')}
-							/>
-							{errors?.clientAmount && <FormError text='El monto del cliente es obligatorio.' />}
-						</fieldset>
-						<fieldset className=''>
-							<label htmlFor='ownerAmount'>Monto dueño </label>
-							<CustomInput
-								placeholder='123.99'
-								type='number'
-								initialValue={ownerAmount || ''}
-								onChange={(value) => handleInputChange(value, 'ownerAmount')}
-							/>
-							{errors?.ownerAmount && <FormError text='El monto del dueño es obligatorio.' />}
-						</fieldset>
-					</FieldsetGroup>
-					<fieldset className=''>
-						<label htmlFor='expiredDate'>Fecha Vencimiento </label>
 						<CustomInput
-							placeholder='example@gmail.com'
-							initialValue={expiredDate || ''}
-							type='date'
-							onChange={(value) => handleInputChange(value, 'expiredDate')}
+							placeholder='202.99'
+							type='number'
+							initialValue={clientAmount || ''}
+							onChange={(value) => handleInputChange(value, 'clientAmount')}
+							label='Monto Inquilino'
+							required
+							hasError={errors?.clientAmount}
+							errorText='El monto del cliente es obligatorio.'
 						/>
-						{errors?.expiredDate && <FormError text='La fecha de vencimiento es obligatorio.' />}
-					</fieldset>
-					<fieldset className=''>
-						<label htmlFor='description'>Descripción </label>
-						<CustomTextArea
-							placeholder='Escribe una breve descripción ...'
-							initialValue={description || ''}
-							onChange={(value) => handleInputChange(value, 'description')}
+						<CustomInput
+							placeholder='120.99'
+							type='number'
+							initialValue={ownerAmount || ''}
+							onChange={(value) => handleInputChange(value, 'ownerAmount')}
+							label='Monto propietario'
+							required
+							hasError={errors?.ownerAmount}
+							errorText='El monto del propietario es obligatorio.'
 						/>
-						{errors?.description && <FormError text='La descripción es obligatoria.' />}
-					</fieldset>
-					<section className='action flex items-center gap-x-3 mt-4'>
-						<button
-							className='btn !py-1'
-							onClick={closeCreateModal}
-							type='button'
-						>
-							Cerrar
-						</button>
-						<button
-							className='btn gradient  !py-1'
-							type='submit'
-						>
-							Guardar
-						</button>
-					</section>
+					</FieldsetGroup>
+					<CustomInput
+						placeholder=''
+						initialValue={expiredDate || ''}
+						type='date'
+						onChange={(value) => handleInputChange(value, 'expiredDate')}
+						label='Fecha Vencimiento'
+						required
+						hasError={errors?.expiredDate}
+						errorText='La fecha de vencimiento es obligatorio.'
+					/>
+					<CustomTextArea
+						placeholder='Escribe una breve descripción ...'
+						initialValue={description || ''}
+						onChange={(value) => handleInputChange(value, 'description')}
+						maxLength={255}
+						label='Descripción'
+						required
+						hasError={errors?.description}
+						errorText='La descripción es obligatoria.'
+					/>
+					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
 				</form>
 			</CreateModal>
 

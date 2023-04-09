@@ -95,11 +95,14 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.DATE,
 				allowNull: true,
 				defaultValue: null,
-			},		
+			},
+			createdAt: DataTypes.DATEONLY,
+			updatedAt: DataTypes.DATEONLY,
 		},
 		{
 			paranoid: true,
 			sequelize,
+			tableName: 'debtclients',
 			modelName: 'DebtClient',
 		}
 	)
