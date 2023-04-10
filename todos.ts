@@ -5,3 +5,5 @@
 // TODO:: menus and submenus on mobile
 // TODO :FORMAT NUMBER TO CURRENCY WITH TWO NUMBER DECIMALS
 // TODO :: ADD MONTH AND YEAR TO THE PAYMENT RECEIPT
+
+// TODO :: when revert payment remove eventuality for diferences from paidTotal and total 

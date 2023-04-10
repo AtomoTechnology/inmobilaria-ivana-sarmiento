@@ -1,0 +1,78 @@
+const { showAndHideModal } = useShowAndHideModal()
+
+const [savingOrUpdating, setSavingOrUpdating] = useState(false)
+
+.then((res) => res.data)
+
+const { error, ok } = validateForm({...values})
+setErrors(error)
+if (!ok) return false
+
+setSavingOrUpdating(true)
+
+	const onGlobalFilterChange = (val: any) => {
+		const value = val
+		let _filters = { ...filters }
+		_filters['global'].value = value
+		setFilters(_filters)
+		setGlobalFilterValue(value)
+	}
+
+<CustomInput
+onChange={(val) => onGlobalFilterChange(val)}
+className=' w-auto mx-2 sm:mx-0 sm:w-96'
+initialValue={globalFilterValue}
+placeholder='Buscar '
+type='search'
+/>
+
+
+finally {
+				setSavingOrUpdating(false)
+}
+
+
+<HeaderData action={openCreateOrEditModel} text='Zonas' />
+
+rows={RowsToShow}
+			 
+paginatorLeft={<RefreshData action={refetch} />}
+
+<EmptyData text='Aún no hay ' />
+
+savingOrUpdating={savingOrUpdating}
+
+maxLength={50}
+label='Clave'
+required
+hasError={errors?.key}
+errorText='La clave es obligatoria.'
+
+
+savingOrUpdating={savingOrUpdating}
+
+<FormActionBtns savingOrUpdating={savingOrUpdating}  onClose={closeCreateModal} />
+
+
+1. zones :: Izone
+2. property-types :: IpropertyType
+3. paymenttypes :: IpaymentType
+4. configs  :: IConfig
+5. properties :: Iproperty
+	5.1 state=Libre
+	5.2 isFor=Alquiler or Venta
+6. clients  ::: IPerson 
+7. owners  :: IPerson
+8. visits :::  IVisit
+9. claims ::: IClaim
+10. contracts , { filter } :::  Contract 
+	10.1 /debts/client/all
+	10.2 /debts/owner/all
+11. eventualities  ::: IEventuality
+12. client-expenses  ::: IClientExpensesResponseSimple 
+13. owner-expenses ::: IClientExpensesResponseSimple
+
+
+TABLAS PARA BORRAR DE FORMA DEF
+1. Eventualities
+2. 

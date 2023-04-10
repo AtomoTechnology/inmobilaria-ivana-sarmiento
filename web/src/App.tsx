@@ -71,7 +71,7 @@ const App = () => {
 
 	return (
 		<div className='App min-h-screen flex flex-col  dark:bg-gray-900 '>
-			<header className='header bg-white dark:bg-gray-900 shadow border-b border-gray-200 dark:border-slate-700'>
+			<header className='header bg-white sticky z-20 top-0 dark:bg-gray-900 shadow border-b border-gray-200 dark:border-slate-700'>
 				<nav className='flex justify-between px-4 items-center h-full'>
 					<div className='logo-app'>
 						<img

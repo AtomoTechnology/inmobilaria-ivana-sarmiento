@@ -160,7 +160,7 @@ const OwnerExpenses = () => {
 	}
 	if (isLoading) return <Loading />
 	if (isError) return <RequestError error={error} />
-
+	console.log('CQQQ ::: ', contractQuery.data?.data)
 	return (
 		<div className='container m-auto  flex sm:mx-0  flex-col justify-center sm:justify-center'>
 			<HeaderData action={openCreateOrEditModel} text='Impuestos propietarios' />
@@ -273,8 +273,8 @@ const OwnerExpenses = () => {
 								options={contractQuery.data?.data}
 								optionLabel='street'
 								showClear
-								valueTemplate={(data, props) => !data ? props.placeholder : (<span> {data.Client.fullName} | {data.Property.street} {data.Property.number} {data.Property.floor}-{data.Property.dept} </span>)}
-								itemTemplate={(data) => (<span> {data.Client.fullName} | {data.Property.street} {data.Property.number} {data.Property.floor}-{data.Property.dept} </span>)}
+								valueTemplate={(data, props) => !data ? props.placeholder : (<span> {data.Property.Owner.fullName} | {data.Property.street} {data.Property.number} {data.Property.floor}-{data.Property.dept} </span>)}
+								itemTemplate={(data) => (<span> {data.Property.Owner.fullName} | {data.Property.street} {data.Property.number} {data.Property.floor}-{data.Property.dept} </span>)}
 								filterBy='Client.fullName,Property.street,Property.number,Property.floor,Property.dept'
 								optionValue='id'
 								placeholder='elije contrato'

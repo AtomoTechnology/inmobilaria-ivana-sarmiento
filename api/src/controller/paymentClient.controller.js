@@ -56,7 +56,25 @@ exports.Post = catchAsync(async (req, res, next) => {
     const payment = await PaymentClient.create(req.body, {
       transaction: transact,
     });
+    console.log('BODYYY :::: ', req.body)
+    console.log('PAID ::: ', req.body.paidTotal, ' TOTAL ::: ', req.body.total)
+    if (req.body.paidTotal && req.body.paidTotal > 0 && req.body.paidTotal !== req.body.total) {
+      // add a eventualities with the difference
+      console.log('entro acaaaaaaa ')
+      await Eventuality.create({
+        description: 'Diferencia a favor sobre el cobro ' + req.body.month + '/' + req.body.year,
+        ownerAmount: 0,
+        clientAmount: req.body.total - req.body.paidTotal,
+        amount: req.body.total - req.body.paidTotal,
+        clientPaid: false,
+        ownerPaid: true,
+        expiredDate: new Date().getTime() + 30 * 24 * 60 * 60 * 1000,  //actual date plus 1 month
+        ContractId: req.body.ContractId,
+      }, {
+        transaction: transact,
+      });
 
+    }
     if (req.body.expenseDetails.length > 0) {
       for (let j = 0; j < req.body.expenseDetails.length; j++) {
         if (req.body.expenseDetails[j].debt) {

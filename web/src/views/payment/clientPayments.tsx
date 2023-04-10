@@ -1,20 +1,16 @@
-import React, { useContext, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import Box from '../../components/Box'
-import EditIcon from '../../components/icons/EditIcon'
-import DeleteIcon from '../../components/icons/DeleteIcon'
 import DeleteModal from '../../components/DeleteModal'
 import Loading from '../../components/Loading'
 import http from '../../api/axios'
 import CreateModal from '../../components/CreateModal'
-import { AuthContext } from '../../context/authContext'
-import { MdAdd } from 'react-icons/md'
 import CustomInput from '../../components/CustomInput'
 import { useForm } from '../../hooks/useForm'
 import FormError from '../../components/FormError'
 import RequestError from '../../components/RequestError'
-import { DelayAlertToHide, monthsInSpanish, selectedYears } from '../../helpers/variableAndConstantes'
+import { monthsInSpanish } from '../../helpers/variableAndConstantes'
 import FieldsetGroup from '../../components/FieldsetGroup'
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
 import { useContracts } from '../../hooks/useContracts'
@@ -28,14 +24,21 @@ import { Idebt, IdebtsResponse } from '../../interfaces/IDebtsResponse'
 import { IClienyPayment } from '../../interfaces/IclientPayments'
 import { IConfigResponse } from '../../interfaces/Iconfig'
 import { diffenceBetweenDates, formatDateDDMMYYYY, padTo2Digits, padToNDigit } from '../../helpers/date'
-import { Button } from 'primereact/button'
-import { BsPrinter, BsSkipBackward } from 'react-icons/bs'
+import { BsPrinter } from 'react-icons/bs'
 import { TfiBackLeft } from 'react-icons/tfi'
+import { FiAlertTriangle } from 'react-icons/fi'
 import logoApp from '../../assets/images/logo.png'
 // @ts-expect-error
 import html2pdf from 'html2pdf.js'
+import useShowAndHideModal from '../../hooks/useShowAndHideModal'
+import { validateForm } from '../../helpers/form'
+import HeaderData from '../../components/HeaderData'
+import RefreshData from '../../components/RefreshData'
+import { EmptyData } from '../../components/EmptyData'
+import { FilterMatchMode } from 'primereact/api'
+import FormActionBtns from '../../components/FormActionBtns'
 const ClientPayments = () => {
-	const { showAlert, hideAlert } = useContext(AuthContext)
+
 	const [showCreateModal, setShowCreateModal] = useState(false)
 	const [downloadPdf, setDownloadPdf] = useState(false)
 	const [show, setShow] = useState(false)
@@ -46,6 +49,7 @@ const ClientPayments = () => {
 		rentingAmount,
 		month,
 		year,
+		paidTotal,
 		updateAll,
 		total,
 		values,
@@ -53,7 +57,6 @@ const ClientPayments = () => {
 		handleInputChange,
 		reset,
 		dailyPunitive,
-		isRecharged,
 	} = useForm({
 		extraExpenses: 0,
 		ContractId: null,
@@ -64,62 +67,68 @@ const ClientPayments = () => {
 		recharge: 0,
 		rentingAmount: 0,
 		qteDays: 0,
-		isRecharged: 0,
 		dailyPunitive: 0,
+		paidTotal: 0,
 	})
+	const { showAndHideModal } = useShowAndHideModal()
+	const [savingOrUpdating, setSavingOrUpdating] = useState(false)
 	const [errors, setErrors] = useState<any>()
 	const [editMode, setEditMode] = useState(false)
-	const [to, setTo] = useState<any>()
 	const [selectedEventualities, setSelectedEventualities] = useState<IEventuality[]>([])
 	const [selectedExpensesClient, setSelectedExpensesClient] = useState<IClientExpItem[]>([])
 	const [selectedDebts, setSelectedDebts] = useState<Idebt[]>([])
+	const [upToDate, setUpToDate] = useState(false)
+	const [twoYearsWithoutPrice, setTwoYearsWithoutPrice] = useState(false)
+	const [threeYearsWithoutPrice, setThreeYearsWithoutPrice] = useState(false)
 
 	const eventTotal = useRef(0)
 	const expsTotal = useRef(0)
+	const debtsTotal = useRef(0)
 	const currentPayment = useRef<IClienyPayment | null>()
 	const [expenseDetails, setExpenseDetails] = useState<IClientExpItem[]>([])
 	const [eventualityDetails, setEventualityDetails] = useState<IEventuality[]>([])
 	const [debts, setDebts] = useState<Idebt[]>([])
 	const [loadingPdf, setLoadingPdf] = useState(false)
-
+	const [globalFilterValue, setGlobalFilterValue] = useState('')
+	const [filters, setFilters] = useState({
+		global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+		month: { value: null, matchMode: FilterMatchMode.CONTAINS },
+		year: { value: null, matchMode: FilterMatchMode.CONTAINS },
+		'Contract.Property.street': { value: null, matchMode: FilterMatchMode.CONTAINS }
+	})
 	const clientPaymentQuery = useClientPayments()
 	const { data, isError, isLoading, error, isFetching } = useContracts()
 	const [loadingExpenses, setLoadingExpenses] = useState(false)
-	// const contractQuery = useContracts()
 	const paymentTypeQuery = usePaymentTypes()
 
-	const edit = (data: IClienyPayment) => {
-		// handleInputChange(data.name, 'name')
-		setShowCreateModal(true)
-		setEditMode(true)
-		currentPayment.current = data
-	}
+
 	const printPdf = async (data: IClienyPayment) => {
 		currentPayment.current = data
 		setDownloadPdf(true)
 	}
+
 	const closePrintPdfModal = () => {
 		setDownloadPdf(false)
 		currentPayment.current = null
 	}
+
 	const handleDownloadPdf = async () => {
 		setLoadingPdf(true)
 		var element = document.getElementById('pdf-download');
-
 		var opt = {
 			margin: [.1, .1],
 			filename: `${currentPayment.current?.Contract.Client.fullName}_${currentPayment.current?.month}_${currentPayment.current?.year}_${formatDateDDMMYYYY(new Date().toISOString())}.pdf`,
-			// image: { type: 'jpeg', quality: 0.98 },
+			image: { type: 'png', quality: 0.98 },
 			html2canvas: { scale: 2 },
 			jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
 		};
 		try {
-
 			await html2pdf().from(element).set(opt).save();
 		} catch (error) {
 			console.log(error)
 		} finally {
 			setLoadingPdf(false)
+			closePrintPdfModal()
 		}
 	}
 
@@ -128,22 +137,12 @@ const ClientPayments = () => {
 		currentPayment.current = data
 	}
 
-	const showAndHideModal = (
-		title: string,
-		message: string,
-		color: string = 'green',
-		delay: number = DelayAlertToHide
-	) => {
-		clearTimeout(to)
-		showAlert({ title, message, color, show: true })
-		setTo(setTimeout(hideAlert, delay))
-	}
-
 	const destroy = async (id: number) => {
 		try {
+			setSavingOrUpdating(true)
 			const res = await http.delete('/payment-clients/' + id)
 			if (res.data.ok) {
-				data?.data && (data.data! = data?.data.filter((z) => z.id !== id)) // TODO: fix this refecth new items
+				clientPaymentQuery.data?.data && (clientPaymentQuery.data.data! = clientPaymentQuery.data?.data.filter((z) => z.id !== id))
 				setShow(false)
 				showAndHideModal('Borrado', res.data.message)
 			} else {
@@ -151,111 +150,74 @@ const ClientPayments = () => {
 			}
 		} catch (error: any) {
 			if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
-		}
-	}
-
-	const verifyForm = () => {
-		let ok = true
-		let error: any = {}
-		if (!ContractId) {
-			ok = false
-			error.ContractId = true
-		}
-		if (!month) {
-			ok = false
-			error.month = true
-		}
-		if (!year) {
-			ok = false
-			error.year = true
-		}
-		if (!PaymentTypeId) {
-			ok = false
-			error.PaymentTypeId = true
-		}
-		setErrors(error)
-		return ok
+		} finally { setSavingOrUpdating(false) }
 	}
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		values.total = rentingAmount + eventTotal.current + expsTotal.current + recharge
-		// console.log({ ...values, expenseDetails: selectedExpensesClient, eventualityDetails: selectedEventualities })
-		// return
-		if (verifyForm()) {
-			if (editMode) {
-				// @ts-expect-error
-				values.ContractId = values.ContractId!.id
-				try {
-					const res = await http.put(`/payment-clients/${currentPayment.current?.id}`, {
-						...values,
-						expenseDetails: selectedExpensesClient,
-						eventualityDetails: selectedEventualities,
-					})
-					if (res.data.ok) {
-						// data?.data &&
-						// 	(data.data = data?.data.map((z) => {
-						// 		if (z.id === currentPayment.current?.id) {
-						// 			// z.name = values.name
-						// 		}
-						// 		return z
-						// 	}))
-						clientPaymentQuery.refetch()
-						reset()
-						// setShowCreateModal(false)
-						closeCreateModal()
+		values.total = rentingAmount + eventTotal.current + expsTotal.current + debtsTotal.current + recharge
+		const { error, ok } = validateForm({ ...values }, ['paidTotal', 'extraExpenses'])
+		setErrors(error)
+		if (!ok) return false
 
-						showAndHideModal('Editado', res.data.message)
-					} else {
-						showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
-					}
-				} catch (error: any) {
-					if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
-				}
+		// console.log({ ...values, expenseDetails: [...selectedExpensesClient, ...selectedDebts], eventualityDetails: selectedEventualities })
+		// @ts-expect-error
+		values.ContractId = values.ContractId!.id
+
+		try {
+			setSavingOrUpdating(true)
+			const res = await http.post('/payment-clients', {
+				...values,
+				expenseDetails: [...selectedExpensesClient, ...selectedDebts],
+				eventualityDetails: selectedEventualities,
+			})
+			if (res.data.ok) {
+				clientPaymentQuery.refetch()
+				reset()
+				closeCreateModal()
+				showAndHideModal('Guardado', res.data.message)
 			} else {
-				console.log({ ...values, expenseDetails: selectedExpensesClient, eventualityDetails: selectedEventualities })
-				// @ts-expect-error
-				values.ContractId = values.ContractId!.id
-				try {
-					const res = await http.post('/payment-clients', {
-						...values,
-						expenseDetails: selectedExpensesClient,
-						eventualityDetails: selectedEventualities,
-					})
-					if (res.data.ok) {
-						clientPaymentQuery.refetch()
-						reset()
-						// setShowCreateModal(false)
-						closeCreateModal()
-						showAndHideModal('Guardado', res.data.message)
-					} else {
-						showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
-					}
-				} catch (error: any) {
-					if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
-				}
+				showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
 			}
+		} catch (error: any) {
+			if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+		} finally {
+			setSavingOrUpdating(false)
 		}
+
 	}
 
 	const closeCreateModal = () => {
+		setUpToDate(false)
+		setTwoYearsWithoutPrice(false)
+		setThreeYearsWithoutPrice(false)
 		reset()
 		setSelectedEventualities([])
 		setSelectedExpensesClient([])
 		setEventualityDetails([])
 		setExpenseDetails([])
 		setDebts([])
+		setSelectedDebts([])
 		eventTotal.current = 0
 		expsTotal.current = 0
+		debtsTotal.current = 0
 		setShowCreateModal(false)
 		setErrors({})
+
 	}
 
-	const actionBodyTemplate = (rowData: any) => {
+	const onGlobalFilterChange = (val: any) => {
+		const value = val
+		let _filters = { ...filters }
+		_filters['global'].value = value
+		setFilters(_filters)
+		setGlobalFilterValue(value)
+	}
+
+	const actionBodyTemplate = (rowData: IClienyPayment) => {
 		return (
 			<div className='flex gap-x-3 items-center justify-center'>
 				<BsPrinter title='Imprimir comprobante' size={22} onClick={() => printPdf(rowData)} />
-				{/* <EditIcon action={() => edit(rowData)} /> */}
 				<TfiBackLeft title='Revertir cobro' size={23} onClick={() => ConfirmDestroy(rowData)} />
 			</div>
 		)
@@ -263,15 +225,22 @@ const ClientPayments = () => {
 
 	const onExpensesClienteChange = (e: CheckboxChangeEvent) => {
 		let _selectedExps = [...selectedExpensesClient]
-
 		if (e.checked) _selectedExps.push(e.value)
 		else _selectedExps = _selectedExps.filter((evt) => evt.id !== e.value.id)
 		expsTotal.current = _selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0)
 		setSelectedExpensesClient(_selectedExps)
 	}
+
+	const onDebtsChanges = (e: CheckboxChangeEvent) => {
+		let _selectedExps = [...selectedDebts]
+		if (e.checked) _selectedExps.push(e.value)
+		else _selectedExps = _selectedExps.filter((evt) => evt.id !== e.value.id)
+		debtsTotal.current = _selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0)
+		setSelectedDebts(_selectedExps)
+	}
+
 	const onEventualityChange = (e: CheckboxChangeEvent) => {
 		let _selectedEvents = [...selectedEventualities]
-
 		if (e.checked) _selectedEvents.push(e.value)
 		else _selectedEvents = _selectedEvents.filter((evt) => evt.id !== e.value.id)
 		eventTotal.current = _selectedEvents.reduce((acc: any, cur: any) => acc + cur.clientAmount, 0)
@@ -279,16 +248,61 @@ const ClientPayments = () => {
 	}
 
 	const handleChangeContract = async (e: DropdownChangeEvent) => {
-		// alert('ffdg')
-		setLoadingExpenses(true)
-		reset()
+
+		setUpToDate(false)
+		setTwoYearsWithoutPrice(false)
+		setThreeYearsWithoutPrice(false)
 		setSelectedEventualities([])
 		setSelectedExpensesClient([])
+		setEventualityDetails([])
+		setExpenseDetails([])
+		setDebts([])
+		setSelectedDebts([])
 		eventTotal.current = 0
 		expsTotal.current = 0
+		debtsTotal.current = 0
+
+		if (e.value == undefined) {
+			updateAll({ ...values, ContractId: null, })
+			return
+		}
+
+		values.ContractId = e.value
+		let daysFrom = diffenceBetweenDates(e.value.startDate, new Date().toISOString().slice(0, 10))
+		if (daysFrom > 365 && daysFrom < 730) {
+			if (e.value.PriceHistorials.length < 2) {
+				setTwoYearsWithoutPrice(true)
+				return
+			}
+		} else if (daysFrom > 730) {
+			if (e.value.PriceHistorials.length < 3) {
+				setThreeYearsWithoutPrice(true)
+				return
+			}
+		}
+
+		// validate if the contract has a payment for the current month
+		try {
+			setLoadingExpenses(true)
+			const res = await http.get(`/payment-clients?Contractid=${e.value.id}&month=${month}&year=${year}&include=true`)
+			if (res.data.results > 0) {
+				setUpToDate(true)
+				updateAll({
+					...values,
+					ContractId: e.value,
+					rentingAmount: 0,
+					total: 0,
+					recharge: 0,
+					qteDays: 0,
+				})
+				return
+			}
+		} catch (error) {
+			showAndHideModal('Error', 'Error al intentar validar si el contrato ya tiene cobro para el mes y ano actual', 'red')
+		} finally { setLoadingExpenses(false) }
 
 		try {
-
+			setLoadingExpenses(true)
 			const docsExpss = http.get<IClientExpensesResponseSimple>(`/client-expenses?amount=0:gt&ContractId=${e.value.id}&include=true`)
 			const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?clientPaid=0&ContractId=${e.value.id}&include=true`)
 			const dps = http.get<IConfigResponse>(`/config?key=dailypunitive`)
@@ -296,13 +310,12 @@ const ClientPayments = () => {
 			const [docsExps, docsEvents, dp, docsDebts] = await Promise.all([docsExpss, docsEventss, dps, docsDebtss])
 
 			setEventualityDetails(docsEvents.data.data)
-			setExpenseDetails(docsExps.data.data)
-			// setDailyPunitive(Number(dp.data.data[0].value))
+			setExpenseDetails(docsExps.data.data.map((d) => ({ ...d, description: d.description + ' ' + month + '/' + year })))
 			setDebts(docsDebts.data.data)
+
 			docsDebts.data.data.map((d) => {
 				if (d.rent) {
-					let qtyDay = diffenceBetweenDates(d.year + '-' + padTo2Digits(d.month) + '-10', new Date().toString())
-					console.log('alq : ', e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount, qtyDay, d.year + '-' + padTo2Digits(d.month) + '-10', new Date().toISOString())
+					let qtyDay = diffenceBetweenDates(d.year + '-' + padTo2Digits(d.month) + '-05', new Date().toString())
 					setDebts((debts) => [...debts,
 					{
 						...d,
@@ -310,17 +323,15 @@ const ClientPayments = () => {
 						amount: Number((qtyDay * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (Number(dp.data.data[0].value) / 100)).toFixed(2)),
 						createdAt: (new Date().getTime().toString()),
 						rent: false,
-						id: new Date().getTime(),
+						id: Number(Math.floor(Math.random() * 10000).toFixed(0) + d.id.toFixed(0) + new Date().getTime().toFixed(0)),
 						recharge: true
 					}
 					])
-
-					console.log(d)
 				}
 			})
 			let day = new Date().getDate()
-			if (day > 10) {
-				let qte = day - 10
+			if (day > 5) {
+				let qte = day - 5
 				console.log(qte * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (Number(dp.data.data[0].value) / 100))
 				updateAll({
 					...values,
@@ -341,50 +352,47 @@ const ClientPayments = () => {
 			}
 
 		} catch (error) { }
-		setLoadingExpenses(false)
+		finally { setLoadingExpenses(false) }
+
 	}
-	const paginatorLeft = (
-		<Button
-			onClick={() => clientPaymentQuery.refetch()}
-			type='button'
-			icon='pi pi-refresh'
-			text
-		/>
-	)
-	// @ts-ignore
+
+	const openCreateOrEditModel = () => {
+		setEditMode(false)
+		currentPayment.current = null
+		setShowCreateModal(true)
+	}
+
 	if (clientPaymentQuery.isLoading) return <Loading />
 	if (clientPaymentQuery.isError) return <RequestError error={clientPaymentQuery.error} />
-	// console.log(values)
+
 	return (
 		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
-			<div className='flex gap-x-4 mb-6 mx-4  items-center justify-between sm:justify-start'>
-				<h3 className='font-bold  text-slate-700 dark:text-slate-500 text-lg sm:text-4xl'>Cobro a Inquilino</h3>
-				<button
-					onClick={() => {
-						setEditMode(false)
-						currentPayment.current = null
-						setShowCreateModal(true)
-					}}
-					className='btn !w-10 !h-10 !p-0 gradient !rounded-full'
-				>
-					<MdAdd size={50} />
-				</button>
-			</div>
+			<HeaderData action={openCreateOrEditModel} text='Cobro a Inquilino' />
+
 			{clientPaymentQuery?.data?.data.length > 0 ? (
 				<>
-					<Box className='!p-0 !overflow-hidden !border-none !mx-4    mb-4 '>
+					<CustomInput
+						onChange={(val) => onGlobalFilterChange(val)}
+						className=' w-auto mx-2 sm:mx-0 sm:w-96'
+						initialValue={globalFilterValue}
+						placeholder='Buscar cobro'
+						type='search'
+					/>
+					<Box className='!p-0 !overflow-hidden !border-none sm:mx-0    mb-4 '>
 						<DataTable
 							size='small'
 							emptyMessage='Aún no hay cobro'
 							className='!overflow-hidden   !border-none'
 							value={clientPaymentQuery?.data?.data}
 							dataKey='id'
+							filters={filters}
+							globalFilterFields={['month', 'year', 'Contract.Property.street']}
 							responsiveLayout='scroll'
 							paginator
 							rows={10}
 							paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
 							currentPageReportTemplate='{first} al {last} de {totalRecords}'
-							paginatorLeft={paginatorLeft}
+							paginatorLeft={<RefreshData action={clientPaymentQuery.refetch} />}
 						>
 							<Column
 								field='Contract.Property.street'
@@ -401,11 +409,7 @@ const ClientPayments = () => {
 							/>
 							<Column
 								field='month'
-								body={(data) => (
-									<span>
-										{data.month}/{data.year}
-									</span>
-								)}
+								body={(data) => (<span>{data.month}/{data.year}</span>)}
 								header='Periodo'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
@@ -446,13 +450,14 @@ const ClientPayments = () => {
 					</Box>
 				</>
 			) : (
-				<div className='text-slate-400 mx-3 text-center'>Aún no hay Cobro.</div>
+				<EmptyData text='Aún no hay Cobro' />
 			)}
 
 			{clientPaymentQuery.isFetching && (<Loading h={40} w={40} />)}
 
 			<DeleteModal
 				show={show}
+				savingOrUpdating={savingOrUpdating}
 				setShow={setShow}
 				destroy={() => destroy(currentPayment.current?.id!)}
 				text={`El cobro de ${currentPayment.current?.month} ${currentPayment.current?.Contract.Client.fullName} - ${currentPayment.current?.year}`}
@@ -471,7 +476,7 @@ const ClientPayments = () => {
 					<div id='pdf-download' className="flex gap-x-2 ">
 						{
 							[1, 2].map((pdf, index) => (
-								<div key={index} className="flex justify-between flex-col border border-gray-200 dark:border-slate-600 p-1  h-[95%] w-[500px]">
+								<div key={index} className="flex justify-between flex-col border border-gray-200 dark:border-slate-600 p-1 text-xs  h-[95%] w-[500px]">
 									<div className="header-pdf flex justify-between border border-gray-200 dark:border-slate-600  p-2">
 										<div className="left w-[50%] flex items-center flex-col gap-y-2">
 											<div className='logo-app flex items-center'>
@@ -596,6 +601,14 @@ const ClientPayments = () => {
 											<span className=''>${currentPayment.current?.total}</span>
 
 										</div>
+										<div className="sign-aclaration my-1">
+											<div className="sign my-2">
+												<span>Firma : </span>
+											</div>
+											<div className="">
+												<span>Aclaración : </span>
+											</div>
+										</div>
 									</div>
 								</div>
 							))
@@ -616,70 +629,83 @@ const ClientPayments = () => {
 				titleText={'Cobros'}
 				overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
-				<div className='flex justify-between f-full gap-x-6 mt-3'>
+				<CloseOnClick action={closeCreateModal} />
+				<div className='flex justify-between w-full flex-col md:flex-row gap-x-6 mt-3'>
 					<form
-						action=''
 						onSubmit={handleSave}
 						// bg-gray-100 p-2 rounded-md shadow-xl
-						className=' w-[600px] '
+						className='w-full  sm:w-[600px] '
 					>
-						<CloseOnClick action={closeCreateModal} />
 						<FieldsetGroup>
-							<fieldset className=''>
-								<label htmlFor='ContractId'>Contrato</label>
+
+							<fieldset>
+								<label htmlFor='ContractId'>Contrato </label>
 								<Dropdown
 									value={ContractId}
 									onChange={handleChangeContract}
 									options={data?.data}
-									optionLabel='id'
-									valueTemplate={(data, props) => {
-										if (!data) return props.placeholder
-										return (
-											<span>
-												{data.Client.fullName} - {data.Client.cuit} | {data.Property.street} {data.Property.number}{' '}
-												{data.Property.floor}-{data.Property.dept}
-											</span>
-										)
-									}}
-									itemTemplate={(data) => {
-										return (
-											<span>
-												{data.Client.fullName} - {data.Client.cuit} | {data.Property.street} {data.Property.number}{' '}
-												{data.Property.floor}-{data.Property.dept}
-											</span>
-										)
-									}}
-									filterPlaceholder='Busca contrato'
-									filterBy='Property.street,Property.number,Client.fullName'
+									optionLabel='street'
+									showClear
+									valueTemplate={(data, props) => !data ? props.placeholder : (<span> {data.Client.fullName} | {data.Property.street} {data.Property.number} {data.Property.floor}-{data.Property.dept} </span>)}
+									itemTemplate={(data) => (<span> {data.Client.fullName} | {data.Property.street} {data.Property.number} {data.Property.floor}-{data.Property.dept} </span>)}
+									filterBy='Client.fullName,Property.street,Property.number,Property.floor,Property.dept'
 									// optionValue='id'
 									placeholder='elije contrato'
 									filter
-									className='h-[42px] items-center !border-gray-200 shadow '
+									filterPlaceholder='Busca contrato'
+									className='h-[42px] !w-full  items-center !border-gray-200 shadow '
 								/>
 								{errors?.ContractId && <FormError text='El contrato es obligatorio.' />}
 							</fieldset>
+
 						</FieldsetGroup>
 
+						{
+							(upToDate && ContractId) && (
+								<div className="text-green-500 dark:text-green-400 text-center my-2">
+									{/* @ts-ignore */}
+									El contrato  {ContractId.Property.street!} {ContractId?.Property?.number} {ContractId?.Property?.floor}-{ContractId?.Property?.dept} está al dia
+								</div>
+							)
+						}
+
+						{
+							twoYearsWithoutPrice && (
+								<Box className="dark:!text-red-500 dark:!bg-red-100 text-center !p-2 !bg-red-200 mx-0 border-0 my-2 flex items-center gap-4 ">
+									<FiAlertTriangle size={25} />
+									El contrato no tiene precio cargado para el 2 año !
+								</Box>
+							)
+						}
+						{
+							threeYearsWithoutPrice && (
+								<Box className="dark:!text-red-500 dark:!bg-red-100 text-center !p-2 !bg-red-200 mx-0 border-0 my-2 flex items-center gap-4 ">
+									<FiAlertTriangle size={25} />
+									El contrato   no tiene precio cargado para el 3 año !
+								</Box>
+							)
+						}
+
 						{!loadingExpenses ? (
-							<>
+							<div className='mt-4'>
 								{expenseDetails.length > 0 && (
 									<div className=''>
 										<h1 className='title-form mb-2'>Gastos inquilino</h1>
 										<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
 											{expenseDetails.map((evt, index) => (
 												<div
-													key={evt.id.toString() + evt.createdAt}
-													className='align-items-center flex items-center flex-auto   border border-gray-300 dark:border-slate-500 p-2'
+													key={evt.id.toString() + evt.createdAt + index + evt.amount + evt.description}
+													className='align-items-center flex items-center flex-wrap   border border-gray-300 dark:border-slate-500 p-2'
 												>
 													<Checkbox
-														inputId={evt.id.toString() + evt.createdAt}
+														inputId={evt.id.toString() + evt.createdAt + index + evt.amount + evt.description}
 														name='expenseClients'
 														value={evt}
 														onChange={onExpensesClienteChange}
 														checked={selectedExpensesClient.some((item: any) => item.id === evt.id)}
 													/>
 													<label
-														htmlFor={evt.id.toString() + evt.createdAt}
+														htmlFor={evt.id.toString() + evt.createdAt + index + evt.amount + evt.description}
 														className='ml-2'
 													>
 														${evt.amount} - {evt.description}
@@ -696,18 +722,18 @@ const ClientPayments = () => {
 										<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
 											{eventualityDetails.map((evt, index) => (
 												<div
-													key={evt.updatedAt + evt.description}
+													key={evt.updatedAt + evt.description + index + evt.id + evt.clientAmount}
 													className='align-items-center flex items-center flex-auto   border border-gray-300 dark:border-slate-500 p-2'
 												>
 													<Checkbox
-														inputId={evt.updatedAt + evt.description}
+														inputId={evt.updatedAt + evt.description + index + evt.id + evt.clientAmount}
 														value={evt}
 														name='eventuality'
 														onChange={onEventualityChange}
 														checked={selectedEventualities.some((item: any) => item.id === evt.id)}
 													/>
 													<label
-														htmlFor={evt.updatedAt + evt.description}
+														htmlFor={evt.updatedAt + evt.description + index + evt.id + evt.clientAmount}
 														className='ml-2'
 													>
 														${evt.clientAmount} - {evt.description}
@@ -724,48 +750,46 @@ const ClientPayments = () => {
 										<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
 											{debts.map((evt, index) => (
 												<div
-													key={evt.updatedAt + evt.id}
+													key={evt.updatedAt + evt.id + evt.description + evt.amount + index}
 													className={`align-items-center flex items-center  flex-wrap border border-gray-300 dark:border-slate-500 p-1 ${diffenceBetweenDates(evt.year + '-' + padTo2Digits(evt.month) + '-10', new Date().toString()) > 70 ? ' !border-red-500' : ''}`}
 												>
 													<Checkbox
-														inputId={evt.updatedAt + evt.id}
+														inputId={evt.updatedAt + evt.id + evt.description + evt.amount + index}
 														value={evt}
-														name='expenseClients'
-														onChange={onExpensesClienteChange}
-														checked={selectedExpensesClient.some((item: any) => item.id === evt.id)}
+														name='debtsClients'
+														onChange={onDebtsChanges}
+														checked={selectedDebts.some((item: any) => item.id === evt.id)}
 													/>
 													<label
-														htmlFor={evt.updatedAt + evt.id}
+														htmlFor={evt.updatedAt + evt.id + evt.description + evt.amount + index}
 														className='ml-2 '
 													>
 														<span className=''>
-															{evt.description} $ {evt.amount}
+															{evt.description} |  $ {evt.amount}
 														</span>
-														{/* <span className='flex  gap-x-1'>
-														{evt.expenseDetails.map((ev) => (
-															<span className='border border-gray-400 px-1  w-fit'>
-																{ev.description} - ${ev.amount}
-															</span>
-														))}
-													</span> */}
-														{/* <span className='border bg-blue-800 text-white px-1  w-fit'>
-														Total a pagar : ${evt.total}
-													</span> */}
 													</label>
 												</div>
 											))}
 										</div>
 									</div>
 								)}
-							</>
+							</div>
 						) : (
 							<Loading />
 						)}
 						<FieldsetGroup>
-							<FieldsetGroup className='w-full sm:w-[50%]'>
-								<fieldset>
-									<label htmlFor='month'>Mes de pago</label>
-									<Dropdown
+							<FieldsetGroup className='w-full sm:w-[50%] '>
+								<CustomInput
+									initialValue={month || ''}
+									disabled={true}
+									placeholder=''
+									onChange={(v) => { }}
+									label='Mes'
+									required
+									hasError={errors?.month}
+									errorText='El mes de pago es obligatorio.'
+								/>
+								{/* <Dropdown
 										value={month || ''}
 										placeholder='Elija un mes'
 										filterPlaceholder='Busca mes'
@@ -773,32 +797,31 @@ const ClientPayments = () => {
 										onChange={(event: DropdownChangeEvent) => handleInputChange(event.value, 'month')}
 										filter
 										className='h-[42px] items-center !border-gray-200 shadow'
-									/>
-									{errors?.month && <FormError text='El mes de pago es obligatorio.' />}
-								</fieldset>
-								<fieldset>
-									<label htmlFor='year'>Año de pago</label>
-									<Dropdown
-										placeholder='Elija un año'
-										value={year || ''}
-										options={selectedYears}
-										onChange={(event: DropdownChangeEvent) => handleInputChange(event.value, 'year')}
-										className='h-[42px] items-center !border-gray-200 shadow'
-									/>
-									{errors?.year && <FormError text='El año de pago es obligatorio.' />}
-								</fieldset>
+									/> */}
+
+								<CustomInput
+									initialValue={year || ''}
+									disabled={true}
+									placeholder=''
+									onChange={(v) => { }}
+									label='Año'
+									required
+									hasError={errors?.year}
+									errorText='El año de pago es obligatorio.'
+								/>
+
 							</FieldsetGroup>
-							<FieldsetGroup className='w-full sm:w-[50%]'>
+							<FieldsetGroup className='w-full sm:w-[50%] '>
 								<fieldset className=''>
-									<label htmlFor='PaymentTypeId'>Formato de pago </label>
+									<label htmlFor='PaymentTypeId'>Forma de pago </label>
 									<Dropdown
 										value={PaymentTypeId}
 										onChange={(e) => handleInputChange(e.value, 'PaymentTypeId')}
 										options={paymentTypeQuery.data?.data}
 										optionLabel='name'
-										filterPlaceholder='Busca un formato de pago'
+										filterPlaceholder='Busca  forma de pago'
 										optionValue='id'
-										placeholder='elije una un formato de pago'
+										placeholder='elije forma de pago'
 										filter
 										className='h-[42px] items-center !border-gray-200 shadow'
 									/>
@@ -819,34 +842,23 @@ const ClientPayments = () => {
 									/>
 								</fieldset>
 								<fieldset className=''>
-									<label htmlFor=''>Total impuestos</label>
+									<label htmlFor=''>Total Imp.</label>
 									<input
 										placeholder='1234.90'
 										type='number'
 										disabled={true}
-										value={expsTotal.current}
+										value={expsTotal.current + debtsTotal.current}
 										onChange={(value) => { }}
 									/>
 								</fieldset>
 							</FieldsetGroup>
 							<FieldsetGroup className='w-full sm:w-[50%]'>
-								{/* <fieldset className=''>
-							<label htmlFor='isRecharged'>Cobrar recargo (S/N)</label>
-							<input
-								type='checkbox'
-								name='isRecharged'
-								style={{ boxShadow: 'none' }}
-								className='w-12 !border-none !ml-0 !pl-0'
-								id='isRecharged'
-							/>
-						</fieldset> */}
 								<fieldset className=''>
-									<label htmlFor='total'>Días atrasados</label>
-
+									<label title='Cantidad de dias atrasados' htmlFor='total'>C.D.A</label>
 									<input
 										placeholder='1234.90'
 										name='qteDays'
-										className={`dark:!bg-gray-900 w-24 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
+										className={`dark:!bg-gray-900 w-full sm:w-24 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
 										min={0}
 										type='number'
 										value={qteDays ?? ''}
@@ -861,7 +873,7 @@ const ClientPayments = () => {
 									/>
 								</fieldset>
 								<fieldset className=''>
-									<label htmlFor='recharge'>Totla recargo</label>
+									<label htmlFor='recharge'>Tot. recargo</label>
 									<input
 										placeholder='1234.90'
 										disabled={true}
@@ -873,20 +885,19 @@ const ClientPayments = () => {
 								</fieldset>
 							</FieldsetGroup>
 						</FieldsetGroup>
-						<FieldsetGroup className='w-full sm:w-[50%]'>
+						<FieldsetGroup className=''>
 							<fieldset className=''>
 								<label htmlFor='rentingAmount'>Valor alquiler</label>
 								<input
 									placeholder='1234.90'
 									type='number'
-									// disabled={true}
-									className={`dark:!bg-gray-900 w-24 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
+									disabled={true}
+									className={`dark:!bg-gray-900  dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
 									value={rentingAmount ?? ''}
 									onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
 										handleInputChange(Number(e.target.value), 'rentingAmount')
 									}}
 								/>
-								{/* {errors?.rentingAmount && <FormError text='EL formato de pago es obligatorio.' />} */}
 							</fieldset>
 							<fieldset className=''>
 								<label htmlFor='total'>Total a cobrar</label>
@@ -895,47 +906,43 @@ const ClientPayments = () => {
 									disabled={true}
 									name='total'
 									type='number'
-									value={rentingAmount + eventTotal.current + expsTotal.current + recharge}
+									value={rentingAmount + eventTotal.current + expsTotal.current + debtsTotal.current + recharge}
 									onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value, 'total')}
 								/>
 							</fieldset>
+							<CustomInput
+								initialValue={paidTotal || ''}
+								type='number'
+								placeholder={(rentingAmount + eventTotal.current + expsTotal.current + debtsTotal.current + recharge).toFixed()}
+								onChange={(v) => { handleInputChange(Number(v), 'paidTotal') }}
+								label='Total cobrado'
+							/>
 						</FieldsetGroup>
-						<FieldsetGroup>
-							<FieldsetGroup className='w-full sm:w-[50%]'></FieldsetGroup>
-						</FieldsetGroup>
-
-						<section className='action flex items-center gap-x-3 mt-8'>
-							<button
-								className='btn sec !py-1'
-								onClick={closeCreateModal}
-								type='button'
-							>
-								Cerrar
-							</button>
-							<button
-								className='btn gradient  !py-1'
-								type='submit'
-							>
-								Guardar
-							</button>
-						</section>
+						<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
 					</form>
 
 					{
 						ContractId && (
-							<Box className="shadow-md rounded-lg border border-gray-200 dark:!from-gray-700 dark:!to-gray-800 dark:!bg-gradient-to-tr p-2">
+							<Box className="shadow-md rounded-lg border mx-0  border-gray-200 dark:!from-gray-700 dark:!to-gray-800 dark:!bg-gradient-to-tr p-2">
 								<h3 className='font-bold mb-2 text-lg '>Lista de conceptos a cobrar</h3>
-								<div className="flex justify-between flex-col  h-[95%]">
+								<div className="flex justify-between flex-col min-h-[300px] h-[95%]">
 
 									<div className='payment-pdf  pt-4 flex-1 gap-y-1 flex flex-col px-1'>
-
+										{
+											(upToDate && ContractId) && (
+												<div className="text-green-500 dark:text-green-400 text-center my-2">
+													{/* @ts-ignore */}
+													El contrato  {ContractId.Property.street!} {ContractId?.Property?.number} {ContractId?.Property?.floor}-{ContractId?.Property?.dept} está al dia
+												</div>
+											)
+										}
 										{
 											values.rentingAmount > 0 && (
 												<div
 													className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
 												>
 													<span className=''>ALQUILER
-														{/*  @ts-ignore*/}
+														{/* @ts-ignore */}
 														{ContractId?.Property?.street} {ContractId?.Property?.number}{' '}{ContractId?.Property?.floor}-{ContractId?.Property?.dept}  {month}   {year.toString()}</span>
 													<span>${rentingAmount}</span>
 
@@ -958,7 +965,7 @@ const ClientPayments = () => {
 												key={index}
 												className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
 											>
-												<span className=''>{evt.description + ' ' + month + '  ' + year.toString()}</span>
+												<span className=''>{evt.description}</span>
 												<span>${evt.amount}</span>
 
 											</div>
@@ -980,7 +987,6 @@ const ClientPayments = () => {
 											>
 												<span className=''>{evt.description}</span>
 												<span>${evt.amount}</span>
-
 											</div>
 										))}
 
@@ -988,15 +994,14 @@ const ClientPayments = () => {
 									</div>
 									<div className="mt-auto">
 										<div
-											className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+											className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between  mt-3  border-gray-300'
 										>
 											<span className=''>Total a cobrar </span>
-											<span>${rentingAmount + eventTotal.current + expsTotal.current + recharge}</span>
+											<span>${rentingAmount + eventTotal.current + expsTotal.current + debtsTotal.current + recharge}</span>
 
 										</div>
 									</div>
 								</div>
-
 							</Box>
 						)
 					}
@@ -1009,4 +1014,3 @@ const ClientPayments = () => {
 
 export default ClientPayments
 
-// ? TODO:: print pdf - https://www.npmjs.com/package/react-to-print - revert payment functionality

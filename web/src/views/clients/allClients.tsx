@@ -44,10 +44,10 @@ const Clients = () => {
 		obs: '',
 	})
 	const { fullName, email, phone, cuit, province, city, address, codePostal, obs, fixedPhone } = values
-	const [globalFilterValue, setGlobalFilterValue] = useState('')
 	const [errors, setErrors] = useState<any>()
 	const [editMode, setEditMode] = useState(false)
 	const [cities, setCities] = useState([])
+	const [globalFilterValue, setGlobalFilterValue] = useState('')
 	const [filters, setFilters] = useState({
 		global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 		fullName: { value: null, matchMode: FilterMatchMode.CONTAINS },
