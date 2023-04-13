@@ -10,7 +10,8 @@ dotenv.config();
 const { sequelize } = require("../models");
 const bodyParser = require("body-parser");
 const schedule = require("node-schedule");
-const ctrl = require("./controller/debtClient.controller");
+const ctrlDebtsClient = require("./controller/debtClient.controller");
+const ctrlDebtsOwner = require("./controller/debtOwner.controller");
 
 const app = express();
 
@@ -73,11 +74,14 @@ app.use(globalError);
 // 0 0 1 * * --  se ejecutara todo el primer dia de cada mes a las 12:00 am
 
 schedule.scheduleJob("0 0 1 * *", function () {
-  return ctrl.jobDebtsClients();
+  ctrlDebtsClient.jobDebtsClients();
+  ctrlDebtsOwner.jobDebtsOwner();
 });
 
-// schedule.scheduleJob("* * * * *", function () {
-//   return ctrl.jobDebtsClients();
+// schedule.scheduleJob("* * * * *", async function () {
+//   // return ctrl.jobDebtsClients();
+//   await ctrlDebtsClient.jobDebtsClients();
+//   await ctrlDebtsOwner.jobDebtsOwner();
 // });
 
 //Starting

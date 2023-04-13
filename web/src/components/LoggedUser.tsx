@@ -20,23 +20,13 @@ const LoggedUser = ({ authState, signOut, handleToggleTheme, darkTheme }: Props)
 
 	return (
 		<>
-			<div className='relative flex items-center justify-center text-left'>
+			<div className='flex items-center justify-center text-left'>
 				<button
 					className='btn-toggle-theme btn gradient !p-0 !rounded-full !w-[35px] !h-[35px] !mr-4'
 					onClick={handleToggleTheme}
 					title='Tema negro/Blanco'
 				>
-					{darkTheme ? (
-						<BsFillMoonFill
-							color='white'
-							size={25}
-						/>
-					) : (
-						<BsSun
-							size={25}
-							color='white'
-						/>
-					)}
+					{darkTheme ? (<BsFillMoonFill color='white' size={25} />) : (<BsSun size={25} color='white' />)}
 				</button>
 				<div
 					onClick={() => {
@@ -66,25 +56,25 @@ const LoggedUser = ({ authState, signOut, handleToggleTheme, darkTheme }: Props)
 
 				<div
 					style={{ zIndex: 900000 }}
-					className='dropdown-user-logged-box hidden ring-black ring-opacity-5 transition-fade rounded-md shadow p-1 origin-top-right absolute right-0 mt-2 w-56 top-[60px]   bg-white dark:bg-slate-800  ring-1  focus:outline-none'
+					className='dropdown-user-logged-box overflow-auto  hidden  transition-fade rounded-md shadow p-1 origin-top-right absolute right-0 mt-2 sm:w-56  !w-full top-[60px]   bg-white dark:bg-slate-800'
 					role='menu'
 					aria-orientation='vertical'
 					aria-labelledby='menu-button'
 					tabIndex={-1}
 				>
 					<div
-						className='py-1 flex flex-col  gap-1'
+						className='py-1 flex flex-col '
 						role='none'
 					>
 
-						<ul className='flex lg:hidden items-start flex-col gap-x-2 text-white'>
+						<ul className='flex lg:hidden items-start flex-col gap-y-2 !overflow-auto text-white'>
 							{menuItems.map((item, index) =>
 								item.to !== null ? (
 									<NavLink
 										to={item.to}
 										key={index}
 										className={({ isActive, isPending }) =>
-											`relative items-center  justify-center flex  h-[70px] text-brand2 dark:text-slate-400  dark:hover:text-brand hover:text-brand group p-1 ${isActive ? 'underline !text-brand rounded-md   ' : isPending ? 'pending' : ''
+											`relative items-center  justify-center flex text-brand2 dark:text-slate-400  dark:hover:text-brand hover:text-brand group p-1 ${isActive ? 'underline !text-brand rounded-md   ' : isPending ? 'pending' : ''
 											}`
 										}
 									>
@@ -93,12 +83,18 @@ const LoggedUser = ({ authState, signOut, handleToggleTheme, darkTheme }: Props)
 								) : (
 									<li
 										key={index}
-										className={`relative dark:text-slate-400  items-center  justify-center flex  h-[70px]  dark:hover:text-brand  text-brand2 hover:text-brand group p-1`}
+										className={`relative dark:text-slate-400  group  flex flex-col   dark:hover:text-brand  text-brand2 hover:text-brand group p-1`}
 									>
-										{item.title} <DownAngle />
+										<span className='flex items-center'>
+											<span>
+												{item.title}
+											</span>
+											<DownAngle />
+										</span>
 										<ul
 											style={{ zIndex: 900000 }}
-											className=' top-[60px] !left-0 p-3 w-fit hidden transition-colors duration-1000 group-hover:flex bg-white border dark:bg-slate-800 dark:border-slate-700  border-gray-100  flex-col gap-y-2 rounded-b-md shadow '
+											className='ml-2 group-hover:flex flex-col gap-y-2 mt-2 hidden'
+										// className=' top-[60px] !left-0 p-3 w-fit hidden transition-colors duration-1000 group-hover:flex bg-white border dark:bg-slate-800 dark:border-slate-700  border-gray-100  flex-col gap-y-2 rounded-b-md shadow '
 										>
 											{item.subLink.map((sub, index) => (
 												<NavLink

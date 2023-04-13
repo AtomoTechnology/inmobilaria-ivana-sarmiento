@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import Box from '../../components/Box'
@@ -90,6 +90,13 @@ const Properties = () => {
 	const zoneQuery = useZones()
 	const propietyType = usePropertyTypes()
 	const ownerQuery = useOwners()
+	useEffect(() => {
+
+		updateAll({ ...values, isFor: isForParam !== undefined ? isForParam : '' })
+		return () => {
+
+		}
+	}, [isForParam])
 
 	const edit = (data: Iproperty) => {
 		updateAll({ ...data })
@@ -97,7 +104,6 @@ const Properties = () => {
 		setShowCreateModal(true)
 		setEditMode(true)
 		currentProperty.current = data
-		console.log(values)
 	}
 
 	const ConfirmDestroy = (data: Iproperty) => {
@@ -219,15 +225,13 @@ Descripción del inmueble \n${data.description}
 		currentProperty.current = null
 		setShowCreateModal(true)
 	}
-	console.log('Propietarios :::: ', ownerQuery.data?.data)
-	console.log('CASAS :::: ', data?.data)
 	if (isLoading) return <Loading />
 	if (isError) return <RequestError error={error} />
 
 	return (
 		<BoxContainerPage >
 			<HeaderData action={openCreateOrEditModel} text={`Propiedades ${isForParam ? ` en   ${isForParam}` : ''}`} />
-			{data.data.length > 0 ? (
+			{data?.data?.length > 0 ? (
 				<>
 					<CustomInput
 						onChange={(val) => onGlobalFilterChange(val)}

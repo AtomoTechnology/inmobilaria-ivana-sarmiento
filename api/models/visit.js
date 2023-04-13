@@ -30,7 +30,6 @@ module.exports = (sequelize, DataTypes) => {
       date: {
         allowNull: false,
         type: DataTypes.DATE,
-
         validate: {
           notNull: {
             msg: "Ingresa la fecha de la visita",
@@ -79,7 +78,7 @@ module.exports = (sequelize, DataTypes) => {
       ],
       paranoid: true,
       sequelize,
-       tableName: 'visits',
+      tableName: 'visits',
       modelName: "Visit",
     }
   );

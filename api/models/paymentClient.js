@@ -59,18 +59,6 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
-      rentingAmount: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-        validate: {
-          notNull: {
-            msg: "El monto del alquiler  es obligatorio",
-          },
-          notEmpty: {
-            msg: "El  monto del alquiler es obligatorio",
-          },
-        },
-      },
       month: {
         type: DataTypes.STRING(15),
         allowNull: false,
@@ -83,6 +71,7 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
+
       total: {
         type: DataTypes.FLOAT,
         allowNull: false,
@@ -95,6 +84,7 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
+
       expenseDetails: {
         type: DataTypes.TEXT("long"),
         get: function () {
@@ -108,6 +98,7 @@ module.exports = (sequelize, DataTypes) => {
           );
         },
       },
+
       eventualityDetails: {
         type: DataTypes.TEXT("long"),
         get: function () {
@@ -121,6 +112,7 @@ module.exports = (sequelize, DataTypes) => {
           );
         },
       },
+
     },
     {
       indexes: [
@@ -132,7 +124,7 @@ module.exports = (sequelize, DataTypes) => {
       paranoid: true,
       sequelize,
       modelName: "PaymentClient",
-      tableName : 'paymentclients',
+      tableName: 'paymentclients',
     }
   );
   return PaymentClient;

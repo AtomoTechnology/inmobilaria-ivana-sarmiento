@@ -81,15 +81,15 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 			}
 		);
 		// console.log("DOCS ::: ", docs);
+		// id OWNERS QUE COBRARON EN EL MES ANTERIOR
 		let ids = [];
 		if (docs.length > 0) {
 			console.log("entreooooooooo");
 			ids.push(docs.map((doc) => doc.OwnerId));
 		}
-		// id OWNERS QUE COBRARON EN EL MES ANTERIOR
 		console.log("IDS11 OWNERS QUE COBRARON EN EL MES ANTERIOR ::: ", ids);
 
-		// get owner who did receive payment last month
+		// get owner who did not receive payment last month
 		const docs2 = await Owner.findAll(
 			{
 				where: {
@@ -122,6 +122,7 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 				OwnerId: {
 					[Op.in]: ids2,
 				},
+				state: "Ocupado",
 				// TODO ::: state: 'Ocupado' should i add this?
 			},
 			attributes: ['id', 'street', 'number', 'dept', 'floor']
@@ -149,6 +150,7 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 							new Date(year, month, 0).getDate()
 						),
 					},
+					endDate: { [Op.gt]: new Date() },
 					// TODO ::: endDate should i add this? endDate < Date().now()
 				},
 				include: [
@@ -157,6 +159,7 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 					},
 					{
 						model: Property,
+						include: [{ model: Owner, attributes: ['id', 'commision'] }],
 					},
 					{
 						model: PriceHistorial,
@@ -204,6 +207,32 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 						transaction: transact,
 					}
 				);
+				await DebtOwner.create(
+					{
+						description:
+							"HONORARIOS " +
+							contractNotPaid[k].Property.street +
+							" " +
+							contractNotPaid[k].Property.number +
+							" " +
+							contractNotPaid[k].Property.dept +
+							"-" +
+							contractNotPaid[k].Property.floor +
+							" " +
+							monthsInSpanish[month - 1] +
+							" " +
+							year,
+						amount: contractNotPaid[k].PriceHistorials.sort(
+							(a, b) => a.amount - b.amount
+						)[contractNotPaid[k].PriceHistorials.length - 1].amount * (-1) * (contractNotPaid[k].Property.Owner.commision / 100),
+						year,
+						month,
+						ContractId: contractNotPaid[k].id,
+					},
+					{
+						transaction: transact,
+					}
+				);
 				for (let l = 0; l < contractNotPaid[k].OwnerExpenses.length; l++) {
 					await DebtOwner.create(
 						{
@@ -233,6 +262,10 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 			message: "DEBTS OWNER JOB DONE SUCCESSFULLY.",
 		});
 		await transact.commit();
+		// next()
+		// return res.json(
+		// 	contractNotPaid
+		// )
 		// return res.json({
 		// 	ok: true,
 		// 	message: 'Operación realizada con éxito.',
@@ -240,12 +273,13 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 		// 	// data: docs2
 		// })
 	} catch (error) {
-		await transact.rollback();
 		await JobLog.create({
 			type: "debts",
 			state: "fail",
 			message: error.message || "Something went wrong.",
 		});
+		await transact.rollback();
+
 		// throw error
 	}
 });

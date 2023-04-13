@@ -135,14 +135,10 @@ exports.GetById = findOne(PaymentClient, {
 
 exports.Put = update(PaymentClient, [
   "PaymentTypeId",
-  "insurance",
-  "compensation",
-  "admExpenses",
   "recharge",
   "total",
   "month",
   "year",
-  "totalPro",
   "eventualityDetails",
   "ExpenseDetails",
 ]);

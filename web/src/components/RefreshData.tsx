@@ -6,6 +6,8 @@ const RefreshData = ({ action }: { action: any }) => {
         <Button
             onClick={() => action()}
             type='button'
+            title='Refrescar datos'
+            className='dark:!text-brand'
             icon='pi pi-refresh'
             text
         />

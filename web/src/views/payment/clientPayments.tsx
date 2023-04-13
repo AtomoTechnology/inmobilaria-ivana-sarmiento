@@ -97,7 +97,7 @@ const ClientPayments = () => {
 		'Contract.Property.street': { value: null, matchMode: FilterMatchMode.CONTAINS }
 	})
 	const clientPaymentQuery = useClientPayments()
-	const { data, isError, isLoading, error, isFetching } = useContracts()
+	const { data, } = useContracts()
 	const [loadingExpenses, setLoadingExpenses] = useState(false)
 	const paymentTypeQuery = usePaymentTypes()
 
@@ -155,7 +155,7 @@ const ClientPayments = () => {
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		values.total = rentingAmount + eventTotal.current + expsTotal.current + debtsTotal.current + recharge
+		values.total = eventTotal.current + expsTotal.current + debtsTotal.current + recharge
 		const { error, ok } = validateForm({ ...values }, ['paidTotal', 'extraExpenses'])
 		setErrors(error)
 		if (!ok) return false
@@ -295,7 +295,7 @@ const ClientPayments = () => {
 					recharge: 0,
 					qteDays: 0,
 				})
-				return
+				// return
 			}
 		} catch (error) {
 			showAndHideModal('Error', 'Error al intentar validar si el contrato ya tiene cobro para el mes y ano actual', 'red')
@@ -305,12 +305,36 @@ const ClientPayments = () => {
 			setLoadingExpenses(true)
 			const docsExpss = http.get<IClientExpensesResponseSimple>(`/client-expenses?amount=0:gt&ContractId=${e.value.id}&include=true`)
 			const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?clientPaid=0&ContractId=${e.value.id}&include=true`)
-			const dps = http.get<IConfigResponse>(`/config?key=dailypunitive`)
+			const dps = http.get<IConfigResponse>(`/config?key=punitorio_diario`)
 			const docsDebtss = http.get<IdebtsResponse>(`/debt-clients?paid=0&ContractId=${e.value.id}`)
 			const [docsExps, docsEvents, dp, docsDebts] = await Promise.all([docsExpss, docsEventss, dps, docsDebtss])
 
 			setEventualityDetails(docsEvents.data.data)
-			setExpenseDetails(docsExps.data.data.map((d) => ({ ...d, description: d.description + ' ' + month + '/' + year })))
+			setExpenseDetails([
+				{
+					ContractId: e.value.id,
+					date: new Date().toISOString().slice(0, 10),
+					updatedAt: new Date().toISOString(),
+					deletedAt: null,
+					description: 'ALQUILERES  ' + e.value.Property.street + ' ' + e.value?.Property?.number + ' ' + e.value?.Property?.floor + ' ' + e.value?.Property?.dept + ' ' + month + '/' + year,
+					amount: e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount,
+					createdAt: (new Date().getTime().toString()),
+					// rent: true,
+					id: Number(Math.floor(Math.random() * 10000).toFixed(0) + e.value.id.toFixed(0) + new Date().getTime().toFixed(0))
+				},
+				// {
+				// 	ContractId: e.value.id,
+				// 	date: new Date().toISOString().slice(0, 10),
+				// 	updatedAt: new Date().toISOString(),
+				// 	deletedAt: null,
+				// 	description: 'PUNITORIOS  ' + ' ' + month + '/' + year,
+				// 	amount: recharge,
+				// 	createdAt: (new Date().getTime().toString()),
+				// 	id: Number(Math.floor(Math.random() * 1000).toFixed(0) + e.value.id.toFixed(0) + new Date().getTime().toFixed(0))
+				// },
+				...docsExps.data.data.map((d) => ({ ...d, description: d.description + ' ' + month + '/' + year }))
+			])
+
 			setDebts(docsDebts.data.data)
 
 			docsDebts.data.data.map((d) => {
@@ -511,6 +535,7 @@ const ClientPayments = () => {
 											</div>
 										</div>
 									</div>
+
 									<div className="client-data border border-gray-200 dark:border-slate-600  my-2 p-2 flex ">
 										<div className="flex flex-col gap-y-2 flex-1">
 											<span>
@@ -546,30 +571,22 @@ const ClientPayments = () => {
 										</div>
 									</div>
 
+
 									<div className='payment-pdf px-2  my-3 pt-4 flex-1 gap-y-1 flex flex-col '>
 										{
-											currentPayment.current?.rentingAmount! > 0 && (
-												<div
-													className='align-items-center uppercase text-sm  flex gap-x-3 items-center dark:border-slate-600  justify-between    border-gray-300'
-												>
-													<span className=''>
-														{/*  @ts-ignore*/}
-														ALQUILER {currentPayment.current?.Contract?.Property?.street} {currentPayment.current?.Contract?.Property?.number}{' '}{currentPayment.current?.Contract?.Property?.floor}-{currentPayment.current?.Contract?.Property?.dept}  {currentPayment.current?.month}   {currentPayment.current?.year.toString()}</span>
-													<span>${currentPayment.current?.rentingAmount}</span>
+											// currentPayment.current?.rentingAmount! > 0 && (
+											// 	<div
+											// 		className='align-items-center uppercase text-sm  flex gap-x-3 items-center dark:border-slate-600  justify-between    border-gray-300'
+											// 	>
+											// 		<span className=''>
+											// 			{/*  @ts-ignore*/}
+											// 			ALQUILER {currentPayment.current?.Contract?.Property?.street} {currentPayment.current?.Contract?.Property?.number}{' '}{currentPayment.current?.Contract?.Property?.floor}-{currentPayment.current?.Contract?.Property?.dept}  {currentPayment.current?.month}   {currentPayment.current?.year.toString()}</span>
+											// 		<span>${currentPayment.current?.rentingAmount}</span>
 
-												</div>
-											)
+											// 	</div>
+											// )
 										}
-										{
-											currentPayment.current?.recharge! > 0 && (
-												<div
-													className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between dark:border-slate-600    border-gray-300'
-												>
-													<span className=''>PUNITORIOS  {currentPayment.current?.month}   {currentPayment.current?.year.toString()}</span>
-													<span>${currentPayment.current?.recharge}</span>
-												</div>
-											)
-										}
+
 
 										{currentPayment.current?.expenseDetails.map((evt, index) => (
 											<div
@@ -581,6 +598,16 @@ const ClientPayments = () => {
 
 											</div>
 										))}
+										{
+											currentPayment.current?.recharge! > 0 && (
+												<div
+													className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between dark:border-slate-600    border-gray-300'
+												>
+													<span className=''>PUNITORIOS  {currentPayment.current?.month}   {currentPayment.current?.year.toString()}</span>
+													<span>${currentPayment.current?.recharge}</span>
+												</div>
+											)
+										}
 										{currentPayment.current?.eventualityDetails.map((evt, index) => (
 											<div
 												key={index}
@@ -664,7 +691,7 @@ const ClientPayments = () => {
 							(upToDate && ContractId) && (
 								<div className="text-green-500 dark:text-green-400 text-center my-2">
 									{/* @ts-ignore */}
-									El contrato  {ContractId.Property.street!} {ContractId?.Property?.number} {ContractId?.Property?.floor}-{ContractId?.Property?.dept} está al dia
+									El contrato  {ContractId.Property.street!} {ContractId?.Property?.number} {ContractId?.Property?.floor}-{ContractId?.Property?.dept} ya pago el mes de {month} {year}
 								</div>
 							)
 						}
@@ -708,7 +735,7 @@ const ClientPayments = () => {
 														htmlFor={evt.id.toString() + evt.createdAt + index + evt.amount + evt.description}
 														className='ml-2'
 													>
-														${evt.amount} - {evt.description}
+														${evt.amount} | {evt.description}
 													</label>
 												</div>
 											))}
@@ -719,11 +746,11 @@ const ClientPayments = () => {
 								{eventualityDetails.length > 0 && (
 									<div className='my-4'>
 										<h1 className='title-form mb-2'>Eventualidades</h1>
-										<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
+										<div className='eventualities-section flex flex-wrap  items-center gap-y-2 gap-x-3'>
 											{eventualityDetails.map((evt, index) => (
 												<div
 													key={evt.updatedAt + evt.description + index + evt.id + evt.clientAmount}
-													className='align-items-center flex items-center flex-auto   border border-gray-300 dark:border-slate-500 p-2'
+													className='align-items-center flex items-center  flex-wrap   border border-gray-300 dark:border-slate-500 p-2'
 												>
 													<Checkbox
 														inputId={evt.updatedAt + evt.description + index + evt.id + evt.clientAmount}
@@ -736,7 +763,7 @@ const ClientPayments = () => {
 														htmlFor={evt.updatedAt + evt.description + index + evt.id + evt.clientAmount}
 														className='ml-2'
 													>
-														${evt.clientAmount} - {evt.description}
+														${evt.clientAmount} | {evt.description}
 													</label>
 												</div>
 											))}
@@ -747,7 +774,7 @@ const ClientPayments = () => {
 								{debts.length > 0 && (
 									<div className='my-4'>
 										<h1 className='title-form mb-2'>Deudas anteriores</h1>
-										<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
+										<div className='eventualities-section flex flex-wrap  items-center gap-y-2 gap-x-3'>
 											{debts.map((evt, index) => (
 												<div
 													key={evt.updatedAt + evt.id + evt.description + evt.amount + index}
@@ -765,7 +792,7 @@ const ClientPayments = () => {
 														className='ml-2 '
 													>
 														<span className=''>
-															{evt.description} |  $ {evt.amount}
+															$ {evt.amount} |  {evt.description}
 														</span>
 													</label>
 												</div>
@@ -886,7 +913,7 @@ const ClientPayments = () => {
 							</FieldsetGroup>
 						</FieldsetGroup>
 						<FieldsetGroup className=''>
-							<fieldset className=''>
+							{/* <fieldset className=''>
 								<label htmlFor='rentingAmount'>Valor alquiler</label>
 								<input
 									placeholder='1234.90'
@@ -898,7 +925,7 @@ const ClientPayments = () => {
 										handleInputChange(Number(e.target.value), 'rentingAmount')
 									}}
 								/>
-							</fieldset>
+							</fieldset> */}
 							<fieldset className=''>
 								<label htmlFor='total'>Total a cobrar</label>
 								<input
@@ -906,14 +933,14 @@ const ClientPayments = () => {
 									disabled={true}
 									name='total'
 									type='number'
-									value={rentingAmount + eventTotal.current + expsTotal.current + debtsTotal.current + recharge}
+									value={eventTotal.current + expsTotal.current + debtsTotal.current + recharge}
 									onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value, 'total')}
 								/>
 							</fieldset>
 							<CustomInput
 								initialValue={paidTotal || ''}
 								type='number'
-								placeholder={(rentingAmount + eventTotal.current + expsTotal.current + debtsTotal.current + recharge).toFixed()}
+								placeholder={(eventTotal.current + expsTotal.current + debtsTotal.current + recharge).toFixed()}
 								onChange={(v) => { handleInputChange(Number(v), 'paidTotal') }}
 								label='Total cobrado'
 							/>
@@ -929,37 +956,27 @@ const ClientPayments = () => {
 
 									<div className='payment-pdf  pt-4 flex-1 gap-y-1 flex flex-col px-1'>
 										{
-											(upToDate && ContractId) && (
-												<div className="text-green-500 dark:text-green-400 text-center my-2">
-													{/* @ts-ignore */}
-													El contrato  {ContractId.Property.street!} {ContractId?.Property?.number} {ContractId?.Property?.floor}-{ContractId?.Property?.dept} está al dia
-												</div>
-											)
+											// (upToDate && ContractId) && (
+											// 	<div className="text-green-500 dark:text-green-400 text-center my-2">
+											// 		{/* @ts-ignore */}
+											// 		El contrato  {ContractId.Property.street!} {ContractId?.Property?.number} {ContractId?.Property?.floor}-{ContractId?.Property?.dept} ya pago el mes de {month} {year}
+											// 	</div>
+											// )
 										}
 										{
-											values.rentingAmount > 0 && (
-												<div
-													className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
-												>
-													<span className=''>ALQUILER
-														{/* @ts-ignore */}
-														{ContractId?.Property?.street} {ContractId?.Property?.number}{' '}{ContractId?.Property?.floor}-{ContractId?.Property?.dept}  {month}   {year.toString()}</span>
-													<span>${rentingAmount}</span>
+											// values.rentingAmount > 0 && (
+											// 	<div
+											// 		className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+											// 	>
+											// 		<span className=''>ALQUILER
+											// 			{/* @ts-ignore */}
+											// 			{ContractId?.Property?.street} {ContractId?.Property?.number}{' '}{ContractId?.Property?.floor}-{ContractId?.Property?.dept}  {month}   {year.toString()}</span>
+											// 		<span>${rentingAmount}</span>
 
-												</div>
-											)
+											// 	</div>
+											// )
 										}
-										{
-											values.recharge > 0 && (
-												<div
-													className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
-												>
-													<span className=''>PUNITORIOS  {month}   {year.toString()}</span>
-													<span>${recharge}</span>
 
-												</div>
-											)
-										}
 										{selectedExpensesClient.map((evt, index) => (
 											<div
 												key={index}
@@ -980,6 +997,17 @@ const ClientPayments = () => {
 
 											</div>
 										))}
+										{
+											values.recharge > 0 && (
+												<div
+													className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+												>
+													<span className=''>PUNITORIOS  {month}   {year.toString()}</span>
+													<span>${recharge}</span>
+
+												</div>
+											)
+										}
 										{selectedDebts.map((evt, index) => (
 											<div
 												key={index}
@@ -997,7 +1025,7 @@ const ClientPayments = () => {
 											className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between  mt-3  border-gray-300'
 										>
 											<span className=''>Total a cobrar </span>
-											<span>${rentingAmount + eventTotal.current + expsTotal.current + debtsTotal.current + recharge}</span>
+											<span>${eventTotal.current + expsTotal.current + debtsTotal.current + recharge}</span>
 
 										</div>
 									</div>

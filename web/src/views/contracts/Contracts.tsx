@@ -105,7 +105,7 @@ const Contracts = () => {
 		ContractId: 0,
 		clientAmount: 0.0,
 		ownerAmount: 0.0,
-		expiredDate: '',
+		expiredDate: new Date().toISOString().slice(0, 10),
 		description: '',
 	})
 
@@ -254,7 +254,7 @@ const Contracts = () => {
 	const actionBodyTemplate = (rowData: Contract) => {
 		return (
 			<div className='flex gap-x-3 items-center justify-start'>
-				<SeeIcon action={() => navigate(`/contracts/${rowData.id}/${rowData.uuid}`)} />
+				{/* <SeeIcon action={() => navigate(`/contracts/${rowData.id}/${rowData.uuid}`)} /> */}
 				{rowData.state !== 'Finalizado' && (<AddGuarantee action={() => showAddGuarantee(rowData)} />)}
 				<TbReportMoney size={25} title='Agregar Eventualidad' onClick={() => openModalAddEvent(rowData)} />
 				<EditIcon action={() => edit(rowData)} />
@@ -322,7 +322,7 @@ const Contracts = () => {
 		<div className='container m-auto  flex sm:mx-0  flex-col justify-center sm:justify-center'>
 			<HeaderData action={openCreateOrEditModel} text='Contratos' />
 			{
-				data.data.length > 0 ? (
+				data?.data?.length > 0 ? (
 					<>
 						<CustomInput
 							onChange={(val) => onGlobalFilterChange(val)}
@@ -589,7 +589,7 @@ const Contracts = () => {
 						/>
 					</FieldsetGroup>
 					{
-						(assurances.length > 0 && editMode) && (
+						(assurances?.length > 0 && editMode) && (
 							<div className="mt-4">
 								<h1 className='title-form'>Garantes</h1>
 								<div className='list-guarantees-to-add flex gap-x-2 flex-col sm:flex-row flex-wrap gap-y-3'>

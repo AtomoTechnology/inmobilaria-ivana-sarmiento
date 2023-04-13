@@ -97,6 +97,7 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 		console.log('FECHAS ::: ', (new Date(year, month - 1, new Date(year, month, 0).getDate())))
 		console.log('DOCS ::: ', docs)
 
+		// ids de los contratos que pagaron el mes anterior
 		let ids = []
 		if (docs.length > 0) {
 			console.log('entreooooooooo')
@@ -111,6 +112,7 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 				},
 				state: 'En curso',
 				startDate: { [Op.lt]: new Date(year, month - 1, new Date(year, month, 0).getDate()) },
+				endDate: { [Op.gt]: new Date() },
 
 			},
 			include: [{
@@ -175,19 +177,13 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 
 		})
 		await transact.commit()
-		// return res.json({
-		// 	ok: true,
-		// 	message: 'Operación realizada con éxito.',
-		// 	result: docs2.length,
-		// 	// data: docs2
-		// })
+
 	} catch (error) {
 		await transact.rollback()
 		await JobLog.create({
 			type: 'debts',
 			state: 'fail',
-			message: error.message || 'Something went wrong.',
+			message: error?.message || 'Something went wrong.',
 		})
-		// throw error
 	}
 })

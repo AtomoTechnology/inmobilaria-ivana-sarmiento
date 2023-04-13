@@ -76,7 +76,7 @@ export const menuItems = [
 		subLink: [
 			{ to: 'client-payment', title: 'Cobro a inquilino' },
 			{ to: 'owner-payment', title: 'Pago a propietario' },
-			{ to: 'properties', title: 'Lista conceptos' },
+			// { to: 'properties', title: 'Lista conceptos' },
 			// { to: 'revert-payment', title: 'Revertir cobro' },
 		],
 	},

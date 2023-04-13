@@ -242,7 +242,7 @@ const OwnerPayment = () => {
 					OwnerId: e.value,
 					total: 0,
 				})
-				return
+				// return
 			}
 		} catch (error) {
 			showAndHideModal('Error', 'Error al intentar validar si el contrato ya tiene cobro para el mes y ano actual', 'red')
@@ -254,7 +254,7 @@ const OwnerPayment = () => {
 			ownerContracts.data.data.map(async (contract: any) => {
 
 
-				const docsExpss = http.get<IClientExpensesResponseSimple>(`/owner-expenses?amount=0:gt&ContractId=${contract.id}&include=true`)
+				const docsExpss = http.get<IClientExpensesResponseSimple>(`/owner-expenses?ContractId=${contract.id}&include=true`)
 				const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?ownerPaid=0&ContractId=${contract.id}&include=true`)
 				const docsDebtss = http.get<IdebtsResponse>(`/debt-owners?paid=0&ContractId=${contract.id}`)
 
@@ -479,7 +479,7 @@ const OwnerPayment = () => {
 							(upToDate && OwnerId) && (
 								<div className="text-green-500 dark:text-green-400 text-center my-2">
 									{/* @ts-ignore */}
-									El propietario  {OwnerId.fullName}  está al dia
+									El propietario  {OwnerId.fullName}  ya cobro el mes de {month} - {year}
 								</div>
 							)
 						}
@@ -527,7 +527,7 @@ const OwnerPayment = () => {
 														{contract.eventualityDetails.map((evt: any, index: any) => (
 															<div
 																key={evt.updatedAt + evt.description + index + evt.ownerAmount + evt.description}
-																className='align-items-center flex items-center flex-auto   border border-gray-300 dark:border-slate-700 p-2'
+																className='align-items-center flex items-center flex-wrap   border border-gray-300 dark:border-slate-700 p-2'
 															>
 																<Checkbox
 																	inputId={evt.updatedAt + evt.description + index + evt.ownerAmount + evt.description}
@@ -674,14 +674,6 @@ const OwnerPayment = () => {
 								<div className="flex justify-between flex-col min-h-[300px] h-[95%]">
 
 									<div className='payment-pdf  pt-4 flex-1 gap-y-1 flex flex-col px-1'>
-										{
-											(upToDate && OwnerId) && (
-												<div className="text-green-500 dark:text-green-400 text-center my-2">
-													{/* @ts-ignore */}
-													El propietario  {OwnerId.fullName}  está al dia
-												</div>
-											)
-										}
 										{selectedExpensesClient.map((evt, index) => (
 											<div
 												key={index}
@@ -728,7 +720,6 @@ const OwnerPayment = () => {
 							</Box>
 						)
 					}
-
 				</div>
 			</CreateModal>
 
@@ -846,6 +837,14 @@ const OwnerPayment = () => {
 											<span className=''>${currentPayment.current?.total}</span>
 
 										</div>
+										<div className="sign-aclaration my-1">
+											<div className="sign my-2">
+												<span>Firma : </span>
+											</div>
+											<div className="">
+												<span>Aclaración : </span>
+											</div>
+										</div>
 									</div>
 								</div>
 							))
@@ -863,4 +862,3 @@ const OwnerPayment = () => {
 
 export default OwnerPayment
 
-// ? TODO:: print pdf - https://www.npmjs.com/package/react-to-print - revert payment functionality

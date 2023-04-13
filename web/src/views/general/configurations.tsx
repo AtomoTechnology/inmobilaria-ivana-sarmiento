@@ -122,7 +122,7 @@ const Configurations = () => {
         return (
             <div className='flex gap-x-3 items-center justify-center'>
                 <EditIcon action={() => edit(rowData)} />
-                <DeleteIcon action={() => ConfirmDestroy(rowData)} />
+                {/* <DeleteIcon action={() => ConfirmDestroy(rowData)} /> */}
             </div>
         )
     }

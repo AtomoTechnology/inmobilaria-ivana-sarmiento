@@ -18,10 +18,12 @@ module.exports = (sequelize, DataTypes) => {
     },
     name: {
       type: DataTypes.STRING(80),
+      allowNull: false,
       unique: {
+        name: true,
         msg: 'Ya existe un tipo de pago con ese nombre.',
       },
-      allowNull: false,
+
       validate: {
         notNull: {
           msg: 'El nombre de tipo de pago es obligatorio',
@@ -38,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     paranoid: true,
     sequelize,
-    tableName : 'paymenttypes',
+    tableName: 'paymenttypes',
     modelName: 'PaymentType',
   });
   return PaymentType;

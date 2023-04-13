@@ -1,4 +1,5 @@
 var router = require('express').Router()
+const ctrlJobs = require("./../controller/jobs.controller");
 
 router.use('/api/v1/paymenttypes', require('../route/paymenttype.router'))
 router.use('/api/v1/zones', require('../route/zone.router'))
@@ -20,4 +21,9 @@ router.use('/api/v1/payment-clients', require('../Route/paymentClient.router'))
 router.use('/api/v1/payment-owners', require('../Route/paymentOwner.router'))
 router.use('/api/v1/debt-clients', require('../Route/debtClient.router'))
 router.use('/api/v1/debt-owners', require('../Route/debtOwner.router'))
+
+
+router.post('/api/v1/jobs-debts-clients', ctrlJobs.jobDebtsClients)
+router.post('/api/v1/jobs-debts-owners', ctrlJobs.jobDebtsOwner)
+
 module.exports = router

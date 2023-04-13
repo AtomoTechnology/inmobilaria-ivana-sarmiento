@@ -235,7 +235,8 @@ const Owners = () => {
 			</div>
 		)
 	}
-	const allowExpansion = (rowData: IPerson) => rowData.Properties!.length > 0
+	// @ts-expect-error
+	const allowExpansion = (rowData: IPerson) => rowData.Properties?.length > 0
 
 
 	const openCreateOrEditModel = () => {
@@ -249,8 +250,7 @@ const Owners = () => {
 	return (
 		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
 			<HeaderData action={openCreateOrEditModel} text='Propietarios' />
-
-			{data.data.length > 0 ? (
+			{data.data?.length > 0 ? (
 				<>
 					<CustomInput
 						onChange={(val) => onGlobalFilterChange(val)}
@@ -259,7 +259,6 @@ const Owners = () => {
 						placeholder='Buscar propietario'
 						type='search'
 					/>
-
 					<Box className={`!p-0 !overflow-hidden !border-none sm:mx-0   mb-4 `}>
 						<DataTable
 							expandedRows={expandedRows}
@@ -269,14 +268,13 @@ const Owners = () => {
 							emptyMessage='Aún no hay propietario'
 							className='!overflow-hidden !border-none'
 							value={data?.data}
-							paginator
-							rows={10}
 							filters={filters}
 							globalFilterFields={['fullName', 'cuit']}
-							paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-							currentPageReportTemplate='{first} al {last} de {totalRecords}'
-							paginatorLeft={<RefreshData action={refetch} />}
-
+							// rows={10}
+							// paginator
+							// paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+							// currentPageReportTemplate='{first} al {last} de {totalRecords}'
+							// paginatorLeft={<RefreshData action={refetch} />}
 							dataKey='id'
 							responsiveLayout='scroll'
 						>
@@ -316,7 +314,7 @@ const Owners = () => {
 								field='address'
 								body={(data) => (
 									<span>
-										{data.city || '-'} {data.province || '-'} , {data.address}
+										{data.city || '-'}, {data.address}
 									</span>
 								)}
 								header='Dirección'
@@ -356,7 +354,7 @@ const Owners = () => {
 
 			<CreateModal
 				show={showCreateModal}
-				className='max-w-[700px]'
+				className='max-w-[750px]'
 				closeModal={closeCreateModal}
 				titleText={`${editMode ? 'Editar' : 'Crear'} propietario`}
 			>
@@ -390,7 +388,7 @@ const Owners = () => {
 					</FieldsetGroup>
 
 					<FieldsetGroup>
-						<FieldsetGroup>
+						<FieldsetGroup className='w-full sm:w-[50%]'>
 							<CustomInput
 								placeholder='20909239120'
 								initialValue={cuit || ''}
@@ -403,6 +401,7 @@ const Owners = () => {
 							/>
 							<CustomInput
 								placeholder='10'
+								type='number'
 								initialValue={commision || ''}
 								onChange={(value) => handleInputChange(value, 'commision')}
 								label='%Comision'
@@ -414,7 +413,7 @@ const Owners = () => {
 							/>
 						</FieldsetGroup>
 
-						<FieldsetGroup className=''>
+						<FieldsetGroup className='w-full sm:w-[50%]'>
 							<CustomInput
 								placeholder='3417207882'
 								initialValue={phone || ''}

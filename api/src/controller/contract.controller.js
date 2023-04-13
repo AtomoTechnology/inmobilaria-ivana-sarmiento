@@ -46,7 +46,6 @@ exports.Paginate = paginate(Contract, {
 
 exports.GetOwnerContracts = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  console.log('was there brothers....')
   const properties = await Property.findAll({
     where: {
       OwnerId: id,
@@ -107,7 +106,7 @@ exports.Post = catchAsync(async (req, res, next) => {
     );
     if (!p)
       return next(
-        new AppError("Existe un contrato vigente para este inmueble", 400)
+        new AppError("Existe un contrato vigente para esta propiedad", 400)
       );
     const cont = await Contract.create(req.body);
 
@@ -143,11 +142,6 @@ exports.Post = catchAsync(async (req, res, next) => {
         transaction: transact,
       }
     );
-    // const isExist = await Contract.findOne({
-    // 	where: {
-    // 		[Op.and]: [{ PropertyId: PropertyId }, { state: 'Finalizado' }],
-    // 	},
-    // })
 
     await transact.commit();
     return res.json({
@@ -197,10 +191,7 @@ exports.Put = update(Contract, [
   "deposit",
   "booking",
   "state",
-  "description",
-  // 'stamped',
-  // 'fees',
-  // 'warrantyInquiry',
+  "description"
 ]);
 exports.Destroy = catchAsync(async (req, res, next) => {
   const id = req.params.id;
@@ -233,6 +224,7 @@ exports.Destroy = catchAsync(async (req, res, next) => {
           400
         )
       );
+
     const events = await Eventuality.findAll(
       {
         where: {
@@ -242,6 +234,7 @@ exports.Destroy = catchAsync(async (req, res, next) => {
       },
       { transaction: transact }
     );
+
     if (events.length > 0)
       return next(
         new AppError(
@@ -333,12 +326,9 @@ exports.HistorialPrice = all(Contract, {
   ],
 });
 
+// para obtener las deudas pagas o impagas de los clientes
 exports.DebtsClients = catchAsync(async (req, res, next) => {
   const docs = await Contract.findAll({
-    // where: {
-    // 	'$DebtClients.paid$': false,
-    // },
-    // attributes : ['id','endDate']
     include: [
       { model: Client },
       { model: Property, include: { model: Owner } },
@@ -354,12 +344,10 @@ exports.DebtsClients = catchAsync(async (req, res, next) => {
     data: docs,
   });
 });
+
+//  para obtener las deudas pagas o impagas de los propietarios
 exports.DebtsOwners = catchAsync(async (req, res, next) => {
   const docs = await Contract.findAll({
-    // where: {
-    // 	'$DebtClients.paid$': false,
-    // },
-    // attributes : ['id','endDate']
     include: [
       { model: Client },
       { model: Property, include: { model: Owner } },

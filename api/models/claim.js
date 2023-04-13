@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			state: {
 				allowNull: false,
-				type: DataTypes.STRING(150),
+				type: DataTypes.STRING(10),
 				defaultValue: 'Abierto',
 				validate: {
 					isIn: [['Abierto', 'Cerrado']],

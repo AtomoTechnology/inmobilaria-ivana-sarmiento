@@ -4,6 +4,7 @@ module.exports = (sequelize, DataTypes) => {
 	class Owner extends Model {
 		static associate(models) {
 			Owner.hasMany(models.Property)
+			Owner.hasMany(models.PaymentOwner)
 		}
 	}
 	Owner.init(
@@ -73,7 +74,7 @@ module.exports = (sequelize, DataTypes) => {
 				},
 			},
 			commision: {
-				type: DataTypes.FLOAT,				
+				type: DataTypes.FLOAT,
 				allowNull: false,
 				validate: {
 					notNull: {
@@ -107,7 +108,7 @@ module.exports = (sequelize, DataTypes) => {
 		{
 			sequelize,
 			modelName: 'Owner',
-			tableName : 'owners',
+			tableName: 'owners',
 			paranoid: true,
 		}
 	)

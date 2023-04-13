@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 import LoggedUser from './components/LoggedUser'
 import { AuthContext } from './context/authContext'
 import { useContext, useState } from 'react'
@@ -73,15 +73,15 @@ const App = () => {
 		<div className='App min-h-screen flex flex-col  dark:bg-gray-900 '>
 			<header className='header bg-white sticky z-20 top-0 dark:bg-gray-900 shadow border-b border-gray-200 dark:border-slate-700'>
 				<nav className='flex justify-between px-4 items-center h-full'>
-					<div className='logo-app'>
+					<Link to='/' className='logo-app'>
 						<img
 							width={100}
 							className='min-w-[100px] object-cover'
 							src={logoApp}
 							alt='LOGO CENTRO'
 						/>
-					</div>
-					<ul className='hidden lg:flex items-center gap-x-2 text-white'>
+					</Link>
+					<ul className='hidden lg:flex items-center gap-x-2 text-white '>
 						{menuItems.map((item, index) =>
 							item.to !== null ? (
 								<NavLink
@@ -118,8 +118,7 @@ const App = () => {
 											</NavLink>
 										))}
 									</ul>
-								</li>
-							)
+								</li>)
 						)}
 					</ul>
 
@@ -135,25 +134,27 @@ const App = () => {
 			<main className='my-6  sm:grid  items-center justify-center'>
 				<Outlet />
 			</main>
-			<footer className='mt-auto bg-gray-100  bg-gradient-to-r from-brand2 to-brand  dark:bg-[#061122]  p-6 '>
+			{/* from-brand2 to-brand */}
+			<footer className='mt-auto bg-gray-100  bg-gradient-to-r from-white to-brand dark:from-slate-600 dark:to-slate-700  dark:bg-[#061122]  p-2 '>
 				<div className='container m-auto'>
 					<section className='py-6'>
 						<div className='px-4 mx-auto sm:px-6 lg:px-8 max-w-7xl'>
 							<div className='text-center sm:flex sm:items-center sm:justify-between sm:text-left'>
 								<div className='sm:flex sm:items-center sm:justify-start'>
 									<img
-										className='w-auto mx-auto h-7'
-										src='https://cdn.rareblocks.xyz/collection/celebration/images/logo-alt-2.svg'
+										className='w-auto mx-auto h-16'
+										// width={50}
+										src={logoApp}
 										alt=''
 									/>
 
-									<p className='mt-5 text-sm text-white sm:ml-6 sm:mt-0'>© Copyright 2021 Postcraft</p>
+									<p className='mt-5 text-lg text-white sm:ml-6 sm:mt-0'>© Copyright 2021 Centro-Administracion</p>
 								</div>
 
 								<div className='items-center mt-8 sm:mt-0 sm:flex sm:justify-end sm:space-x-8'>
-									<div className='w-full h-px mt-8 mb-5 sm:w-px sm:m-0 sm:h-6 bg-gray-50/20'></div>
+									{/* <div className='w-full h-px mt-8 mb-5 sm:w-px sm:m-0 sm:h-6 bg-gray-50/20'></div> */}
 
-									<ul className='flex items-center justify-center space-x-8 xl:justify-end'>
+									{/* <ul className='flex items-center justify-center space-x-8 xl:justify-end'>
 										<li>
 											<a
 												href='#'
@@ -210,7 +211,7 @@ const App = () => {
 												</svg>
 											</a>
 										</li>
-									</ul>
+									</ul> */}
 								</div>
 							</div>
 						</div>

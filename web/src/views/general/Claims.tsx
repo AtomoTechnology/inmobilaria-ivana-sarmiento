@@ -445,8 +445,18 @@ const Claims = () => {
 											<span className='absolute bottom-[2px] right-1 text-xs'> {formatDate(comment.date)} </span>
 											<button
 												disabled={savingOrUpdating}
-												className='absolute top-[2px] right-1 text-xs hidden bg-red-100 dark:bg-gray-800 p-2 rounded-full shadow-lg group-hover:flex'>
-												<DeleteIcon action={() => deleteClaimComment(comment.date)} />
+												title='Doble click para eliminar'
+												onClick={() => {
+													document.querySelectorAll('.showAlertDelete')?.forEach((item) => {
+														item.classList.toggle('hidden')
+														// item.addEventListener('click', () => {
+														// })
+													});
+												}}
+												onDoubleClick={() => { deleteClaimComment(comment.date) }}
+												className='absolute top-[2px] right-1 text-xs hidden bg-red-100   dark:bg-gray-800 p-2 rounded-full shadow-lg group-hover:flex'>
+												<DeleteIcon action={() => { }} />
+												<span className='showAlertDelete absolute top-2 shadow rounded hidden  right-10 bg-gray-200 p-1 w-40 text-xs'>Doble click para eliminar</span>
 											</button>
 										</div>
 									))

@@ -20,7 +20,11 @@ const handleSequelizeUniqueConstraintErrorPaymentOwner = (error) =>
 	new AppError('El contrato ya tiene  un pago para ese periodo .', 400)
 const handleSequelizeUniqueConstraintErrorVisit = (error) =>
 	new AppError('Esta persona ya tiene una visita pactada para esa propiedad con esa fecha.', 400)
-const handleSequelizeUniqueConstraintError = (error) => new AppError(error.errors.map((e) => e.message).join(',,'), 400)
+const handleSequelizeUniqueConstraintError = (error) => {
+
+	console.log('ERROR AHORA :::: ', error)
+	return new AppError(error.errors.map((e) => e.message).join(',,'), 400)
+}
 
 const handleJsonWebTokenError = () => new AppError(`Token  no valido. Inicia sesión de nuevo.`, 401)
 const handleJWTExpiredToken = () => new AppError('Su token ha caducado. Vuelva a iniciar sesión, por favor.', 401)
