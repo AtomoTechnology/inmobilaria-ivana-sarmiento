@@ -14,10 +14,10 @@
     "dialect": "mysql"
   },
   "production": {
-    "username": "root",
-    "password": "jhm.ok",
-    "database": "ivanaDB",
-    "host": "127.0.0.1",
+    "username": "novaitfl_ivanadb",
+    "password": "ivana.2023",
+    "database": "novaitfl_ivanadb",
+    "host": "localhost",
     "dialect": "mysql"
   }
 }

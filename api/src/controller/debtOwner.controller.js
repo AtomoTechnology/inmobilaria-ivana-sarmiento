@@ -85,7 +85,7 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 		let ids = [];
 		if (docs.length > 0) {
 			console.log("entreooooooooo");
-			ids.push(docs.map((doc) => doc.OwnerId));
+			ids = docs.map((doc) => doc.OwnerId);
 		}
 		console.log("IDS11 OWNERS QUE COBRARON EN EL MES ANTERIOR ::: ", ids);
 
@@ -111,7 +111,7 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 		let ids2 = [];
 		if (docs2.length > 0) {
 			console.log("entreooooooooo2222222222");
-			ids2.push(docs2.map((doc) => doc.id));
+			ids2 = docs2.map((doc) => doc.id);
 		}
 
 		console.log("IDS222 OWNERS QUE  NOOO COBRARON EN EL MES ANTERIOR ::: ", ids2);
@@ -133,7 +133,7 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 		let ids3 = [];
 		if (properties.length > 0) {
 			console.log("entreooooooooo3333");
-			ids3.push(properties.map((doc) => doc.id));
+			ids3 = properties.map((doc) => doc.id);
 		}
 		console.log("IDS3333 propiedades QUE NOOO  COBRARON EN EL MES ANTERIOR ::: ", ids3);
 		const contractNotPaid = await Contract.findAll(

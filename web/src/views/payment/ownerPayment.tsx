@@ -135,9 +135,11 @@ const OwnerPayment = () => {
 		// @ts-expect-error
 		values.OwnerId = values.OwnerId!.id
 		try {
+			setSavingOrUpdating(true)
+
 			const res = await http.post('/payment-owners', {
 				...values,
-				expenseDetails: selectedExpensesClient,
+				expenseDetails: [...selectedExpensesClient, ...selectedDebts],
 				eventualityDetails: selectedEventualities,
 			})
 			if (res.data.ok) {
@@ -151,6 +153,8 @@ const OwnerPayment = () => {
 			}
 		} catch (error: any) {
 			if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+		} finally {
+			setSavingOrUpdating(false)
 		}
 
 
@@ -329,8 +333,8 @@ const OwnerPayment = () => {
 			jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
 		};
 		try {
-			closePrintPdfModal()
 			await html2pdf().from(element).set(opt).save();
+			closePrintPdfModal()
 		} catch (error) {
 			console.log(error)
 		} finally {
@@ -427,7 +431,7 @@ const OwnerPayment = () => {
 					</Box>
 				</>
 			) : (
-				<EmptyData text='Aún no hay Cobro' />
+				<EmptyData text='Aún no hay pago' />
 			)}
 
 			{ownerPaymentQuery.isFetching && (<Loading h={40} w={40} />)}
@@ -738,8 +742,8 @@ const OwnerPayment = () => {
 
 						{
 							[1, 2].map((pdf, index) => (
-								<div key={index} className="flex justify-between flex-col border border-gray-200 dark:border-slate-600 p-1  h-[95%] w-[500px]">
-									<div className="header-pdf flex justify-between border border-gray-200 dark:border-slate-600  p-2">
+								<div key={index} className="flex  justify-between flex-col border border-gray-200 dark:border-slate-600 p-1  h-[95%] w-[500px]">
+									<div className="header-pdf flex justify-between items-center border border-gray-200 dark:border-slate-600  p-2">
 										<div className="left w-[50%] flex items-center flex-col gap-y-2">
 											<div className='logo-app flex items-center'>
 												<img
@@ -750,15 +754,14 @@ const OwnerPayment = () => {
 												/>
 											</div>
 											<div className="flex flex-col items-center">
-
-												<span className="text-2xl font-semibold uppercase">Centro</span>
+												<span className="text-lg font-semibold uppercase">Centro</span>
 												<span className="text-md font-semibold ">Administracion de  </span>
 												<span className="text-sm font-semibold ">Consorcios y Propiedades</span>
 											</div>
 
 										</div>
 										<div className="right w-[50%] ">
-											<div className="flex flex-col items-center text-sm">
+											<div className="flex flex-col items-center text-xs">
 												<span>Alquileres - Ventas - Tasaciones</span>
 												<span>San Martin 1514  Tel: 4483280</span>
 												<span>2000 - Rosario - Santa Fe </span>
@@ -773,7 +776,7 @@ const OwnerPayment = () => {
 											</div>
 										</div>
 									</div>
-									<div className="client-data border border-gray-200 dark:border-slate-600  my-2 p-2 flex ">
+									<div className="client-data border text-xs border-gray-200 dark:border-slate-600  my-2 p-2 flex ">
 										<div className="flex flex-col gap-y-2 flex-1">
 											<span>
 												<span className="font-semibold">Propietario: </span>
@@ -811,12 +814,12 @@ const OwnerPayment = () => {
 									<div className='payment-pdf mb-2   flex-1 gap-y-2 flex flex-col '>
 
 										{currentPayment.current?.printData.map((con: any, index: any) => (
-											<div className=" border border-gray-200 p-2">
+											<div key={index} className=" border border-gray-200 p-2">
 												{
 													con.map((evt: any, k: any) => (
 														<div
 															key={k}
-															className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
+															className='align-items-center uppercase text-xs  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
 														>
 															<span className=''>{evt.description}</span>
 															<span>${evt.amount ? evt.amount : evt.ownerAmount}</span>
@@ -831,10 +834,10 @@ const OwnerPayment = () => {
 									</div>
 									<div className="mt-auto p-2  border border-gray-200 dark:border-slate-600 ">
 										<div
-											className='align-items-center font-semibold uppercase text-sm  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
+											className='align-items-center font-semibold uppercase text-xs  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
 										>
 											<span className=''>Total a pagar </span>
-											<span className=''>${currentPayment.current?.total}</span>
+											<span className=''>$ {currentPayment.current?.total}</span>
 
 										</div>
 										<div className="sign-aclaration my-1">

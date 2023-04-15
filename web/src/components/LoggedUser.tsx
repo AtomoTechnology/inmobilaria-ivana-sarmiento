@@ -56,7 +56,7 @@ const LoggedUser = ({ authState, signOut, handleToggleTheme, darkTheme }: Props)
 
 				<div
 					style={{ zIndex: 900000 }}
-					className='dropdown-user-logged-box overflow-auto  hidden  transition-fade rounded-md shadow p-1 origin-top-right absolute right-0 mt-2 sm:w-56  !w-full top-[60px]   bg-white dark:bg-slate-800'
+					className='dropdown-user-logged-box overflow-auto  hidden  transition-fade rounded-md shadow p-1 origin-top-right absolute right-0 mt-2 !w-full sm:!w-56   top-[60px]   bg-white dark:bg-slate-800'
 					role='menu'
 					aria-orientation='vertical'
 					aria-labelledby='menu-button'

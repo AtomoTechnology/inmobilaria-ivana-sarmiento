@@ -139,22 +139,22 @@ const App = () => {
 				<div className='container m-auto'>
 					<section className='py-6'>
 						<div className='px-4 mx-auto sm:px-6 lg:px-8 max-w-7xl'>
-							<div className='text-center sm:flex sm:items-center sm:justify-between sm:text-left'>
-								<div className='sm:flex sm:items-center sm:justify-start'>
+							<div className=''>
+								<div className='flex flex-col sm:flex-row  items-center justify-center sm:justify-between '>
 									<img
-										className='w-auto mx-auto h-16'
-										// width={50}
+										className='w-24'
+										width={50}
 										src={logoApp}
-										alt=''
+										alt='LOGO CENTRO'
 									/>
 
-									<p className='mt-5 text-lg text-white sm:ml-6 sm:mt-0'>© Copyright 2021 Centro-Administracion</p>
+									<p className='mt-5 text-base sm:text-lg text-white  sm:mt-0'>© Copyright 2021 Centro-Administracion</p>
 								</div>
 
-								<div className='items-center mt-8 sm:mt-0 sm:flex sm:justify-end sm:space-x-8'>
-									{/* <div className='w-full h-px mt-8 mb-5 sm:w-px sm:m-0 sm:h-6 bg-gray-50/20'></div> */}
+								{/* <div className='items-center mt-8 sm:mt-0 sm:flex sm:justify-end sm:space-x-8'> */}
+								{/* <div className='w-full h-px mt-8 mb-5 sm:w-px sm:m-0 sm:h-6 bg-gray-50/20'></div> */}
 
-									{/* <ul className='flex items-center justify-center space-x-8 xl:justify-end'>
+								{/* <ul className='flex items-center justify-center space-x-8 xl:justify-end'>
 										<li>
 											<a
 												href='#'
@@ -212,7 +212,7 @@ const App = () => {
 											</a>
 										</li>
 									</ul> */}
-								</div>
+								{/* </div> */}
 							</div>
 						</div>
 					</section>

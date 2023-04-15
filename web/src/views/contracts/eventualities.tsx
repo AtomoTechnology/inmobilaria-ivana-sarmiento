@@ -104,8 +104,9 @@ const Eventualities = () => {
 					data?.data &&
 						(data.data = data?.data.map((z) => {
 							if (z.id === currentEventuality.current?.id) {
+								console.log(values)
 								// @ts-expect-error
-								z = { ...values }
+								z = { ...values, Contract: contractQuery.data?.data.find((x) => x.id === values.ContractId) }
 								// eslint-disable-line no-use-before-define
 							}
 							return z

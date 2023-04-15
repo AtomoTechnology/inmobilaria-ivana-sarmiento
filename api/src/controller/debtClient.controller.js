@@ -101,7 +101,7 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 		let ids = []
 		if (docs.length > 0) {
 			console.log('entreooooooooo')
-			ids.push(docs.map(doc => doc.ContractId))
+			ids = docs.map(doc => doc.ContractId)
 		}
 		console.log('IDS ::: ', ids)
 

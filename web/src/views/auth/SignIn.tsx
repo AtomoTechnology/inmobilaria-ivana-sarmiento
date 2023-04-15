@@ -95,7 +95,7 @@ const SignIn = () => {
             </button>
           </fieldset>
 
-          <div className="register-section text-sx my-2">
+          {/* <div className="register-section text-sx my-2">
             <span className="text-sm">
               <Link
                 to="/forget-password"
@@ -104,7 +104,8 @@ const SignIn = () => {
                 ¿Olvidaste tu contraseña ?
               </Link>
             </span>
-          </div>
+          </div> */}
+
         </form>
       </Box>
     </div>

@@ -20,53 +20,17 @@ app.use(morgan("dev"));
 const Port = 4000;
 app.set("port", process.env.PORT || Port);
 app.use(express.static(__dirname + "/uploads"));
-
-// Limit
-app.use(
-  bodyParser.json({
-    limit: "50mb",
-  })
-);
-
-app.use(
-  bodyParser.urlencoded({
-    limit: "50mb",
-    parameterLimit: 100000,
-    extended: true,
-  })
-);
-
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-//   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-//   message:
-//     "Demasiadas cuentas creadas a partir de esta IP, intente nuevamente después de una hora",
-//   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-// });
-
-// Apply the rate limiting middleware to all requests
-// app.use(limiter);
-
-
-
-
-var corsOptions = {
-  origin: "*",
-  optionsSuccessStatus: 200, // For legacy browser support
-};
+app.use(bodyParser.json({ limit: "50mb", }));
+app.use(bodyParser.urlencoded({ limit: "50mb", parameterLimit: 100000, extended: true, }));
+var corsOptions = { origin: "*", optionsSuccessStatus: 200, };
 app.use(cors(corsOptions));
 app.use(helmet());
 app.use(express.json());
 
 //Routes
 app.use(routeconfig);
+app.all("*", (req, res, next) => res.json(next(new Error(`can´t find the url ${req.originalUrl} for this server...`))));
 
-app.all("*", (req, res, next) => {
-  return res.json(
-    next(new Error(`can´t find the url ${req.originalUrl} for this server...`))
-  );
-});
 //Global error
 app.use(globalError);
 
@@ -78,31 +42,19 @@ schedule.scheduleJob("0 0 1 * *", function () {
   ctrlDebtsOwner.jobDebtsOwner();
 });
 
-// schedule.scheduleJob("* * * * *", async function () {
+// schedule.scheduleJob("* * * * *", function () {
 //   // return ctrl.jobDebtsClients();
-//   await ctrlDebtsClient.jobDebtsClients();
-//   await ctrlDebtsOwner.jobDebtsOwner();
+//   ctrlDebtsClient.jobDebtsClients();
+//   ctrlDebtsOwner.jobDebtsOwner();
 // });
 
 //Starting
 app.listen(app.get("port"), () => {
-  console.log(
-    " server on port",
-    app.get("port"),
-    "  MODE : ",
-    process.env.NODE_ENV
-  );
+  console.log("APP RUNNING ON PORT : ", app.get("port"), "  MODE : ", process.env.NODE_ENV);
   // sequelize
-  // 	.sync({
-  // 		alter: true,
-  // 	})
-  // 	.then(() => {
-  // 		console.log('DB is conected')
-  // 	})
-  // 	.catch((err) => {
-  // 		console.log(err)
-  // 		return
-  // 	})
+  //   .sync({ force: true, })
+  //   .then(() => { console.log('DB IS CONNECTED.') })
+  //   .catch((err) => { console.log(err) })
 });
 
 //   TODO:  add restrictions

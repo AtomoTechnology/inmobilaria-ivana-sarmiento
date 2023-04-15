@@ -12,6 +12,7 @@ import { Contract, } from '../../interfaces/Icontracts'
 import { formatDateDDMMYYYY } from '../../helpers/date'
 import RefreshData from '../../components/RefreshData'
 import HeaderData from '../../components/HeaderData'
+import { EmptyData } from '../../components/EmptyData'
 
 const DebtsOwners = () => {
 
@@ -96,112 +97,125 @@ const DebtsOwners = () => {
 	return (
 		<div className='container m-auto  flex sm:mx-0  flex-col justify-center sm:justify-center'>
 			<HeaderData showBtn={false} action={() => { }} text='Deudas x propietarios' />
-			<CustomInput
-				onChange={(val) => onGlobalFilterChange(val)}
-				className=' w-auto mx-2 sm:mx-0 sm:w-96'
-				initialValue={globalFilterValue}
-				placeholder='Buscar contrato'
-				type='search'
-			/>
 
-			<Box className='!p-0 !overflow-hidden !border-none sm:mx-0    mb-4 '>
-				<DataTable
-					expandedRows={expandedRows}
-					onRowToggle={(e: any) => setExpandedRows(e.data)}
-					rowExpansionTemplate={rowExpansionTemplate}
-					size='small'
-					emptyMessage='Aún no hay contrato'
-					className='!overflow-hidden   !border-none'
-					value={data?.data}
-					filters={filters}
-					globalFilterFields={['Property.street', 'Client.fullName']}
-					paginator
-					rows={RowsToShow}
-					paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-					currentPageReportTemplate='{first} al {last} de {totalRecords}'
-					paginatorLeft={<RefreshData action={refetch} />}
-					dataKey='id'
-					responsiveLayout='scroll'
-				>
-					<Column
-						expander={allowExpansion}
-						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-						style={{ width: '0.5rem' }}
-					/>
-					<Column
-						field='Property.street'
-						body={(data) => (
-							<span className={`${data.DebtOwners.filter((d: any) => !d.paid).length > 0 ? 'text-red-400' : ''}`}>
-								{data.Property.street} {data.Property.number} {data.Property.floor} {data.Property.dept}
-							</span>
-						)}
-						header='Propiedad'
-						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-						sortable
-					/>
-					<Column
-						field='Client.fullName'
-						body={(data) => (
-							<span className={`${data.DebtOwners.filter((d: any) => !d.paid).length > 0 ? 'text-red-400' : ''}`}>
-								{data.Client.fullName} <span className='text-sm'> ({data.Client.cuit}) </span>
-							</span>
-						)}
-						header='Inquilino'
-						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-						sortable
-					/>
-					<Column
-						field='startDate'
-						header='Fecha inicio'
-						body={(data) => <span>{formatDateDDMMYYYY(data.startDate)}</span>}
-						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-						sortable
-					/>
-					<Column
-						field='endDate'
-						header='Fecha fin'
-						body={(data) => <span>{formatDateDDMMYYYY(data.endDate)}</span>}
-						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-						sortable
-					/>
-					<Column
-						field='state'
-						header='Estado'
-						sortable
-						body={(data) => (<span>{data.state}</span>)}
-						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-					/>
-					<Column
-						field='state'
-						header='Año'
-						body={(data) => (
-							<span className={`${data.PriceHistorials.length === 3 && 'text-yellow-500 font-bold'}`}>
-								{data.PriceHistorials[data.PriceHistorials.length - 1]?.year}
-							</span>
-						)}
-						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-					/>
-					<Column
-						field=''
-						header='Monto Actual'
-						body={(data) => (
-							<span className={`font-bold`}>
-								${data.PriceHistorials[data.PriceHistorials.length - 1]?.amount}
-							</span>
-						)}
-						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-					/>
+			{
+				data?.data?.length > 0 ? (
+					<>
 
-				</DataTable>
-			</Box>
+						<CustomInput
+							onChange={(val) => onGlobalFilterChange(val)}
+							className=' w-auto mx-2 sm:mx-0 sm:w-96'
+							initialValue={globalFilterValue}
+							placeholder='Buscar contrato'
+							type='search'
+						/>
+
+						<Box className='!p-0 !overflow-hidden !border-none sm:mx-0    mb-4 '>
+							<DataTable
+								expandedRows={expandedRows}
+								onRowToggle={(e: any) => setExpandedRows(e.data)}
+								rowExpansionTemplate={rowExpansionTemplate}
+								size='small'
+								emptyMessage='Aún no hay contrato'
+								className='!overflow-hidden   !border-none'
+								value={data?.data}
+								filters={filters}
+								globalFilterFields={['Property.street', 'Client.fullName']}
+								paginator
+								rows={RowsToShow}
+								paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+								currentPageReportTemplate='{first} al {last} de {totalRecords}'
+								paginatorLeft={<RefreshData action={refetch} />}
+								dataKey='id'
+								responsiveLayout='scroll'
+							>
+								<Column
+									expander={allowExpansion}
+									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+									className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+									style={{ width: '0.5rem' }}
+								/>
+								<Column
+									field='Property.street'
+									body={(data) => (
+										<span className={`${data.DebtOwners.filter((d: any) => !d.paid).length > 0 ? 'text-red-400' : ''}`}>
+											{data.Property.street} {data.Property.number} {data.Property.floor} {data.Property.dept}
+										</span>
+									)}
+									header='Propiedad'
+									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+									className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+									sortable
+								/>
+								<Column
+									field='Client.fullName'
+									body={(data) => (
+										<span className={`${data.DebtOwners.filter((d: any) => !d.paid).length > 0 ? 'text-red-400' : ''}`}>
+											{data.Client.fullName} <span className='text-sm'> ({data.Client.cuit}) </span>
+										</span>
+									)}
+									header='Inquilino'
+									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+									className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+									sortable
+								/>
+								<Column
+									field='startDate'
+									header='Fecha inicio'
+									body={(data) => <span>{formatDateDDMMYYYY(data.startDate)}</span>}
+									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+									className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+									sortable
+								/>
+								<Column
+									field='endDate'
+									header='Fecha fin'
+									body={(data) => <span>{formatDateDDMMYYYY(data.endDate)}</span>}
+									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+									className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+									sortable
+								/>
+								<Column
+									field='state'
+									header='Estado'
+									sortable
+									body={(data) => (<span>{data.state}</span>)}
+									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+									className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+								/>
+								<Column
+									field='state'
+									header='Año'
+									body={(data) => (
+										<span className={`${data.PriceHistorials.length === 3 && 'text-yellow-500 font-bold'}`}>
+											{data.PriceHistorials[data.PriceHistorials.length - 1]?.year}
+										</span>
+									)}
+									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+									className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+								/>
+								<Column
+									field=''
+									header='Monto Actual'
+									body={(data) => (
+										<span className={`font-bold`}>
+											${data.PriceHistorials[data.PriceHistorials.length - 1]?.amount}
+										</span>
+									)}
+									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+									className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+								/>
+
+							</DataTable>
+						</Box>
+					</>
+				) : (
+					<EmptyData text='Aún no hay deuda' />
+				)
+
+			}
+
+
 			{isFetching && (<Loading h={40} w={40} />)}
 		</div>
 	)
