@@ -118,3 +118,13 @@ db_name = novaitfl_ivanadb
  db_user = novaitfl_ivanadb
  db_password = ivana.2023
 TOKEN_GIT ::: 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
+
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'I+rAQza6R&M6ZnX2';
+CREATE USER 'dev'@'%' IDENTIFIED BY ')r3QjBEJdWKJDkEf';
+GRANT ALL PRIVILEGES ON . TO 'dev'@'%' WITH GRANT OPTION;
+
+
+ "username": "novaitfl_ivanadb",
+    "password": "ivana.2023",
+    "database": "novaitfl_ivanadb",
+    "host": "localhost",

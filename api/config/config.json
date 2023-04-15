@@ -14,10 +14,10 @@
     "dialect": "mysql"
   },
   "production": {
-    "username": "novaitfl_ivanadb",
-    "password": "ivana.2023",
-    "database": "novaitfl_ivanadb",
-    "host": "localhost",
+    "username": "root",
+    "password": "I+rAQza6R&M6ZnX2",
+    "database": "ivana_centro",
+    "host": "127.0.0.1",
     "dialect": "mysql"
   }
 }
