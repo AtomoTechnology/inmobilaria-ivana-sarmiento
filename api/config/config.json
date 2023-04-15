@@ -17,7 +17,7 @@
     "username": "root",
     "password": "I+rAQza6R&M6ZnX2",
     "database": "ivana_centro",
-    "host": "127.0.0.1",
+    "host": "localhost",
     "dialect": "mysql"
   }
 }

@@ -51,10 +51,10 @@ schedule.scheduleJob("0 0 1 * *", function () {
 //Starting
 app.listen(app.get("port"), () => {
   console.log("APP RUNNING ON PORT : ", app.get("port"), "  MODE : ", process.env.NODE_ENV);
-  // sequelize
-  //   .sync({ force: true, })
-  //   .then(() => { console.log('DB IS CONNECTED.') })
-  //   .catch((err) => { console.log(err) })
+// sequelize
+//    .sync({ alter: true, })
+//    .then(() => { console.log('DB IS CONNECTED.') })
+//    .catch((err) => { console.log(err) })
 });
 
 //   TODO:  add restrictions
