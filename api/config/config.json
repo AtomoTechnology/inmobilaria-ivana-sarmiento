@@ -15,8 +15,8 @@
   },
   "production": {
     "username": "root",
-    "password": "jhm.ok",
-    "database": "ivanaDB",
+    "password": "I+rAQza6R&M6ZnX2",
+    "database": "ivana_centro",
     "host": "127.0.0.1",
     "dialect": "mysql"
   }
