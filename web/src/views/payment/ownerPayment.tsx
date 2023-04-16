@@ -214,6 +214,7 @@ const OwnerPayment = () => {
 	}
 
 	const handleChangeOwner = async (e: DropdownChangeEvent) => {
+		setUpToDate(false)
 		setLoadingExpenses(true)
 		reset()
 		setSelectedEventualities([])
@@ -450,7 +451,7 @@ const OwnerPayment = () => {
 				overlayClick={false}
 				// className='shadow-none border-0 w-full sm:w-[640px] md:w-[768px] lg:w-[1024px] !p-3'
 				titleText={'Pagos'}
-				overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
+			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
 				<CloseOnClick action={closeCreateModal} />
 				<div className='flex justify-between w-full flex-col md:flex-row gap-x-6 mt-3'>
@@ -733,7 +734,7 @@ const OwnerPayment = () => {
 				overlayClick={false}
 				// className='shadow-none border-0 w-full sm:w-[640px] md:w-[768px] lg:w-[1024px] !p-3'
 				titleText={`Recibo de ${currentPayment.current?.month} - ${currentPayment.current?.year}`}
-				overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
+			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
 				<CloseOnClick action={closePrintPdfModal} />
 

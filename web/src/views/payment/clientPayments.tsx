@@ -46,7 +46,6 @@ const ClientPayments = () => {
 		ContractId,
 		PaymentTypeId,
 		recharge,
-		rentingAmount,
 		month,
 		year,
 		paidTotal,
@@ -65,7 +64,6 @@ const ClientPayments = () => {
 		year: new Date().getFullYear(),
 		total: 0,
 		recharge: 0,
-		rentingAmount: 0,
 		qteDays: 0,
 		dailyPunitive: 0,
 		paidTotal: 0,
@@ -156,7 +154,7 @@ const ClientPayments = () => {
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		values.total = eventTotal.current + expsTotal.current + debtsTotal.current + recharge
-		const { error, ok } = validateForm({ ...values }, ['paidTotal', 'extraExpenses'])
+		const { error, ok } = validateForm({ ...values }, ['paidTotal', 'extraExpenses', 'qteDays', 'recharge', 'dailyPunitive'])
 		setErrors(error)
 		if (!ok) return false
 
@@ -290,7 +288,6 @@ const ClientPayments = () => {
 				updateAll({
 					...values,
 					ContractId: e.value,
-					rentingAmount: 0,
 					total: 0,
 					recharge: 0,
 					qteDays: 0,
@@ -363,14 +360,12 @@ const ClientPayments = () => {
 						(qte * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (Number(dp.data.data[0].value) / 100)).toFixed(2)
 					),
 					qteDays: qte,
-					rentingAmount: e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount,
 					ContractId: e.value,
 					dailyPunitive: e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (Number(dp.data.data[0].value) / 100),
 				})
 			} else {
 				updateAll({
 					...values,
-					rentingAmount: e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount,
 					ContractId: e.value,
 				})
 			}
@@ -492,7 +487,7 @@ const ClientPayments = () => {
 				overlayClick={false}
 				// className='shadow-none border-0 w-full sm:w-[640px] md:w-[768px] lg:w-[1024px] !p-3'
 				titleText={`Recibo de ${currentPayment.current?.month} - ${currentPayment.current?.year}`}
-				overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
+			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
 				<CloseOnClick action={closePrintPdfModal} />
 
@@ -573,20 +568,6 @@ const ClientPayments = () => {
 
 
 									<div className='payment-pdf px-2  my-3 pt-4 flex-1 gap-y-1 flex flex-col '>
-										{
-											// currentPayment.current?.rentingAmount! > 0 && (
-											// 	<div
-											// 		className='align-items-center uppercase text-sm  flex gap-x-3 items-center dark:border-slate-600  justify-between    border-gray-300'
-											// 	>
-											// 		<span className=''>
-											// 			{/*  @ts-ignore*/}
-											// 			ALQUILER {currentPayment.current?.Contract?.Property?.street} {currentPayment.current?.Contract?.Property?.number}{' '}{currentPayment.current?.Contract?.Property?.floor}-{currentPayment.current?.Contract?.Property?.dept}  {currentPayment.current?.month}   {currentPayment.current?.year.toString()}</span>
-											// 		<span>${currentPayment.current?.rentingAmount}</span>
-
-											// 	</div>
-											// )
-										}
-
 
 										{currentPayment.current?.expenseDetails.map((evt, index) => (
 											<div
@@ -654,7 +635,7 @@ const ClientPayments = () => {
 				overlayClick={false}
 				// className='shadow-none border-0 w-full sm:w-[640px] md:w-[768px] lg:w-[1024px] !p-3'
 				titleText={'Cobros'}
-				overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
+			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
 				<CloseOnClick action={closeCreateModal} />
 				<div className='flex justify-between w-full flex-col md:flex-row gap-x-6 mt-3'>
@@ -913,19 +894,6 @@ const ClientPayments = () => {
 							</FieldsetGroup>
 						</FieldsetGroup>
 						<FieldsetGroup className=''>
-							{/* <fieldset className=''>
-								<label htmlFor='rentingAmount'>Valor alquiler</label>
-								<input
-									placeholder='1234.90'
-									type='number'
-									disabled={true}
-									className={`dark:!bg-gray-900  dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
-									value={rentingAmount ?? ''}
-									onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-										handleInputChange(Number(e.target.value), 'rentingAmount')
-									}}
-								/>
-							</fieldset> */}
 							<fieldset className=''>
 								<label htmlFor='total'>Total a cobrar</label>
 								<input
@@ -963,19 +931,7 @@ const ClientPayments = () => {
 											// 	</div>
 											// )
 										}
-										{
-											// values.rentingAmount > 0 && (
-											// 	<div
-											// 		className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
-											// 	>
-											// 		<span className=''>ALQUILER
-											// 			{/* @ts-ignore */}
-											// 			{ContractId?.Property?.street} {ContractId?.Property?.number}{' '}{ContractId?.Property?.floor}-{ContractId?.Property?.dept}  {month}   {year.toString()}</span>
-											// 		<span>${rentingAmount}</span>
 
-											// 	</div>
-											// )
-										}
 
 										{selectedExpensesClient.map((evt, index) => (
 											<div

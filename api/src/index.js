@@ -1,15 +1,17 @@
+const dotenv = require("dotenv");
 const express = require("express");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cors = require("cors");
-const routeconfig = require("./routeconfig/config");
-const rateLimit = require("express-rate-limit");
-const { globalError } = require("./Generic/errorGeneric");
-const dotenv = require("dotenv");
-dotenv.config();
-const { sequelize } = require("../models");
-const bodyParser = require("body-parser");
 const schedule = require("node-schedule");
+// const rateLimit = require("express-rate-limit");
+const bodyParser = require("body-parser");
+
+dotenv.config();
+
+const { globalError } = require("./Generic/errorGeneric");
+const { sequelize } = require("../models");
+const routeconfig = require("./routeconfig/config");
 const ctrlDebtsClient = require("./controller/debtClient.controller");
 const ctrlDebtsOwner = require("./controller/debtOwner.controller");
 
@@ -51,10 +53,10 @@ schedule.scheduleJob("0 0 1 * *", function () {
 //Starting
 app.listen(app.get("port"), () => {
   console.log("APP RUNNING ON PORT : ", app.get("port"), "  MODE : ", process.env.NODE_ENV);
-// sequelize
-//    .sync({ alter: true, })
-//    .then(() => { console.log('DB IS CONNECTED.') })
-//    .catch((err) => { console.log(err) })
+  // sequelize
+  //    .sync({ alter: true, })
+  //    .then(() => { console.log('DB IS CONNECTED.') })
+  //    .catch((err) => { console.log(err) })
 });
 
 //   TODO:  add restrictions

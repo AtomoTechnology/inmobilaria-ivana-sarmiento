@@ -151,7 +151,19 @@ const ExpiredContracts = () => {
 								{data?.data.map((c: any) => (
 									<tr key={c.id} className=''>
 										<td className='px-3 py-2'>{formatDateDDMMYYYY(c.endDate)}</td>
-										<td className='px-3 py-2'>{diffenceBetweenDates(new Date().toISOString(), c.endDate,)}</td>
+										<td className='px-3 py-2'>
+
+											{
+												diffenceBetweenDates(c.startDate, new Date().toISOString()) <= 365 ?
+													(365 - diffenceBetweenDates(c.startDate, new Date().toISOString())) :
+													(
+														(diffenceBetweenDates(c.startDate, new Date().toISOString()) > 365 && diffenceBetweenDates(c.startDate, new Date().toISOString()) <= 730) ? (
+															(730 - diffenceBetweenDates(c.startDate, new Date().toISOString()))
+														)
+															: (1095 - diffenceBetweenDates(c.startDate, new Date().toISOString()))
+													)
+											}
+										</td>
 										<td className='px-3 py-2'>{c.Property.folderNumber}</td>
 										<td className='px-3 py-2'>
 											{c.Property.street} {c.Property.number} {c.Property.dept} - {c.Property.floor}
@@ -161,7 +173,6 @@ const ExpiredContracts = () => {
 										<td className='px-3 py-2'>${c.PriceHistorials[c.PriceHistorials.length - 1].amount}</td>
 										<td className='px-3 py-2'>${c.PriceHistorials[c.PriceHistorials.length - 1].amount - (c.PriceHistorials[c.PriceHistorials?.length - 1].amount * (c.Property.Owner.commision / 100))}</td>
 										<td className='px-3 py-2'>{c.PriceHistorials[c.PriceHistorials.length - 1].year}</td>
-
 										<td
 											className='px-3 py-2'
 											title={c.description}
@@ -175,25 +186,12 @@ const ExpiredContracts = () => {
 					</div>
 				</Box>
 			</div>
-			{isFetching && (
-				<Loading
-					h={60}
-					w={60}
-				/>
-			)}
-			<button className='btn gradient  !my-4' disabled={loadingPdf} onClick={downloadPdf}> {loadingPdf ? 'Descargando ... ' : 'Descargar Planilla'} </button>
-			{/* <PDFDownloadLink
-				document={
-					<Expired
-						data={data?.data || []}
-						days={days}
-					/>
-				}
-				fileName={`contratos-a-vencer-dentro-de-${days}-dias`}
-			>
-				fdfhsdf
-			</PDFDownloadLink> */}
-			{/* </PDFViewer> */}
+			{isFetching && (<Loading h={60} w={60} />)}
+			<button className='btn gradient  !my-4'
+				disabled={loadingPdf || data?.data.length == 0}
+				onClick={downloadPdf}>
+				{loadingPdf ? 'Descargando ... ' : 'Descargar Planilla'}
+			</button>
 		</div>
 	)
 }

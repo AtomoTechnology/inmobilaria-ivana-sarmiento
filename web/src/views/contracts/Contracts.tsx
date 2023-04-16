@@ -153,6 +153,7 @@ const Contracts = () => {
 				if (res.data.ok) {
 					refetch()
 					setAssurances([])
+					setAddGaranteeBox(false)
 					reset()
 					setShowCreateModal(false)
 					showAndHideModal('Editado', res.data.message)
@@ -172,6 +173,7 @@ const Contracts = () => {
 				if (res.data.ok) {
 					refetch()
 					setAssurances([])
+					setAddGaranteeBox(false)
 					reset()
 					setShowCreateModal(false)
 					showAndHideModal('Guardado', res.data.message)
@@ -225,6 +227,7 @@ const Contracts = () => {
 	const closeCreateModal = () => {
 		reset()
 		setShowCreateModal(false)
+		setAddGaranteeBox(false)
 		setErrors({})
 	}
 	const closeGuaranteeModal = () => {
@@ -450,7 +453,7 @@ const Contracts = () => {
 				overlayClick={false}
 				className='shadow-none border-0 max-w-[800px]'
 				titleText={`${editMode ? 'Editar' : 'Crear'} contrato `}
-				overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
+			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
 				<CloseOnClick action={closeCreateModal} />
 				<form onSubmit={handleSave}>
@@ -809,7 +812,7 @@ const Contracts = () => {
 				overlayClick={false}
 				titleText='Agregar  garante'
 				className='shadow-none border-0'
-				overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
+			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
 				<CloseOnClick action={closeGuaranteeModal} />
 				<form onSubmit={handleAddGuarantee} >

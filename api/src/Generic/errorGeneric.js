@@ -63,7 +63,7 @@ const sendError = (err, res) => {
 		ok: false,
 		status: 'error',
 		code: 500,
-		message: '¡¡Algo salió  mal!! Por favor, inténtalo de nuevo.',
+		message: err.message.split(',,')[0] || '¡¡Algo salió  mal!! Por favor, inténtalo de nuevo.',
 	})
 }
 

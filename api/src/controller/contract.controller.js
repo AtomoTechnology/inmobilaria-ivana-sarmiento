@@ -278,7 +278,7 @@ exports.ExpiredContracts = catchAsync(async (req, res, next) => {
             sequelize.col("startDate")
           ),
           {
-            [Op.between]: [366, 730],// restar qte de dias a cada uno de los rangos [306, 670] (-60)
+            [Op.between]: [364 - days, 365],// restar qte de dias a cada uno de los rangos [306, 670] (-60)
           }
         ),
         sequelize.where(
@@ -288,7 +288,17 @@ exports.ExpiredContracts = catchAsync(async (req, res, next) => {
             sequelize.col("startDate")
           ),
           {
-            [Op.between]: [731, 1095],
+            [Op.between]: [729 - days, 730],
+          }
+        ),
+        sequelize.where(
+          sequelize.fn(
+            "datediff",
+            sequelize.fn("NOW"),
+            sequelize.col("startDate")
+          ),
+          {
+            [Op.between]: [1094 - days, 1095],
           }
         ),
       ],
