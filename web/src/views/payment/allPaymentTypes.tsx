@@ -151,12 +151,13 @@ const AllPaymentTypes = () => {
               className='!overflow-hidden   !border-none'
               value={data?.data}
               dataKey='id'
-              paginator
-              rows={10}
-              paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-              currentPageReportTemplate='{first} al {last} de {totalRecords}'
-              paginatorLeft={<RefreshData action={refetch} />}
-              responsiveLayout='scroll'            >
+              // paginator
+              // rows={10}
+              // paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+              // currentPageReportTemplate='{first} al {last} de {totalRecords}'
+              // paginatorLeft={<RefreshData action={refetch} />}
+              responsiveLayout='scroll'
+            >
               <Column field='name' header='Nombre' headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' />
               <Column body={actionBodyTemplate} headerClassName='!border-none dark:!bg-gray-800' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' exportable={false} style={{ width: 90 }} />
             </DataTable>

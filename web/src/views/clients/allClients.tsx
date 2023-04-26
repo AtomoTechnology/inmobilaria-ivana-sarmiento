@@ -25,6 +25,7 @@ import RefreshData from '../../components/RefreshData'
 import FormActionBtns from '../../components/FormActionBtns'
 import { EmptyData } from '../../components/EmptyData'
 import CustomTextArea from '../../components/CustomTextArea'
+import BoxContainerPage from '../../components/BoxContainerPage'
 
 const Clients = () => {
 	const [showCreateModal, setShowCreateModal] = useState(false)
@@ -191,7 +192,7 @@ const Clients = () => {
 	if (isError) return <RequestError error={error} />
 
 	return (
-		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
+		<BoxContainerPage >
 			<HeaderData action={openCreateOrEditModel} text='Inquilinos' />
 			{data.data.length > 0 ? (
 				<>
@@ -209,13 +210,13 @@ const Clients = () => {
 							emptyMessage='Aún no hay inquilino'
 							className='!overflow-hidden !border-none'
 							value={data?.data}
-							paginator
-							rows={10}
 							filters={filters}
 							globalFilterFields={['fullName', 'cuit']}
-							paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-							currentPageReportTemplate='{first} al {last} de {totalRecords}'
-							paginatorLeft={<RefreshData action={refetch} />}
+							// paginator
+							// rows={10}
+							// paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+							// currentPageReportTemplate='{first} al {last} de {totalRecords}'
+							// paginatorLeft={<RefreshData action={refetch} />}
 							dataKey='id'
 							responsiveLayout='scroll'
 						>
@@ -415,7 +416,8 @@ const Clients = () => {
 					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
 				</form>
 			</CreateModal>
-		</div>
+		</BoxContainerPage>
+
 	)
 
 }

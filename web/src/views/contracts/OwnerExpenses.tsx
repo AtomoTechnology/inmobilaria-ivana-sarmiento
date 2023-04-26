@@ -160,7 +160,6 @@ const OwnerExpenses = () => {
 	}
 	if (isLoading) return <Loading />
 	if (isError) return <RequestError error={error} />
-	console.log('CQQQ ::: ', contractQuery.data?.data)
 	return (
 		<div className='container m-auto  flex sm:mx-0  flex-col justify-center sm:justify-center'>
 			<HeaderData action={openCreateOrEditModel} text='Impuestos propietarios' />
@@ -180,13 +179,13 @@ const OwnerExpenses = () => {
 							emptyMessage='Aún no hay impuesto'
 							className='!overflow-hidden   !border-none'
 							value={data?.data}
-							paginator
 							filters={filters}
 							globalFilterFields={['Contract.Property.street', 'description']}
-							rows={RowsToShow}
-							paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-							currentPageReportTemplate='{first} al {last} de {totalRecords}'
-							paginatorLeft={<RefreshData action={refetch} />}
+							// paginator
+							// rows={RowsToShow}
+							// paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+							// currentPageReportTemplate='{first} al {last} de {totalRecords}'
+							// paginatorLeft={<RefreshData action={refetch} />}
 							dataKey='id'
 							responsiveLayout='scroll'
 						>

@@ -12,12 +12,12 @@ const {
 exports.GetAll = all(Eventuality, {
 	include: [
 		{
-			model: Contract,
-			attributes: ["startDate", "endDate", "id", "state"],
-			include: {
-				model: Property,
-				attributes: ["street", "number", "floor", "dept", "id"],
-			},
+			model: Property,
+			attributes: ["street", "number", "floor", "dept", "id"],
+			// include: {
+			// 	model: Contract,
+			// 	attributes: ["startDate", "endDate", "id", "state"],
+			// },
 		},
 	],
 });
@@ -25,7 +25,8 @@ exports.Paginate = paginate(Eventuality, {
 	// include: [{ model: Contract }],
 });
 exports.Create = create(Eventuality, [
-	"ContractId",
+	// "ContractId",
+	"PropertyId",
 	"amount",
 	"description",
 	"expiredDate",
@@ -36,7 +37,8 @@ exports.GetById = findOne(Eventuality, {
 	// include: [{ model: Contract }],
 });
 exports.Put = update(Eventuality, [
-	"ContractId",
+	// "ContractId",
+	"PropertyId",
 	"amount",
 	"description",
 	"expiredDate",

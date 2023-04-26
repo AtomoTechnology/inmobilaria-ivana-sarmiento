@@ -27,14 +27,16 @@ import RefreshData from '../../components/RefreshData'
 import { EmptyData } from '../../components/EmptyData'
 import CloseOnClick from '../../components/CloseOnClick'
 import FormActionBtns from '../../components/FormActionBtns'
+import { useProperties } from '../../hooks/useProperties'
+import BoxContainerPage from '../../components/BoxContainerPage'
 
 
 
 const Eventualities = () => {
 	const [showCreateModal, setShowCreateModal] = useState(false)
 	const [show, setShow] = useState(false)
-	const { description, clientAmount, expiredDate, ownerAmount, ContractId, values, handleInputChange, reset, updateAll } = useForm({
-		ContractId: 0,
+	const { description, clientAmount, expiredDate, ownerAmount, PropertyId, values, handleInputChange, reset, updateAll } = useForm({
+		PropertyId: 0,
 		clientAmount: 0,
 		ownerAmount: 0,
 		description: '',
@@ -47,14 +49,17 @@ const Eventualities = () => {
 	const [filters, setFilters] = useState({
 		global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 		description: { value: null, matchMode: FilterMatchMode.CONTAINS },
-		'Contract.Property.street': { value: null, matchMode: FilterMatchMode.CONTAINS },
+		'Property.street': { value: null, matchMode: FilterMatchMode.CONTAINS },
 	})
 	const currentEventuality = useRef<IEventuality | null>()
 	const { showAndHideModal } = useShowAndHideModal()
 	const { data, isError, isLoading, error, isFetching, refetch } = useEventualities()
-	const contractQuery = useContracts()
+	// const contractQuery = useContracts()
+	const propertyQuery = useProperties()
+
 
 	const edit = (data: IEventuality) => {
+		console.log(data)
 		updateAll({ ...data })
 		setShowCreateModal(true)
 		setEditMode(true)
@@ -92,7 +97,7 @@ const Eventualities = () => {
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		const { error, ok } = validateForm({ ...values }, ['clientPaid', 'ownerPaid'])
+		const { error, ok } = validateForm({ ...values }, ['clientPaid', 'ownerPaid', 'isReverted', 'ContractId'])
 		setErrors(error)
 		if (!ok) return false
 		if (editMode) {
@@ -104,9 +109,8 @@ const Eventualities = () => {
 					data?.data &&
 						(data.data = data?.data.map((z) => {
 							if (z.id === currentEventuality.current?.id) {
-								console.log(values)
 								// @ts-expect-error
-								z = { ...values, Contract: contractQuery.data?.data.find((x) => x.id === values.ContractId) }
+								z = { ...values, Contract: propertyQuery.data?.data.find((x) => x.id === values.PropertyId) }
 								// eslint-disable-line no-use-before-define
 							}
 							return z
@@ -163,7 +167,7 @@ const Eventualities = () => {
 	if (isError) return <RequestError error={error} />
 
 	return (
-		<div className='container m-auto  flex sm:mx-0  flex-col justify-center sm:justify-center'>
+		<BoxContainerPage>
 			<HeaderData action={openCreateOrEditModel} text='Eventualidades' />
 			{data.data.length > 0 ? (
 				<>
@@ -181,7 +185,7 @@ const Eventualities = () => {
 							className='!overflow-hidden   !border-none'
 							value={data?.data}
 							filters={filters}
-							globalFilterFields={['Contract.Property.street', 'description']}
+							globalFilterFields={['Property.street', 'description']}
 							// paginator
 							// rows={10}
 							// paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
@@ -191,11 +195,17 @@ const Eventualities = () => {
 							responsiveLayout='scroll'
 						>
 							<Column
-								field='Contract.Property.street'
+								field='Property.street'
+								// body={(data) => (
+								// 	<span>
+								// 		{data.Contract?.Property?.street} {data.Contract?.Property?.number} {data.Contract?.Property?.floor}{' '}
+								// 		{data.Contract?.Property?.dept}
+								// 	</span>
+								// )}
 								body={(data) => (
 									<span>
-										{data.Contract?.Property?.street} {data.Contract?.Property?.number} {data.Contract?.Property?.floor}{' '}
-										{data.Contract?.Property?.dept}
+										{data.Property?.street} {data.Property?.number} {data.Property?.floor}{' '}
+										{data.Property?.dept}
 									</span>
 								)}
 								header='Propiedad'
@@ -288,7 +298,7 @@ const Eventualities = () => {
 				<CloseOnClick action={closeCreateModal} />
 				<form onSubmit={handleSave}				>
 					<FieldsetGroup>
-						<fieldset className=''>
+						{/* <fieldset className=''>
 							<label htmlFor='ContractId'>Contrato </label>
 							<Dropdown
 								value={ContractId}
@@ -307,6 +317,32 @@ const Eventualities = () => {
 								className='h-[42px] items-center !border-gray-200 shadow '
 							/>
 							{errors?.ContractId && <FormError text='El contrato es obligatorio.' />}
+						</fieldset> */}
+
+
+						<fieldset className=''>
+							<label htmlFor='PropertyId'>Propiedad</label>
+							<Dropdown
+								value={PropertyId}
+								onChange={(e) => handleInputChange(e.value, 'PropertyId')}
+								options={propertyQuery.data?.data}
+								optionLabel='street'
+								showClear
+								filterPlaceholder='Busca propiedad'
+								optionValue='id'
+								filterBy='street,number,dept,floor'
+								placeholder='Elije una propiedad'
+								filter
+								valueTemplate={(data, props) => !data ? props.placeholder : <span>{data.street} {data.number} {data.floor}-{data.dept}</span>}
+								itemTemplate={(data) => (<span> {data.street} {data.number} {data.floor}-{data.dept} </span>)}
+								className='h-[42px] items-center !border-gray-200 shadow'
+							/>
+							{PropertyId > 0 && (
+								<span className='text-blue-600 dark:text-blue-400 text-sm ' >
+									Propietario :  {propertyQuery.data?.data.find((p) => p.id === PropertyId)?.Owner?.fullName}
+								</span>
+							)}
+							{errors?.PropertyId && <FormError text='La propiedad es obligatoria.' />}
 						</fieldset>
 					</FieldsetGroup>
 					<FieldsetGroup>
@@ -355,7 +391,7 @@ const Eventualities = () => {
 				</form>
 			</CreateModal>
 
-		</div>
+		</BoxContainerPage>
 	)
 }
 

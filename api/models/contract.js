@@ -139,7 +139,7 @@ module.exports = (sequelize, DataTypes) => {
 			indexes: [
 				{
 					unique: true,
-					fields: ['PropertyId', 'ClientId', 'startDate', 'endDate'],
+					fields: ['PropertyId', 'ClientId', 'startDate', 'endDate', 'state'],
 				},
 			],
 			sequelize,

@@ -141,10 +141,18 @@ const AllPropertyTypes = () => {
         data.data.length > 0 ? (
           <Box className='!p-0 !overflow-hidden !border-none  sm:mx-0  sm:w-[500px] mb-4 '>
             <DataTable
-              size='small' emptyMessage='Aún no hay tipo de propiedad' className='!overflow-hidden !border-none'
-              value={data?.data} dataKey='id' paginator rows={10} paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-              currentPageReportTemplate='{first} al {last} de {totalRecords}'
-              paginatorLeft={<RefreshData action={refetch} />} responsiveLayout='scroll'>
+              size='small'
+              emptyMessage='Aún no hay tipo de propiedad'
+              className='!overflow-hidden !border-none'
+              value={data?.data}
+              // paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+              // currentPageReportTemplate='{first} al {last} de {totalRecords}'
+              // paginator 
+              // rows={10}               
+              // paginatorLeft={<RefreshData action={refetch} />} 
+              dataKey='id'
+              responsiveLayout='scroll'>
+
               <Column field='description' header='Descripción' headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' />
               <Column body={actionBodyTemplate} headerClassName='!border-none dark:!bg-gray-800' className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 ' exportable={false} style={{ width: 90 }} />
             </DataTable>

@@ -37,6 +37,8 @@ import RefreshData from '../../components/RefreshData'
 import { EmptyData } from '../../components/EmptyData'
 import { FilterMatchMode } from 'primereact/api'
 import FormActionBtns from '../../components/FormActionBtns'
+import { UUID } from '../../helpers/general'
+import CustomTextArea from '../../components/CustomTextArea'
 const ClientPayments = () => {
 
 	const [showCreateModal, setShowCreateModal] = useState(false)
@@ -56,6 +58,7 @@ const ClientPayments = () => {
 		handleInputChange,
 		reset,
 		dailyPunitive,
+		obs
 	} = useForm({
 		extraExpenses: 0,
 		ContractId: null,
@@ -67,6 +70,7 @@ const ClientPayments = () => {
 		qteDays: 0,
 		dailyPunitive: 0,
 		paidTotal: 0,
+		obs: ''
 	})
 	const { showAndHideModal } = useShowAndHideModal()
 	const [savingOrUpdating, setSavingOrUpdating] = useState(false)
@@ -78,7 +82,8 @@ const ClientPayments = () => {
 	const [upToDate, setUpToDate] = useState(false)
 	const [twoYearsWithoutPrice, setTwoYearsWithoutPrice] = useState(false)
 	const [threeYearsWithoutPrice, setThreeYearsWithoutPrice] = useState(false)
-
+	const [gestionExpensePorc, setGestionExpensePorc] = useState(2)
+	const [GG, setGG] = useState<any>({})
 	const eventTotal = useRef(0)
 	const expsTotal = useRef(0)
 	const debtsTotal = useRef(0)
@@ -94,10 +99,11 @@ const ClientPayments = () => {
 		year: { value: null, matchMode: FilterMatchMode.CONTAINS },
 		'Contract.Property.street': { value: null, matchMode: FilterMatchMode.CONTAINS }
 	})
-	const clientPaymentQuery = useClientPayments()
-	const { data, } = useContracts()
 	const [loadingExpenses, setLoadingExpenses] = useState(false)
+
 	const paymentTypeQuery = usePaymentTypes()
+	const { data, isError, isLoading, error, isFetching, refetch } = useClientPayments()
+	const contractQuery = useContracts()
 
 
 	const printPdf = async (data: IClienyPayment) => {
@@ -140,7 +146,7 @@ const ClientPayments = () => {
 			setSavingOrUpdating(true)
 			const res = await http.delete('/payment-clients/' + id)
 			if (res.data.ok) {
-				clientPaymentQuery.data?.data && (clientPaymentQuery.data.data! = clientPaymentQuery.data?.data.filter((z) => z.id !== id))
+				data?.data && (data.data! = data?.data.filter((z) => z.id !== id))
 				setShow(false)
 				showAndHideModal('Borrado', res.data.message)
 			} else {
@@ -170,7 +176,7 @@ const ClientPayments = () => {
 				eventualityDetails: selectedEventualities,
 			})
 			if (res.data.ok) {
-				clientPaymentQuery.refetch()
+				refetch()
 				reset()
 				closeCreateModal()
 				showAndHideModal('Guardado', res.data.message)
@@ -265,21 +271,23 @@ const ClientPayments = () => {
 			return
 		}
 
+
+		// validate if the contract has a  price for his current year
 		values.ContractId = e.value
 		let daysFrom = diffenceBetweenDates(e.value.startDate, new Date().toISOString().slice(0, 10))
 		if (daysFrom > 365 && daysFrom < 730) {
 			if (e.value.PriceHistorials.length < 2) {
 				setTwoYearsWithoutPrice(true)
-				return
+				// return
 			}
 		} else if (daysFrom > 730) {
 			if (e.value.PriceHistorials.length < 3) {
 				setThreeYearsWithoutPrice(true)
-				return
+				// return
 			}
 		}
 
-		// validate if the contract has a payment for the current month
+		// TODO validate if the contract has a payment for the current month TODO : CHANGES THAT
 		try {
 			setLoadingExpenses(true)
 			const res = await http.get(`/payment-clients?Contractid=${e.value.id}&month=${month}&year=${year}&include=true`)
@@ -301,7 +309,8 @@ const ClientPayments = () => {
 		try {
 			setLoadingExpenses(true)
 			const docsExpss = http.get<IClientExpensesResponseSimple>(`/client-expenses?amount=0:gt&ContractId=${e.value.id}&include=true`)
-			const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?clientPaid=0&ContractId=${e.value.id}&include=true`)
+			const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?clientPaid=0&PropertyId=${e.value.PropertyId}&include=true`)
+			// const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?clientPaid=0&ContractId=${e.value.id}&include=true`)
 			const dps = http.get<IConfigResponse>(`/config?key=punitorio_diario`)
 			const docsDebtss = http.get<IdebtsResponse>(`/debt-clients?paid=0&ContractId=${e.value.id}`)
 			const [docsExps, docsEvents, dp, docsDebts] = await Promise.all([docsExpss, docsEventss, dps, docsDebtss])
@@ -317,21 +326,30 @@ const ClientPayments = () => {
 					amount: e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount,
 					createdAt: (new Date().getTime().toString()),
 					// rent: true,
-					id: Number(Math.floor(Math.random() * 10000).toFixed(0) + e.value.id.toFixed(0) + new Date().getTime().toFixed(0))
+					id: UUID()
 				},
-				// {
-				// 	ContractId: e.value.id,
-				// 	date: new Date().toISOString().slice(0, 10),
-				// 	updatedAt: new Date().toISOString(),
-				// 	deletedAt: null,
-				// 	description: 'PUNITORIOS  ' + ' ' + month + '/' + year,
-				// 	amount: recharge,
-				// 	createdAt: (new Date().getTime().toString()),
-				// 	id: Number(Math.floor(Math.random() * 1000).toFixed(0) + e.value.id.toFixed(0) + new Date().getTime().toFixed(0))
-				// },
+				{
+					ContractId: e.value.id,
+					date: new Date().toISOString().slice(0, 10),
+					updatedAt: new Date().toISOString(),
+					deletedAt: null,
+					description: 'GASTOS BANCARIOS  ' + ' ' + month + '/' + year,
+					amount: 500,
+					createdAt: (new Date().getTime().toString()),
+					id: UUID()
+				},
 				...docsExps.data.data.map((d) => ({ ...d, description: d.description + ' ' + month + '/' + year }))
 			])
-
+			setGG({
+				ContractId: e.value.id,
+				date: new Date().toISOString().slice(0, 10),
+				updatedAt: new Date().toISOString(),
+				deletedAt: null,
+				description: 'GASTOS DE GESTION  ' + ' ' + month + '/' + year,
+				amount: gestionExpensePorc * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount,
+				createdAt: (new Date().getTime().toString()),
+				id: UUID()
+			},)
 			setDebts(docsDebts.data.data)
 
 			docsDebts.data.data.map((d) => {
@@ -353,7 +371,6 @@ const ClientPayments = () => {
 			let day = new Date().getDate()
 			if (day > 5) {
 				let qte = day - 5
-				console.log(qte * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (Number(dp.data.data[0].value) / 100))
 				updateAll({
 					...values,
 					recharge: Number(
@@ -381,14 +398,14 @@ const ClientPayments = () => {
 		setShowCreateModal(true)
 	}
 
-	if (clientPaymentQuery.isLoading) return <Loading />
-	if (clientPaymentQuery.isError) return <RequestError error={clientPaymentQuery.error} />
+	if (isLoading) return <Loading />
+	if (isError) return <RequestError error={error} />
 
 	return (
 		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
 			<HeaderData action={openCreateOrEditModel} text='Cobro a Inquilino' />
 
-			{clientPaymentQuery?.data?.data.length > 0 ? (
+			{data?.data.length > 0 ? (
 				<>
 					<CustomInput
 						onChange={(val) => onGlobalFilterChange(val)}
@@ -402,23 +419,23 @@ const ClientPayments = () => {
 							size='small'
 							emptyMessage='Aún no hay cobro'
 							className='!overflow-hidden   !border-none'
-							value={clientPaymentQuery?.data?.data}
+							value={data?.data}
 							dataKey='id'
 							filters={filters}
 							globalFilterFields={['month', 'year', 'Contract.Property.street']}
 							responsiveLayout='scroll'
-							paginator
-							rows={10}
-							paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-							currentPageReportTemplate='{first} al {last} de {totalRecords}'
-							paginatorLeft={<RefreshData action={clientPaymentQuery.refetch} />}
+						// paginator
+						// rows={10}
+						// paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+						// currentPageReportTemplate='{first} al {last} de {totalRecords}'
+						// paginatorLeft={<RefreshData action={refetch} />}
 						>
 							<Column
 								field='Contract.Property.street'
 								body={(data) => (
 									<span>
-										{data.Contract.Property.street} {data.Contract.Property.number} {data.Contract.Property.floor}{' '}
-										{data.Contract.Property.dept}
+										{data.Contract?.Property.street} {data.Contract?.Property.number} {data.Contract?.Property.floor}{' '}
+										{data.Contract?.Property.dept}
 									</span>
 								)}
 								header='Propiedad'
@@ -472,7 +489,7 @@ const ClientPayments = () => {
 				<EmptyData text='Aún no hay Cobro' />
 			)}
 
-			{clientPaymentQuery.isFetching && (<Loading h={40} w={40} />)}
+			{isFetching && (<Loading h={40} w={40} />)}
 
 			<DeleteModal
 				show={show}
@@ -644,14 +661,13 @@ const ClientPayments = () => {
 						// bg-gray-100 p-2 rounded-md shadow-xl
 						className='w-full  sm:w-[600px] '
 					>
-						<FieldsetGroup>
-
+						<FieldsetGroup >
 							<fieldset>
 								<label htmlFor='ContractId'>Contrato </label>
 								<Dropdown
 									value={ContractId}
 									onChange={handleChangeContract}
-									options={data?.data}
+									options={contractQuery.data?.data}
 									optionLabel='street'
 									showClear
 									valueTemplate={(data, props) => !data ? props.placeholder : (<span> {data.Client.fullName} | {data.Property.street} {data.Property.number} {data.Property.floor}-{data.Property.dept} </span>)}
@@ -663,8 +679,32 @@ const ClientPayments = () => {
 									filterPlaceholder='Busca contrato'
 									className='h-[42px] !w-full  items-center !border-gray-200 shadow '
 								/>
+								{/* @ts-expect-error */}
+								{ContractId?.id > 0 && (
+									<span className='text-blue-600 dark:text-blue-400 text-sm ' >
+										{/* @ts-expect-error */}
+										Propietario : {ContractId?.Property?.Owner?.fullName}
+									</span>
+								)}
 								{errors?.ContractId && <FormError text='El contrato es obligatorio.' />}
 							</fieldset>
+							<div className='flex w-full sm:w-20 flex-col mt-4'>
+								<label htmlFor='gestionExpensePorc'>%Gestion </label>
+								<input
+									value={gestionExpensePorc}
+									placeholder='0.00'
+									type='number'
+									className={`dark:!bg-gray-900 dark:text-slate-400 w-full  border !border-gray-300 dark:!border-slate-700 !shadow `}
+									min={1}
+									max={10}
+									onChange={(e) => {
+										setGestionExpensePorc(Number(e.target.value))
+										// @ts-expect-error
+										setGG((prev: any) => ({ ...prev, amount: ((Number(e.target.value) / 100) * ContractId?.PriceHistorials[ContractId?.PriceHistorials.length - 1]?.amount).toFixed(2) }))
+									}}
+
+								/>
+							</div>
 
 						</FieldsetGroup>
 
@@ -720,6 +760,25 @@ const ClientPayments = () => {
 													</label>
 												</div>
 											))}
+											<div
+												key={GG.id.toString() + GG.createdAt + GG.amount + GG.description}
+												className='align-items-center flex items-center flex-wrap   border border-gray-300 dark:border-slate-500 p-2'
+											>
+												<Checkbox
+													inputId={GG.id.toString() + GG.createdAt + GG.amount + GG.description}
+													name='expenseClients'
+													value={GG}
+													onChange={onExpensesClienteChange}
+													checked={selectedExpensesClient.some((item: any) => item.id === GG.id)}
+												/>
+												<label
+													htmlFor={GG.toString() + GG.createdAt + GG.amount + GG.description}
+													className='ml-2'
+												>
+													${GG.amount} | {GG.description}
+												</label>
+											</div>
+
 										</div>
 									</div>
 								)}
@@ -913,6 +972,15 @@ const ClientPayments = () => {
 								label='Total cobrado'
 							/>
 						</FieldsetGroup>
+
+						<CustomTextArea
+							initialValue={obs || ''}
+							placeholder='Descriocion del pago'
+							onChange={(v) => { handleInputChange(v, 'obs') }}
+							label='Observaciones'
+						/>
+
+
 						<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
 					</form>
 

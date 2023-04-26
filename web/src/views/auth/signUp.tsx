@@ -49,7 +49,6 @@ const SignUp = () => {
       try {
         const r = await http.post('/auth/SignUp', values);
         if (r.data.status === 200) {
-          console.log(r.data)
           // SignUp(r.data);
           reset();
           setLoading(false);
@@ -58,9 +57,7 @@ const SignUp = () => {
           setLoginError(r.data.message);
         }
       } catch (error: any) {
-        console.log(error)
         if (error.response) {
-          console.log(error.response.data)
           setLoginError(error.response.data.message);
           setTimeout(() => {
             setLoginError(null);

@@ -26,6 +26,7 @@ import Properties from '../views/properties/properties'
 import AllZones from '../views/zones/allZones'
 import PrivateRoute from './PrivateRoute'
 import PublicRoute from './PublicRoute'
+import Guarantors from '../views/contracts/Guarantors'
 
 export const router = createBrowserRouter([
 	{
@@ -82,6 +83,14 @@ export const router = createBrowserRouter([
 				element: (
 					<PrivateRoute>
 						<Owners />
+					</PrivateRoute>
+				),
+			},
+			{
+				path: '/guarantors',
+				element: (
+					<PrivateRoute>
+						<Guarantors />
 					</PrivateRoute>
 				),
 			},

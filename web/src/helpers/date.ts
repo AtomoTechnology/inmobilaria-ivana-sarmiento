@@ -48,10 +48,54 @@ export function formatDateDDMMYYYY(date: string) {
 
 
 
-export const diffenceBetweenDates = (date1: string, date2: string) => {
+export const diffenceBetweenDates = (date1: string, date2: string): number => {
 	let now = new Date(date1)
 	let now2 = new Date(date2)
 	let diff = now2.getTime() - now.getTime()
 	let diffDays = Math.ceil(diff / (1000 * 3600 * 24))
 	return diffDays
 }
+
+
+export const diferenceBetweentwoDatesInYears = (date1: string, date2: string): number => {
+	let now = new Date(date1)
+	let now2 = new Date(date2)
+	let diff = now2.getTime() - now.getTime()
+	return Math.ceil(diff / (1000 * 3600 * 24 * 365.25))
+
+}
+
+
+
+type T = 'years' | 'months' | 'days' | 'hours' | 'minutes' | 'seconds' | 'milliseconds'
+
+export const addDate = (date: string, quantity: number, type: T): Date => {
+	let now = new Date(date)
+	switch (type) {
+		case 'years':
+			now.setFullYear(now.getFullYear() + quantity)
+			break;
+		case 'months':
+			now.setMonth(now.getMonth() + quantity)
+			break;
+		case 'days':
+			now.setDate(now.getDate() + quantity)
+			break;
+		case 'hours':
+			now.setHours(now.getHours() + quantity)
+			break;
+		case 'minutes':
+			now.setMinutes(now.getMinutes() + quantity)
+			break;
+		case 'seconds':
+			now.setSeconds(now.getSeconds() + quantity)
+			break;
+		case 'milliseconds':
+			now.setMilliseconds(now.getMilliseconds() + quantity)
+			break;
+		default:
+			break;
+	}
+	return now
+}
+

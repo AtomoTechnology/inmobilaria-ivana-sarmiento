@@ -25,6 +25,7 @@ import { EmptyData } from '../../components/EmptyData'
 import CustomTextArea from '../../components/CustomTextArea'
 import FormActionBtns from '../../components/FormActionBtns'
 import HeaderData from '../../components/HeaderData'
+import BoxContainerPage from '../../components/BoxContainerPage'
 
 const Owners = () => {
 	const [showCreateModal, setShowCreateModal] = useState(false)
@@ -248,7 +249,8 @@ const Owners = () => {
 	if (isError) return <RequestError error={error} />
 
 	return (
-		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
+		<BoxContainerPage >
+
 			<HeaderData action={openCreateOrEditModel} text='Propietarios' />
 			{data.data?.length > 0 ? (
 				<>
@@ -504,7 +506,8 @@ const Owners = () => {
 					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
 				</form>
 			</CreateModal>
-		</div>
+		</BoxContainerPage>
+
 	)
 }
 

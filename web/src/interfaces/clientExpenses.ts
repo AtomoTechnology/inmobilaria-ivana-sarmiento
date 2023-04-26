@@ -16,7 +16,7 @@ export interface IClientExpensesResponseSimple {
 }
 
 export interface IClientExpItem {
-	id: number
+	id: number | string
 	description: string
 	amount: number
 	date: string

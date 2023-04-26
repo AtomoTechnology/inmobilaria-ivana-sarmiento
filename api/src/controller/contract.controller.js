@@ -83,54 +83,33 @@ exports.GetOwnerContracts = catchAsync(async (req, res, next) => {
 });
 
 exports.Post = catchAsync(async (req, res, next) => {
-  const transact = await sequelize.transaction();
-  try {
-    const { PropertyId, amount, assurances } = req.body;
+  const { PropertyId, amount, assurances } = req.body;
 
-    const p = await Property.findOne(
-      {
-        where: {
-          [Op.and]: [
-            {
-              id: PropertyId,
-            },
-            {
-              state: "Libre",
-            },
-          ],
-        },
-      },
-      {
-        transaction: transact,
-      }
+  const p = await Property.findOne({ where: { id: PropertyId, state: "Libre" } });
+
+  if (!p) return next(new AppError("Existe un contrato vigente para esta propiedad", 400));
+
+  const result = await sequelize.transaction(async (t) => {
+
+    const cont = await Contract.create(req.body, { transaction: t });
+
+    const updPro = await Property.update(
+      { state: "Ocupado" },
+      { where: { id: PropertyId, }, transaction: t },
     );
-    if (!p)
-      return next(
-        new AppError("Existe un contrato vigente para esta propiedad", 400)
-      );
-    const cont = await Contract.create(req.body);
+
+    if (updPro[0] <= 0) {
+      await t.rollback();
+      return next(new AppError("No se pudo actualizar el estado de la propiedad", 400))
+    }
 
     if (assurances !== undefined && assurances.length > 0) {
       for (let j = 0; j < assurances.length; j++) {
         assurances[j].ContractId = cont.id;
-        await Assurance.create(assurances[j], {
-          transaction: transact,
-        });
+        await Assurance.create(assurances[j], { transaction: t });
       }
     }
-    await Property.update(
-      {
-        state: "Ocupado",
-      },
-      {
-        where: {
-          id: PropertyId,
-        },
-      },
-      {
-        transaction: transact,
-      }
-    );
+
     await PriceHistorial.create(
       {
         ContractId: cont.id,
@@ -138,12 +117,9 @@ exports.Post = catchAsync(async (req, res, next) => {
         year: 1,
         percent: 0,
       },
-      {
-        transaction: transact,
-      }
+      { transaction: t }
     );
 
-    await transact.commit();
     return res.json({
       code: 200,
       status: "success",
@@ -151,10 +127,8 @@ exports.Post = catchAsync(async (req, res, next) => {
       message: "El registro fue guardado con exito",
       data: cont,
     });
-  } catch (error) {
-    await transact.rollback();
-    throw error;
-  }
+
+  });
 });
 
 exports.GetById = findOne(Contract, {
@@ -195,78 +169,56 @@ exports.Put = update(Contract, [
 ]);
 exports.Destroy = catchAsync(async (req, res, next) => {
   const id = req.params.id;
-  const transact = await sequelize.transaction();
-  try {
-    const contract = await Contract.findOne(
-      { where: { id } },
-      { transaction: transact }
-    );
-    if (!contract) return next(new AppError("No se encontro el contrato", 400));
-    const debts = await DebtClient.findAll(
-      { where: { ContractId: id, paid: false } },
-      { transaction: transact }
-    );
-    if (debts.length > 0)
-      return next(
-        new AppError(
-          "No se puede eliminar el contrato, existen deudas pendientes",
-          400
-        )
-      );
-    const payments = await DebtOwner.findAll(
-      { where: { ContractId: id, paid: false } },
-      { transaction: transact }
-    );
-    if (payments.length > 0)
-      return next(
-        new AppError(
-          "No se puede eliminar el contrato, existen pagos pendientes",
-          400
-        )
-      );
+  const contract = await Contract.findOne({ where: { id } });
+  if (!contract) return next(new AppError("No se encontró el contrato", 400));
+  console.log('contract :: ', contract)
+  const debts = await DebtClient.findAll({ where: { ContractId: id, paid: false } });
+  if (debts.length > 0) return next(new AppError("No se puede eliminar el contrato, existen deudas pendientes", 400));
 
-    const events = await Eventuality.findAll(
-      {
-        where: {
-          ContractId: id,
-          [Op.or]: { clientPaid: false, ownerPaid: false },
-        },
+  const payments = await DebtOwner.findAll({ where: { ContractId: id, paid: false } },);
+  if (payments.length > 0) return next(new AppError("No se puede eliminar el contrato, existen pagos pendientes", 400));
+
+  const events = await Eventuality.findAll(
+    {
+      where: {
+        PropertyId: contract.PropertyId,
+        [Op.or]: { clientPaid: false, ownerPaid: false },
       },
-      { transaction: transact }
-    );
+    },
+  );
 
-    if (events.length > 0)
-      return next(
-        new AppError(
-          "No se puede eliminar el contrato, existen eventualidades sin pagar o cobrar",
-          400
-        )
-      );
+  if (events.length > 0) return next(new AppError("No se puede eliminar el contrato, existen eventualidades sin pagar o cobrar", 400));
 
+
+  const result = await sequelize.transaction(async (t) => {
+    console.log('contract', contract)
     await Property.update(
       { state: "Libre" },
-      { where: { id: contract.PropertyId } },
-      { transaction: transact }
+      {
+        where: { id: contract.PropertyId },
+        transaction: t
+      },
     );
-    await Contract.update({ state: 'Finalizado' }, { where: { id } }, { transaction: transact });
-    await Contract.destroy({ where: { id } }, { transaction: transact });
 
-
-    await transact.commit();
+    await Contract.update({ state: 'Finalizado' }, { where: { id }, transaction: t });
+    await Contract.destroy({ where: { id }, transaction: t });
     return res.json({
       ok: true,
       status: "success",
       message: "El registro fue eliminado con exito",
     });
-  } catch (error) {
-    await transact.rollback();
-    throw error;
-  }
+  });
+
+  // const transact = await sequelize.transaction();
+  // try {    
+  // } catch (error) {
+  //   await transact.rollback();
+  //   throw error;
+  // }
 });
 
 exports.ExpiredContracts = catchAsync(async (req, res, next) => {
   const days = req.params.days * 1;
-  // get diffDays 
 
   const docs = await Contract.findAll({
     where: {
@@ -278,7 +230,7 @@ exports.ExpiredContracts = catchAsync(async (req, res, next) => {
             sequelize.col("startDate")
           ),
           {
-            [Op.between]: [364 - days, 365],// restar qte de dias a cada uno de los rangos [306, 670] (-60)
+            [Op.between]: [364 - days, 365],
           }
         ),
         sequelize.where(
@@ -304,16 +256,6 @@ exports.ExpiredContracts = catchAsync(async (req, res, next) => {
       ],
       state: "En curso",
     },
-    // where: {
-
-    //   endDate: {
-    //     [Op.and]: {
-    //       [Op.gt]: Date(),
-    //       [Op.lte]: addDays(new Date().toDateString(), days),
-    //     },
-    //   },
-    // },
-    // attributes : ['id','endDate']
     include: [
       { model: Client },
       { model: Property, include: { model: Owner } },

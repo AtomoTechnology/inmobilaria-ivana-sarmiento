@@ -146,11 +146,11 @@ const Configurations = () => {
                         value={data?.data}
                         dataKey='id'
                         responsiveLayout='scroll'
-                        paginator
-                        rows={10}
-                        paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-                        currentPageReportTemplate='{first} al {last} de {totalRecords}'
-                        paginatorLeft={<RefreshData action={refetch} />}
+                    // paginator
+                    // rows={10}
+                    // paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+                    // currentPageReportTemplate='{first} al {last} de {totalRecords}'
+                    // paginatorLeft={<RefreshData action={refetch} />}
                     >
                         <Column
                             field='key'

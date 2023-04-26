@@ -131,7 +131,6 @@ const OwnerPayment = () => {
 		setErrors(error)
 		if (!ok) return false
 		// return
-		console.log({ ...values, expenseDetails: selectedExpensesClient, eventualityDetails: selectedEventualities })
 		// @ts-expect-error
 		values.OwnerId = values.OwnerId!.id
 		try {
@@ -295,7 +294,6 @@ const OwnerPayment = () => {
 	}
 
 	const printPdf = async (data: IClienyPayment) => {
-		console.log(data)
 		currentPayment.current = data
 
 		let pd: any = {};
@@ -350,7 +348,6 @@ const OwnerPayment = () => {
 	}
 	if (ownerPaymentQuery.isLoading) return <Loading />
 	if (ownerPaymentQuery.isError) return <RequestError error={ownerPaymentQuery.error} />
-	// console.log(values)
 	return (
 		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
 			<HeaderData action={openCreateOrEditModel} text='Pago a propietario' />
@@ -371,17 +368,17 @@ const OwnerPayment = () => {
 							value={ownerPaymentQuery?.data?.data}
 							dataKey='id'
 							responsiveLayout='scroll'
-							paginator
-							rows={10}
-							paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-							currentPageReportTemplate='{first} al {last} de {totalRecords}'
-							paginatorLeft={<RefreshData action={ownerPaymentQuery.refetch} />}
+						// paginator
+						// rows={10}
+						// paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+						// currentPageReportTemplate='{first} al {last} de {totalRecords}'
+						// paginatorLeft={<RefreshData action={ownerPaymentQuery.refetch} />}
 						>
 							<Column
 								field='Owner.fullName'
 								body={(data) => (
 									<span>
-										{data.Owner.fullName} {data.Owner.cuit}
+										{data.Owner?.fullName} {data.Owner?.cuit}
 									</span>
 								)}
 								header='Propietario'

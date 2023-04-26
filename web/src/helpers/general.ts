@@ -33,7 +33,6 @@ export const getColorBox = (text: string): string => {
 export async function copyToClipboard(text: string) {
 	try {
 		await navigator.clipboard.writeText(text);
-		console.log('Text copied to clipboard');
 	} catch (err) {
 		console.error('Failed to copy text: ', err);
 	}
@@ -106,6 +105,20 @@ export const menuItems = [
 			{ to: 'property-types', title: 'Tipo de propiedades' },
 			{ to: 'properties', title: 'Propiedades' },
 			{ to: 'configurations', title: 'Infos general' },
+			{ to: 'guarantors', title: 'Garantes' },
 		],
 	},
 ]
+
+
+export const UUID = () => {
+	let d = Date.now();
+	if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+		d += performance.now(); // use high-precision timer if available
+	}
+	const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+		const r = crypto.getRandomValues(new Uint8Array(1))[0] % 16;
+		return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+	});
+	return uuid;
+}

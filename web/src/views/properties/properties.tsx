@@ -24,7 +24,7 @@ import { usePropertyTypes } from '../../hooks/usePropertyTypes'
 import CloseOnClick from '../../components/CloseOnClick'
 import SeeIcon from '../../components/icons/SeeIcon'
 import { useParams } from 'react-router-dom'
-import { BiShareAlt } from 'react-icons/bi'
+import { BiCopy, BiShareAlt } from 'react-icons/bi'
 import { copyToClipboard } from '../../helpers/general'
 import useShowAndHideModal from '../../hooks/useShowAndHideModal'
 import HeaderData from '../../components/HeaderData'
@@ -211,7 +211,7 @@ Descripción del inmueble \n${data.description}
 	const actionBodyTemplate = (rowData: Iproperty) => {
 		return (
 			<div className='flex gap-x-3 items-center justify-center'>
-				{isForParam && (<BiShareAlt size={22} onClick={() => handleShareProperty(rowData)} />)}
+				{isForParam && (<BiCopy size={22} onClick={() => handleShareProperty(rowData)} />)}
 				<SeeIcon action={() => ViewItem(rowData)} />
 				<EditIcon action={() => edit(rowData)} />
 				<DeleteIcon action={() => ConfirmDestroy(rowData)} />
@@ -248,11 +248,11 @@ Descripción del inmueble \n${data.description}
 							value={data?.data}
 							filters={filters}
 							globalFilterFields={['PropertyType.description', 'Owner.fullName', 'Zone.name', 'street']}
-							paginator
-							rows={10}
-							paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-							currentPageReportTemplate='{first} al {last} de {totalRecords}'
-							paginatorLeft={<RefreshData action={refetch} />}
+							// paginator
+							// rows={10}
+							// paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+							// currentPageReportTemplate='{first} al {last} de {totalRecords}'
+							// paginatorLeft={<RefreshData action={refetch} />}
 							dataKey='id'
 							responsiveLayout='scroll'
 						>

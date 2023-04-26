@@ -181,13 +181,13 @@ const ClientExpenses = () => {
 							emptyMessage='Aún no hay impuesto'
 							className='!overflow-hidden   !border-none'
 							value={data?.data}
-							paginator
 							filters={filters}
 							globalFilterFields={['Contract.Property.street', 'description']}
-							rows={RowsToShow}
-							paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-							currentPageReportTemplate='{first} al {last} de {totalRecords}'
-							paginatorLeft={<RefreshData action={refetch} />}
+							// paginator
+							// rows={RowsToShow}
+							// paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+							// currentPageReportTemplate='{first} al {last} de {totalRecords}'
+							// paginatorLeft={<RefreshData action={refetch} />}
 							dataKey='id'
 							responsiveLayout='scroll'
 						>

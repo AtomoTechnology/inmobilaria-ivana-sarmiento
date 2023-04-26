@@ -151,7 +151,6 @@ const Claims = () => {
 		setErrors({})
 	}
 	const handleAddComment = (data: IClaim) => {
-		console.log(data)
 		currentClaim.current = data
 		setShowAddCommentModal(true)
 	}
@@ -243,11 +242,11 @@ const Claims = () => {
 							emptyMessage='Aún no hay reclamo'
 							className='!overflow-hidden   !border-none'
 							value={data?.data}
-							paginator
-							rows={10}
-							paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-							currentPageReportTemplate='{first} al {last} de {totalRecords}'
-							paginatorLeft={<RefreshData action={refetch} />}
+							// paginator
+							// rows={10}
+							// paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+							// currentPageReportTemplate='{first} al {last} de {totalRecords}'
+							// paginatorLeft={<RefreshData action={refetch} />}
 							dataKey='id'
 							responsiveLayout='scroll'
 						>

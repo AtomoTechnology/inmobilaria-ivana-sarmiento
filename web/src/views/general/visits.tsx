@@ -126,7 +126,6 @@ const Visits = () => {
 				setSavingOrUpdating(true)
 				const res = await http.post('/visits', { ...values })
 				if (res.data.ok) {
-					console.log('new items : ', { ...res.data.data, values }, 'NEW VALUES ::: ', propertyQuery.data?.data.find((p) => p.id === PropertyId))
 					data?.data.unshift({ ...res.data.data, Property: propertyQuery.data?.data.find((p) => p.id === PropertyId) })
 					reset()
 					setShowCreateModal(false)
@@ -186,12 +185,12 @@ const Visits = () => {
 							filters={filters}
 							globalFilterFields={['fullName', 'phone', 'Property.street']}
 							dataKey='id'
-							paginator
-							rows={10}
+							// paginator
+							// rows={10}
+							// paginatorLeft={<RefreshData action={refetch} />}
+							// paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+							// currentPageReportTemplate='{first} al {last} de {totalRecords}'
 							responsiveLayout='scroll'
-							paginatorLeft={<RefreshData action={refetch} />}
-							paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-							currentPageReportTemplate='{first} al {last} de {totalRecords}'
 						>
 							<Column
 								header='Dirección'

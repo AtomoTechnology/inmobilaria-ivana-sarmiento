@@ -31,7 +31,8 @@ import RefreshData from '../../components/RefreshData'
 import { EmptyData } from '../../components/EmptyData'
 import FormActionBtns from '../../components/FormActionBtns'
 import { validateForm } from '../../helpers/form'
-import { formatDateDDMMYYYY } from '../../helpers/date'
+import { diferenceBetweentwoDatesInYears, formatDateDDMMYYYY } from '../../helpers/date'
+import BoxContainerPage from '../../components/BoxContainerPage'
 
 export interface Iassurance {
 	fullName: string
@@ -149,7 +150,7 @@ const Contracts = () => {
 		if (editMode) {
 			try {
 				setSavingOrUpdating(true)
-				const res = await http.put(`/contracts/${currentContract.current?.id}`, { ...values, assurances })
+				const res = await http.put(`/contracts/${currentContract.current?.id}`, { ...values })
 				if (res.data.ok) {
 					refetch()
 					setAssurances([])
@@ -168,8 +169,14 @@ const Contracts = () => {
 		} else {
 			try {
 				setSavingOrUpdating(true)
-
-				const res = await http.post('/contracts', { ...values, assurances })
+				// remove the id attributes from assurances 
+				let newAssurances = assurances.map((a) => {
+					// @ts-expect-error
+					delete a.id
+					return a
+				})
+				// 
+				const res = await http.post('/contracts', { ...values, assurances: newAssurances || [] })
 				if (res.data.ok) {
 					refetch()
 					setAssurances([])
@@ -204,6 +211,23 @@ const Contracts = () => {
 			setSavingOrUpdating(false)
 		}
 	}
+	// const destroyGuarantee = async (id: number) => {
+	// 	try {
+	// 		setSavingOrUpdating(true)
+	// 		const res = await http.delete('/assurances/' + id)
+	// 		if (res.data.ok) {
+	// 			data?.data && (data.data! = data?.data.filter((z: any) => z.id !== id))
+	// 			setShow(false)
+	// 			showAndHideModal('Borrado', res.data.message)
+	// 		} else {
+	// 			showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
+	// 		}
+	// 	} catch (error: any) {
+	// 		if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+	// 	} finally {
+	// 		setSavingOrUpdating(false)
+	// 	}
+	// }
 	const handleAddGuarantee = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		const { error, ok } = validateForm({ ...Gvalues }, ['obs'])
@@ -213,8 +237,10 @@ const Contracts = () => {
 			setSavingOrUpdating(true)
 			const res = await http.post('/assurances', Gvalues)
 			if (res.data.ok) {
+				Greset()
+				refetch()
 				setShowAddGuaranteeModal(false)
-				showAndHideModal('Borrado', res.data.message)
+				showAndHideModal('Agregado', res.data.message)
 			} else {
 				showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
 			}
@@ -258,7 +284,7 @@ const Contracts = () => {
 		return (
 			<div className='flex gap-x-3 items-center justify-start'>
 				{/* <SeeIcon action={() => navigate(`/contracts/${rowData.id}/${rowData.uuid}`)} /> */}
-				{rowData.state !== 'Finalizado' && (<AddGuarantee action={() => showAddGuarantee(rowData)} />)}
+				{rowData.state !== 'Finalizado' && (<AddGuarantee q={rowData.Assurances.length} action={() => showAddGuarantee(rowData)} />)}
 				<TbReportMoney size={25} title='Agregar Eventualidad' onClick={() => openModalAddEvent(rowData)} />
 				<EditIcon action={() => edit(rowData)} />
 				<DeleteIcon action={() => ConfirmDestroy(rowData)} />
@@ -322,7 +348,7 @@ const Contracts = () => {
 	if (isError) return <RequestError error={error} />
 
 	return (
-		<div className='container m-auto  flex sm:mx-0  flex-col justify-center sm:justify-center'>
+		<BoxContainerPage >
 			<HeaderData action={openCreateOrEditModel} text='Contratos' />
 			{
 				data?.data?.length > 0 ? (
@@ -342,11 +368,11 @@ const Contracts = () => {
 								value={data?.data}
 								filters={filters}
 								globalFilterFields={['Property.street', 'Client.fullName']}
-								paginator
-								rows={10}
-								paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-								currentPageReportTemplate='{first} al {last} de {totalRecords}'
-								paginatorLeft={<RefreshData action={refetch} />}
+								// paginator
+								// rows='10'
+								// paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+								// currentPageReportTemplate='{first} al {last} de {totalRecords}'
+								// paginatorLeft={<RefreshData action={refetch} />}
 								dataKey='id'
 								responsiveLayout='scroll'
 							>
@@ -358,6 +384,13 @@ const Contracts = () => {
 										</span>
 									)}
 									header='Propiedad'
+									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+									className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+									sortable
+								/>
+								<Column
+									field='Property.folderNumber'
+									header='Carpeta'
 									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 									className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 									sortable
@@ -402,11 +435,15 @@ const Contracts = () => {
 									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 									className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 								/>
+
 								<Column
 									header='Año'
 									body={(data: Contract) => (
-										<span className={`${data.PriceHistorials?.length === 3 && 'text-yellow-500 font-bold'}`}>
-											{data.PriceHistorials[data.PriceHistorials?.length - 1]?.year}
+										<span className={`${diferenceBetweentwoDatesInYears(data.startDate, new Date().toISOString().slice(0, 10)) === 3 && 'text-yellow-500 font-bold'}`}>
+											{
+												diferenceBetweentwoDatesInYears(data.startDate, new Date().toISOString().slice(0, 10)) || 1
+
+											}
 										</span>
 									)}
 									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
@@ -601,6 +638,16 @@ const Contracts = () => {
 											className='relative text-sm'
 											key={index}
 										>
+											{/* <div
+												className='absolute bg-white hover:opacity-75 dark:bg-slate-700 right-4 top-6 cursor-pointer w-10 h-10 rounded-full shadow-lg flex items-center justify-center border border-gray-200 dark:border-slate-800'
+											>
+												<EditIcon action={() => ConfirmDestroy(as)} />
+											</div>
+											<div
+												className='absolute bg-white hover:opacity-75 dark:bg-slate-700 right-4 top-[70px] cursor-pointer w-10 h-10 rounded-full shadow-lg flex items-center justify-center border border-gray-200 dark:border-slate-800'
+											>
+												<DeleteIcon action={() => removeAssurance(as)} />
+											</div> */}
 											<div>
 												<Box className=' w-full sm:w-[300px] dark:!bg-gray-900'>
 													<h1><span className="font-bold"> ID : </span> {as.id}</h1>
@@ -648,7 +695,7 @@ const Contracts = () => {
 									id="showGaranteeModel" />
 							</div>
 							{
-								addGaranteeBox && (
+								(addGaranteeBox) && (
 									<div className=''>
 										<div className='list-guarantees-to-add flex gap-x-2 flex-col sm:flex-row flex-wrap gap-y-3'>
 											{assurances?.map((as, index) => (
@@ -967,7 +1014,7 @@ const Contracts = () => {
 					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeAddEventualitiesModal} />
 				</form>
 			</CreateModal>
-		</div>
+		</BoxContainerPage>
 	)
 }
 

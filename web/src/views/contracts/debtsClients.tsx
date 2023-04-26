@@ -8,7 +8,7 @@ import RequestError from '../../components/RequestError'
 import { FilterMatchMode } from 'primereact/api'
 import { useContracts } from '../../hooks/useContracts'
 import { Contract, } from '../../interfaces/Icontracts'
-import { formatDateDDMMYYYY } from '../../helpers/date'
+import { diferenceBetweentwoDatesInYears, formatDateDDMMYYYY } from '../../helpers/date'
 import HeaderData from '../../components/HeaderData'
 import RefreshData from '../../components/RefreshData'
 import { RowsToShow } from '../../helpers/variableAndConstantes'
@@ -117,14 +117,15 @@ const DebtsClients = () => {
 								value={data?.data}
 								filters={filters}
 								globalFilterFields={['Property.street', 'Client.fullName']}
-								paginator
-								rows={RowsToShow}
-								paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-								currentPageReportTemplate='{first} al {last} de {totalRecords}'
-								paginatorLeft={<RefreshData action={refetch} />}
+								// paginator
+								// rows={RowsToShow}
+								// paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+								// currentPageReportTemplate='{first} al {last} de {totalRecords}'
+								// paginatorLeft={<RefreshData action={refetch} />}
 								dataKey='id'
 								responsiveLayout='scroll'
 							>
+
 								<Column
 									expander={allowExpansion}
 									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
@@ -139,6 +140,13 @@ const DebtsClients = () => {
 										</span>
 									)}
 									header='Propiedad'
+									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+									className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+									sortable
+								/>
+								<Column
+									field='Property.folderNumber'
+									header='Carpeta'
 									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 									className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 									sortable
@@ -182,9 +190,9 @@ const DebtsClients = () => {
 								<Column
 									field='state'
 									header='Año'
-									body={(data) => (
-										<span className={`${data.PriceHistorials.length === 3 && 'text-yellow-500 font-bold'}`}>
-											{data.PriceHistorials[data.PriceHistorials.length - 1]?.year}
+									body={(data: Contract) => (
+										<span className={`${diferenceBetweentwoDatesInYears(data.startDate, new Date().toISOString().slice(0, 10)) === 3 && 'text-yellow-500 font-bold'}`}>
+											{diferenceBetweentwoDatesInYears(data.startDate, new Date().toISOString().slice(0, 10))}
 										</span>
 									)}
 									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'

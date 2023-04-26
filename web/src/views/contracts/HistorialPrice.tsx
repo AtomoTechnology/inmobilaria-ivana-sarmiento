@@ -18,7 +18,7 @@ import { FilterMatchMode } from 'primereact/api'
 import { useContracts } from '../../hooks/useContracts'
 import { Contract, IHistorialPrice } from '../../interfaces/Icontracts'
 import EditIcon from '../../components/icons/EditIcon'
-import { formatDate, formatDateDDMMYYYY } from '../../helpers/date'
+import { diferenceBetweentwoDatesInYears, formatDate, formatDateDDMMYYYY } from '../../helpers/date'
 import useShowAndHideModal from '../../hooks/useShowAndHideModal'
 import { validateForm } from '../../helpers/form'
 import HeaderData from '../../components/HeaderData'
@@ -91,7 +91,6 @@ const HistorialPrices = () => {
 	const openModalAddPrice = (data: Contract) => {
 		reset()
 		currentPrice.current = null
-		console.log(currentPrice)
 		currentContract.current = data
 		let prevYear = data.PriceHistorials[data.PriceHistorials.length! - 1].year
 		let prevAmount = data.PriceHistorials[data.PriceHistorials.length! - 1].amount
@@ -255,11 +254,11 @@ const HistorialPrices = () => {
 					value={data?.data}
 					filters={filters}
 					globalFilterFields={['Property.street', 'Client.fullName']}
-					paginator
-					rows={RowsToShow}
-					paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
-					currentPageReportTemplate='{first} al {last} de {totalRecords}'
-					paginatorLeft={<RefreshData action={refetch} />}
+					// paginator
+					// rows={RowsToShow}
+					// paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
+					// currentPageReportTemplate='{first} al {last} de {totalRecords}'
+					// paginatorLeft={<RefreshData action={refetch} />}
 					dataKey='id'
 					responsiveLayout='scroll'
 				>
@@ -277,6 +276,13 @@ const HistorialPrices = () => {
 							</span>
 						)}
 						header='Propiedad'
+						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+						sortable
+					/>
+					<Column
+						field='Property.folderNumber'
+						header='Carpeta'
 						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 						sortable
@@ -324,9 +330,9 @@ const HistorialPrices = () => {
 					<Column
 						field='state'
 						header='Año'
-						body={(data) => (
-							<span className={`${data.PriceHistorials.length === 3 && 'text-yellow-500 font-bold'}`}>
-								{data.PriceHistorials[data.PriceHistorials.length - 1]?.year}
+						body={(data: Contract) => (
+							<span className={`${diferenceBetweentwoDatesInYears(data.startDate, new Date().toISOString().slice(0, 10)) === 3 && 'text-yellow-500 font-bold'}`}>
+								{diferenceBetweentwoDatesInYears(data.startDate, new Date().toISOString().slice(0, 10))}
 							</span>
 						)}
 						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
@@ -401,13 +407,11 @@ const HistorialPrices = () => {
 						onChange={(value) => {
 							// handleInputChange(value, 'percent')
 							// updateAll({ ...values, percent: Number(value) })
-							console.log('estayyyy')
 							if (currentContract.current?.PriceHistorials) {
 								let prevValue =
 									currentContract.current?.PriceHistorials[currentContract.current?.PriceHistorials.length! - 1]
 										.amount
 								let v = prevValue * (Number(value) / 100)
-								// console.log(v)
 								updateAll({ ...values, amount: Number(v.toFixed(2)) + prevValue, percent: Number(value) })
 								// handleInputChange(v + prevValue, 'amount')
 							} else {

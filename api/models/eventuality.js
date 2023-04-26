@@ -4,7 +4,8 @@ module.exports = (sequelize, DataTypes) => {
 	class Eventuality extends Model {
 		static associate(models) {
 			//  Relation
-			Eventuality.belongsTo(models.Contract)
+			// Eventuality.belongsTo(models.Contract)
+			Eventuality.belongsTo(models.Property)
 		}
 	}
 	Eventuality.init(
@@ -15,18 +16,30 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.BIGINT,
 				autoIncrement: true,
 			},
-			ContractId: {
+			PropertyId: {
 				allowNull: false,
 				type: DataTypes.BIGINT,
 				validate: {
 					notNull: {
-						msg: 'El contrato es obligatorio.',
+						msg: 'La propiedad es obligatoria.',
 					},
 					notEmpty: {
-						msg: 'El contrato es obligatorio.',
+						msg: 'La propiedad es obligatoria.',
 					},
 				},
 			},
+			// ContractId: {
+			// 	allowNull: false,
+			// 	type: DataTypes.BIGINT,
+			// 	validate: {
+			// 		notNull: {
+			// 			msg: 'El contrato es obligatorio.',
+			// 		},
+			// 		notEmpty: {
+			// 			msg: 'El contrato es obligatorio.',
+			// 		},
+			// 	},
+			// },
 			clientAmount: {
 				allowNull: false,
 				type: DataTypes.FLOAT,
@@ -52,6 +65,11 @@ module.exports = (sequelize, DataTypes) => {
 				},
 			},
 			clientPaid: {
+				allowNull: false,
+				type: DataTypes.BOOLEAN,
+				defaultValue: false,
+			},
+			isReverted: {
 				allowNull: false,
 				type: DataTypes.BOOLEAN,
 				defaultValue: false,
@@ -89,7 +107,7 @@ module.exports = (sequelize, DataTypes) => {
 		{
 			sequelize,
 			modelName: 'Eventuality',
-            tableName: 'eventualities',
+			tableName: 'eventualities',
 
 			paranoid: true,
 		}

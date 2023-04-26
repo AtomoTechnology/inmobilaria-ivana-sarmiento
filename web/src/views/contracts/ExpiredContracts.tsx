@@ -6,16 +6,16 @@ import RequestError from '../../components/RequestError'
 import { useContracts } from '../../hooks/useContracts'
 import { Page, Text, View, Document, StyleSheet, PDFViewer, PDFDownloadLink } from '@react-pdf/renderer'
 import Expired from '../../components/contract/Expired'
-import { diffenceBetweenDates, formatDateDDMMYYYY } from '../../helpers/date'
+import { addDate, diferenceBetweentwoDatesInYears, diffenceBetweenDates, formatDateDDMMYYYY } from '../../helpers/date'
 import { jsPDF } from "jspdf"
 // @ts-expect-error
 import html2pdf from 'html2pdf.js'
+import BoxContainerPage from '../../components/BoxContainerPage'
 
 const ExpiredContracts = () => {
 	const [days, setDays] = useState(60)
 	const [loadingPdf, setLoadingPdf] = useState(false)
 	const { data, isError, error, isLoading, refetch, isFetching } = useContracts(`/expired-contracts/${days}`)
-	console.log(data?.data)
 
 	const downloadPdf = async () => {
 		setLoadingPdf(true)
@@ -103,7 +103,7 @@ const ExpiredContracts = () => {
 	if (isLoading) return <Loading />
 	if (isError) return <RequestError error={error} />
 	return (
-		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
+		<BoxContainerPage className=''>
 
 			<Box className='expired-contracts !p-0 !m-0 !border-0 !shadow-none !bg-transparent flex items-end gap-x-4'>
 				<fieldset className='w-fit mb-0 '>
@@ -124,15 +124,15 @@ const ExpiredContracts = () => {
 				</button>
 			</Box>
 
-			<div className=' mx-auto  dark:text-slate-400 ' id='pdf-download'>
+			<div className=' mx-auto !overflow-x-auto dark:text-slate-400  ' id='pdf-download'>
 				<h2 className='my-4 text-2xl font-semibold leading-tight'>
 					<span>
 						Contratos a Vencer <br /> <span className='text-sm'> en los próximos {days} días </span>
 					</span>
 				</h2>
-				<Box className='!p-0 !m-0'>
-					<div className='overflow-x-auto' >
-						<table className='w-full p-6 text-sm text-left whitespace-nowrap'>
+				<Box className='!p-0 !m-0 '>
+					<div className='' >
+						<table className='w-full p-6 !overflow-x-auto text-sm text-left whitespace-nowrap'>
 							<thead className=' rounded-t-lg  overflow-hidden'>
 								<tr className='bg-gray-100 dark:bg-slate-700'>
 									<th className='p-3'>Vence el</th>
@@ -150,17 +150,21 @@ const ExpiredContracts = () => {
 							<tbody className=''>
 								{data?.data.map((c: any) => (
 									<tr key={c.id} className=''>
-										<td className='px-3 py-2'>{formatDateDDMMYYYY(c.endDate)}</td>
+										<td className='px-3 py-2'>
+											{/* {formatDateDDMMYYYY(c.endDate)} |
+											{formatDateDDMMYYYY(c.startDate)} | */}
+											{formatDateDDMMYYYY(addDate(c.startDate, diferenceBetweentwoDatesInYears(c.startDate, new Date().toISOString().slice(0, 10)), 'years').toISOString().slice(0, 10))}
+										</td>
 										<td className='px-3 py-2'>
 
 											{
 												diffenceBetweenDates(c.startDate, new Date().toISOString()) <= 365 ?
-													(365 - diffenceBetweenDates(c.startDate, new Date().toISOString())) :
+													(365 - diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10))) :
 													(
-														(diffenceBetweenDates(c.startDate, new Date().toISOString()) > 365 && diffenceBetweenDates(c.startDate, new Date().toISOString()) <= 730) ? (
-															(730 - diffenceBetweenDates(c.startDate, new Date().toISOString()))
+														(diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10)) > 365 && diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10)) <= 730) ? (
+															(730 - diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10)))
 														)
-															: (1095 - diffenceBetweenDates(c.startDate, new Date().toISOString()))
+															: (1095 - diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10)))
 													)
 											}
 										</td>
@@ -172,7 +176,11 @@ const ExpiredContracts = () => {
 										<td className='px-3 py-2'> {c.Client.fullName}</td>
 										<td className='px-3 py-2'>${c.PriceHistorials[c.PriceHistorials.length - 1].amount}</td>
 										<td className='px-3 py-2'>${c.PriceHistorials[c.PriceHistorials.length - 1].amount - (c.PriceHistorials[c.PriceHistorials?.length - 1].amount * (c.Property.Owner.commision / 100))}</td>
-										<td className='px-3 py-2'>{c.PriceHistorials[c.PriceHistorials.length - 1].year}</td>
+										<td className='px-3 py-2'>
+											<span className={`${diferenceBetweentwoDatesInYears(c.startDate, new Date().toISOString().slice(0, 10)) === 3 && 'text-yellow-500 font-bold'}`}>
+												{diferenceBetweentwoDatesInYears(c.startDate, new Date().toISOString().slice(0, 10))}
+											</span>
+										</td>
 										<td
 											className='px-3 py-2'
 											title={c.description}
@@ -185,15 +193,18 @@ const ExpiredContracts = () => {
 						</table>
 					</div>
 				</Box>
-			</div>
+			</div >
 			{isFetching && (<Loading h={60} w={60} />)}
-			<button className='btn gradient  !my-4'
+			<button className='btn gradient  !my-4 !w-fit'
 				disabled={loadingPdf || data?.data.length == 0}
 				onClick={downloadPdf}>
-				{loadingPdf ? 'Descargando ... ' : 'Descargar Planilla'}
+				{loadingPdf ? 'Descargando ... ' : `Descargar Planilla (${data?.data.length})`}
 			</button>
-		</div>
+		</BoxContainerPage >
 	)
 }
 
 export default ExpiredContracts
+
+
+
