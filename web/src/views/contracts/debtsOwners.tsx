@@ -82,7 +82,7 @@ const DebtsOwners = () => {
 						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 						field='paid'
 						sortable
-						body={(data) => <span className={`p-1 rounded-full px-2  ${data.paid ? 'bg-green-200' : 'bg-red-200'}`}> {data.paid ? 'Pagado' : 'Sin pagar'} {data.paid && formatDateDDMMYYYY(data.paidDate.slice(0, 10))} </span>}
+						body={(data) => <span className={`p-1 rounded-full px-2  ${data.paid ? 'text-green-400' : 'text-red-400'}`}> {data.paid ? 'Pagado' : 'Sin pagar'} {data.paid && formatDateDDMMYYYY(data.paidDate.slice(0, 10))} </span>}
 						header='Pago'
 					></Column>
 

@@ -24,6 +24,7 @@ export interface IClientExpItem {
 	createdAt: string
 	updatedAt: string
 	deletedAt: null | string
+	paidCurrentMonth?: boolean
 }
 
 export interface IClientExpenses extends IClientExpItem {

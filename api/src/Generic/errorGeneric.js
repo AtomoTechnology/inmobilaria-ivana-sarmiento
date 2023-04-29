@@ -84,7 +84,7 @@ exports.globalError = (err, req, res, next) => {
 			case 'avoidMorethanonepriceForContractAtTheSameYear must be unique':
 				error = handleSequelizeUniqueConstraintErrorPriceHistorial(error)
 				break
-			case 'payment_clients__contract_id_month_year must be unique':
+			case 'paymentclients__contract_id_month_year_paid_current_month must be unique':
 				error = handleSequelizeUniqueConstraintErrorPaymentClient(error)
 				break
 			case 'payment_owners__owner_id_month_year must be unique':

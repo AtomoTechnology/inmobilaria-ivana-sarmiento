@@ -76,7 +76,7 @@ module.exports = (sequelize, DataTypes) => {
           name: "visitUnique",
         },
       ],
-      paranoid: true,
+      // paranoid: true,
       sequelize,
       tableName: 'visits',
       modelName: "Visit",

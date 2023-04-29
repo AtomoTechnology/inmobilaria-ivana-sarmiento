@@ -257,9 +257,11 @@ const OwnerPayment = () => {
 			const ownerContracts = await http.get(`contracts/owner/${e.value.id}/all`)
 			ownerContracts.data.data.map(async (contract: any) => {
 
+				console.log(contract)
+
 
 				const docsExpss = http.get<IClientExpensesResponseSimple>(`/owner-expenses?ContractId=${contract.id}&include=true`)
-				const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?ownerPaid=0&ContractId=${contract.id}&include=true`)
+				const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?ownerPaid=0&PropertyId=${contract.PropertyId}&include=true`)
 				const docsDebtss = http.get<IdebtsResponse>(`/debt-owners?paid=0&ContractId=${contract.id}`)
 
 				const [docsExps, docsEvents, docsDebts] = await Promise.all([docsExpss, docsEventss, docsDebtss])
@@ -282,7 +284,19 @@ const OwnerPayment = () => {
 							createdAt: new Date().toISOString(),
 							updatedAt: new Date().toISOString(),
 						},
-						...docsExps.data.data.map((d) => ({ ...d, description: d.description + ' ' + month + '/' + year }))
+						// ...docsExps.data.data.map((d) => ({ ...d, description: d.description + ' ' + month + '/' + year })),
+						...docsExps.data.data.filter((d) => {
+							if (d.description !== 'AGUAS' && d.description !== 'API') {
+								return { ...d, description: d.description + ' ' + month + '/' + year }
+							} else {
+								if (d.description === 'AGUAS' && ((new Date().getMonth() + 1) % 2) === 0) {
+									return { ...d, description: d.description + ' ' + month + '/' + year }
+								}
+								if (d.description === 'API' && ((new Date().getMonth() + 1) % 2) !== 0) {
+									return { ...d, description: d.description + ' ' + month + '/' + year }
+								}
+							}
+						})
 					],
 					eventualityDetails: docsEvents.data.data,
 					debts: docsDebts.data.data,
@@ -571,7 +585,7 @@ const OwnerPayment = () => {
 																	className='ml-2 '
 																>
 																	<span className=''>
-																		{evt.description} $ {evt.amount}
+																		${evt.amount} {evt.description}
 																	</span>
 																</label>
 															</div>

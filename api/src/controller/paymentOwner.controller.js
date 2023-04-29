@@ -123,6 +123,8 @@ exports.Put = update(PaymentOwner, [
 	'year',
 	'eventualityDetails',
 	'ExpenseDetails',
+	'obs'
+
 ])
 exports.Destroy = catchAsync(async (req, res, next) => {
 	const transact = await sequelize.transaction();

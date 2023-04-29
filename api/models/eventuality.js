@@ -28,6 +28,7 @@ module.exports = (sequelize, DataTypes) => {
 					},
 				},
 			},
+			paymentId: DataTypes.BIGINT,
 			// ContractId: {
 			// 	allowNull: false,
 			// 	type: DataTypes.BIGINT,
@@ -108,8 +109,7 @@ module.exports = (sequelize, DataTypes) => {
 			sequelize,
 			modelName: 'Eventuality',
 			tableName: 'eventualities',
-
-			paranoid: true,
+			// paranoid: true,
 		}
 	)
 	return Eventuality

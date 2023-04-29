@@ -220,7 +220,7 @@ const ClientExpenses = () => {
 								field='amount'
 								sortable
 								header='Monto'
-								body={(data) => <span>$ {(data.amount)}</span>}
+								body={(data) => <span>${(data.amount)}</span>}
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 							/>
@@ -297,7 +297,22 @@ const ClientExpenses = () => {
 							/>
 						</div>
 					</FieldsetGroup>
-					<CustomInput
+					<FieldsetGroup>
+						<fieldset className='w-full'>
+							<label htmlFor='ContractId'>Descripción </label>
+							<Dropdown
+								placeholder='elije tipo de impuesto'
+								value={description}
+								options={['Seguro', 'Expensas', 'LUZ', 'GAS', 'AGUAS', 'TGI', 'API', 'Compensación']}
+								onChange={(e) => handleInputChange(e.value, 'description')}
+								className='h-[42px] items-center !border-gray-200 shadow '
+								required
+
+							/>
+							{errors?.description && <FormError text='La descripción es obligatoria.' />}
+
+						</fieldset>
+						{/* <CustomInput
 						placeholder='Gasto bancario...'
 						initialValue={description}
 						onChange={(value) => handleInputChange(value, 'description')}
@@ -305,17 +320,19 @@ const ClientExpenses = () => {
 						required
 						hasError={errors?.description}
 						errorText='La descripción es obligatoria.'
-					/>
-					<CustomInput
-						placeholder='01/01/2023'
-						type='date'
-						initialValue={date}
-						onChange={(value) => handleInputChange(value, 'date')}
-						label='Fecha'
-						required
-						hasError={errors?.date}
-						errorText='La fecha es obligatoria.'
-					/>
+					/> */}
+						<CustomInput
+							placeholder='01/01/2023'
+							type='date'
+							initialValue={date}
+							onChange={(value) => handleInputChange(value, 'date')}
+							label='Fecha'
+							required
+							hasError={errors?.date}
+							errorText='La fecha es obligatoria.'
+						/>
+					</FieldsetGroup>
+
 					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
 				</form>
 			</CreateModal>

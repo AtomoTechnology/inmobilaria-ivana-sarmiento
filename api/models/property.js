@@ -5,12 +5,12 @@ module.exports = (sequelize, DataTypes) => {
 		static associate(models) {
 			Property.belongsTo(models.Zone)
 			Property.belongsTo(models.PropertyType)
-			Property.belongsTo(models.Owner)
+			Property.belongsTo(models.Owner,)
 
 			//  Relation
-			Property.hasMany(models.Contract)
-			Property.hasMany(models.Visit)
-			Property.hasMany(models.Claim)
+			Property.hasMany(models.Contract, { foreignKey: { allowNull: false, }, onUpdate: 'CASCADE', onDelete: 'RESTRICT', })
+			Property.hasMany(models.Visit, { foreignKey: { allowNull: false, }, onUpdate: 'CASCADE', onDelete: 'RESTRICT', })
+			Property.hasMany(models.Claim, { foreignKey: { allowNull: false, }, onUpdate: 'CASCADE', onDelete: 'RESTRICT', })
 		}
 	}
 	Property.init(

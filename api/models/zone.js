@@ -3,7 +3,12 @@ const { Model } = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
 	class Zone extends Model {
 		static associate(models) {
-			Zone.hasMany(models.Property)
+			Zone.hasMany(models.Property,
+				{
+					foreignKeyConstraint: true,
+					onUpdate: 'CASCADE',
+					onDelete: 'RESTRICT',
+				})
 		}
 	}
 	Zone.init(
@@ -40,8 +45,7 @@ module.exports = (sequelize, DataTypes) => {
 			sequelize,
 			tableName: 'zones',
 			modelName: 'Zone',
-
-			paranoid: true,
+			// paranoid: true,
 		}
 	)
 	return Zone

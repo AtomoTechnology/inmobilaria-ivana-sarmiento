@@ -5,7 +5,7 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class PropertyType extends Model {
     static associate(models) {
-      PropertyType.hasMany(models.Property);
+      PropertyType.hasMany(models.Property, { foreignKey: { allowNull: false, }, onUpdate: 'CASCADE', onDelete: 'RESTRICT', });
     }
   }
   PropertyType.init({
@@ -37,7 +37,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'PropertyType',
-     tableName: 'propertytypes',
+    tableName: 'propertytypes',
   });
   return PropertyType;
 };

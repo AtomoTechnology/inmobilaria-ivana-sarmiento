@@ -1,30 +1,9 @@
-const {
-	DebtClient,
-	Contract,
-	Property,
-	ClientExpense,
-	Client,
-	sequelize,
-	PriceHistorial,
-	JobLog,
-	PaymentClient,
-} = require('../../models')
+const { DebtClient, Contract, Property, ClientExpense, Client, sequelize, PriceHistorial, JobLog, PaymentClient, } = require('../../models')
 
-const {
-	all,
-	findOne,
-	update,
-	destroy
-} = require('../Generic/FactoryGeneric')
-const {
-	catchAsync
-} = require('../../helpers/catchAsync')
-const {
-	Op
-} = require('sequelize')
-const {
-	monthsInSpanish
-} = require('../../helpers/variablesAndConstantes')
+const { all, findOne, update, destroy } = require('../Generic/FactoryGeneric')
+const { catchAsync } = require('../../helpers/catchAsync')
+const { Op } = require('sequelize')
+const { monthsInSpanish } = require('../../helpers/variablesAndConstantes')
 
 exports.GetAll = all(DebtClient, {
 	// include: [
@@ -68,63 +47,47 @@ exports.Destroy = destroy(DebtClient)
 
 exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 	console.log("Ingreso en el job")
-	const transact = await sequelize.transaction()
 	const month = new Date().getMonth()
 	const year = new Date().getFullYear()
 	console.log('MONTH ::: ', monthsInSpanish[month - 1])
 
+
+	const docs = await PaymentClient.findAll({
+		where: {
+			[Op.and]: {
+				month: monthsInSpanish[month - 1],
+				year,
+				paidCurrentMonth: true,
+			},
+		},
+		attributes: [[sequelize.fn('DISTINCT', sequelize.col('ContractId')), 'ContractId']],
+	})
+
+	let ids = []
+	if (docs.length > 0) ids = docs.map(doc => doc.ContractId)
+	console.log('IDS :: ', ids)
+
+	const docs2 = await Contract.findAll({
+		where: {
+			id: {
+				[Op.notIn]: ids,
+			},
+			state: 'En curso',
+			startDate: { [Op.lt]: new Date(year, month - 1, new Date(year, month, 0).getDate()) },
+			endDate: { [Op.gt]: new Date() },
+		},
+		include: [
+			{ model: ClientExpense },
+			{ model: Property },
+			{ model: PriceHistorial }
+		],
+	})
+
+
+
+	const transact = await sequelize.transaction()
+
 	try {
-		const docs = await PaymentClient.findAll({
-			where: {
-				[Op.and]: {
-					month: monthsInSpanish[month - 1],
-					year,
-				},
-			},
-			attributes: [
-				[sequelize.fn('DISTINCT', sequelize.col('ContractId')), 'ContractId']
-			],
-		}, {
-			transaction: transact
-		})
-
-
-		// if (docs.length === 0) {
-		// 	console.log('entra acaaa...')
-		// 	await transact.rollback();
-		// 	return;
-		// }
-		console.log('FECHAS ::: ', (new Date(year, month - 1, new Date(year, month, 0).getDate())))
-		console.log('DOCS ::: ', docs)
-
-		// ids de los contratos que pagaron el mes anterior
-		let ids = []
-		if (docs.length > 0) {
-			console.log('entreooooooooo')
-			ids = docs.map(doc => doc.ContractId)
-		}
-		console.log('IDS ::: ', ids)
-
-		const docs2 = await Contract.findAll({
-			where: {
-				id: {
-					[Op.notIn]: ids,
-				},
-				state: 'En curso',
-				startDate: { [Op.lt]: new Date(year, month - 1, new Date(year, month, 0).getDate()) },
-				endDate: { [Op.gt]: new Date() },
-
-			},
-			include: [{
-				model: ClientExpense
-			}, {
-				model: Property
-			}, {
-				model: PriceHistorial
-			}],
-		}, {
-			transaction: transact
-		})
 
 		for (let k = 0; k < docs2.length; k++) {
 			const exist = await DebtClient.findOne({
@@ -135,55 +98,41 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 				}
 			})
 			if (!exist) {
+
 				await DebtClient.create({
-					description: 'ALQUILER ' + docs2[k].Property.street +
-						' ' +
-						docs2[k].Property.number +
-						' ' +
-						docs2[k].Property.dept +
-						'-' +
-						docs2[k].Property.floor +
-						' ' +
-						monthsInSpanish[month - 1] +
-						' ' +
-						year,
-					amount: docs2[k].PriceHistorials.sort((a, b) => a.amount - b.amount)[docs2[k].PriceHistorials.length - 1]
-						.amount,
+					description: 'ALQUILER ' + docs2[k].Property.street + ' ' + docs2[k].Property.number + ' ' + docs2[k].Property.dept + '-' +
+						docs2[k].Property.floor + ' ' + monthsInSpanish[month - 1] + '/' + year,
+
+					amount: docs2[k].PriceHistorials.sort((a, b) => a.amount - b.amount)[docs2[k].PriceHistorials.length - 1].amount,
 					year,
 					month,
 					rent: true,
 					ContractId: docs2[k].id,
-				}, {
-					transaction: transact
-				})
+				}, { transaction: transact })
+
 				for (let l = 0; l < docs2[k].ClientExpenses.length; l++) {
 					await DebtClient.create({
-						description: docs2[k].ClientExpenses[l].description + ' ' + monthsInSpanish[month - 1] + ' ' + year,
+						description: docs2[k].ClientExpenses[l].description + ' ' + monthsInSpanish[month - 1] + '/' + year,
 						amount: docs2[k].ClientExpenses[l].amount,
 						year,
 						month,
 						ContractId: docs2[k].id,
-					}, {
-						transaction: transact
-					})
+					},
+						{ transaction: transact }
+					)
 				}
 			}
 		}
 
-		await JobLog.create({
-			type: 'debts',
-			state: 'success',
-			message: 'DEBTS CLIENT JOB DONE SUCCESSFULLY.',
-
-		})
+		await JobLog.create({ type: 'debts', state: 'success', message: 'DEBTS CLIENT JOB DONE SUCCESSFULLY.' })
 		await transact.commit()
 
 	} catch (error) {
-		await transact.rollback()
 		await JobLog.create({
 			type: 'debts',
 			state: 'fail',
 			message: error?.message || 'Something went wrong.',
 		})
+		await transact.rollback()
 	}
 })

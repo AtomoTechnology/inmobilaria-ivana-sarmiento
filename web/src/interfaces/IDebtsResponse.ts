@@ -10,15 +10,16 @@ export interface IdebtsResponse {
 
 export interface Idebt {
 	// expenseDetails: ExpenseDetail[]
-	id: number
+	id: number | string
 	ContractId: number
 	year: number
 	amount: number
 	month: number
-	rent : boolean
+	rent: boolean
 	// total: number
 	paid: boolean
 	description: string
+	debtParentId?: number | string
 	createdAt: string
 	updatedAt: string
 	deletedAt: null

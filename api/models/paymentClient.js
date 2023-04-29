@@ -84,6 +84,13 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
+      paidTotal: DataTypes.FLOAT,
+      obs: DataTypes.STRING(500),
+      paidCurrentMonth: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
 
       expenseDetails: {
         type: DataTypes.TEXT("long"),
@@ -112,19 +119,21 @@ module.exports = (sequelize, DataTypes) => {
           );
         },
       },
+      createdAt: DataTypes.DATEONLY,
+      updatedAt: DataTypes.DATEONLY
 
     },
     {
       indexes: [
         {
           unique: true,
-          fields: ["ContractId", "month", "year"],
+          fields: ["ContractId", "month", "year", 'paidCurrentMonth'],
         },
       ],
-      paranoid: true,
       sequelize,
       modelName: "PaymentClient",
       tableName: 'paymentclients',
+      paranoid: true,
     }
   );
   return PaymentClient;

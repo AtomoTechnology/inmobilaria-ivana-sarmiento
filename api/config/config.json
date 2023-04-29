@@ -4,7 +4,12 @@
     "password": "jhm.ok",
     "database": "ivanadb",
     "host": "127.0.0.1",
-    "dialect": "mysql"
+    "dialect": "mysql",
+    "define": {
+      "charset": "utf8mb4",
+      "collate": "utf8mb4_0900_ai_ci", 
+      "timestamps": true
+    }
   },
   "test": {
     "username": "novaitfl_ivanadb",
@@ -18,6 +23,12 @@
     "password": "I+rAQza6R&M6ZnX2",
     "database": "ivana_centro",
     "host": "localhost",
-    "dialect": "mysql"
+    "dialect": "mysql",
+    "define": {
+      "charset": "utf8mb4",
+      "collate": "utf8mb4_0900_ai_ci", 
+      "timestamps": true
+    },
+    "logging":false
   }
 }

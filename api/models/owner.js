@@ -3,8 +3,8 @@ const { Model } = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
 	class Owner extends Model {
 		static associate(models) {
-			Owner.hasMany(models.Property)
-			Owner.hasMany(models.PaymentOwner)
+			Owner.hasMany(models.Property, { foreignKey: { allowNull: false, }, onUpdate: 'CASCADE', onDelete: 'RESTRICT', })
+			Owner.hasMany(models.PaymentOwner, { foreignKey: { allowNull: false, }, onUpdate: 'CASCADE', onDelete: 'CASCADE', })
 		}
 	}
 	Owner.init(

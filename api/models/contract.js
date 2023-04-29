@@ -7,15 +7,14 @@ module.exports = (sequelize, DataTypes) => {
 			Contract.belongsTo(models.Client)
 
 			//  Relation
-			Contract.hasMany(models.Eventuality)
-			Contract.hasMany(models.PriceHistorial)
-			Contract.hasMany(models.Assurance)
-			Contract.hasMany(models.ClientExpense)
-			Contract.hasMany(models.OwnerExpense)
-			Contract.hasMany(models.PaymentClient)
-			// Contract.hasMany(models.PaymentOwner)
-			Contract.hasMany(models.DebtClient)
-			Contract.hasMany(models.DebtOwner)
+			// Contract.hasMany(models.Eventuality)
+			Contract.hasMany(models.PriceHistorial, { foreignKey: { allowNull: false, }, onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+			Contract.hasMany(models.Assurance, { foreignKey: { allowNull: false }, onUpdate: 'CASCADE', onDelete: 'CASCADE', })
+			Contract.hasMany(models.ClientExpense, { foreignKey: { allowNull: false, }, onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+			Contract.hasMany(models.OwnerExpense, { foreignKey: { allowNull: false, }, onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+			Contract.hasMany(models.PaymentClient, { foreignKey: { allowNull: false, }, onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+			Contract.hasMany(models.DebtClient, { foreignKey: { allowNull: false, }, onUpdate: 'CASCADE', onDelete: 'CASCADE' })
+			Contract.hasMany(models.DebtOwner, { foreignKey: { allowNull: false, }, onUpdate: 'CASCADE', onDelete: 'CASCADE' })
 		}
 	}
 	Contract.init(

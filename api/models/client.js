@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
 		 */
 		static associate(models) {
 			//  Relation
-			Client.hasMany(models.Contract)
+			Client.hasMany(models.Contract, { foreignKey: { allowNull: false, }, onUpdate: 'CASCADE', onDelete: 'RESTRICT', })
 		}
 	}
 	Client.init(
@@ -101,7 +101,7 @@ module.exports = (sequelize, DataTypes) => {
 		{
 			sequelize,
 			modelName: 'Client',
-			tableName : 'clients',
+			tableName: 'clients',
 			paranoid: true,
 		}
 	)

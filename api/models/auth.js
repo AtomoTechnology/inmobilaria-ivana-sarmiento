@@ -3,7 +3,7 @@ const { Model } = require('sequelize')
 const bcrypt = require('bcryptjs')
 module.exports = (sequelize, DataTypes) => {
 	class Auth extends Model {
-		static associate(models) {}
+		static associate(models) { }
 	}
 	Auth.init(
 		{
@@ -70,10 +70,9 @@ module.exports = (sequelize, DataTypes) => {
 		},
 		{
 			sequelize,
-            tableName: 'auths',
+			tableName: 'auths',
 			modelName: 'Auth',
-
-			paranoid: true,
+			// paranoid: true,
 		}
 	)
 	Auth.prototype.changePasswordAfter = function (jwtIat) {

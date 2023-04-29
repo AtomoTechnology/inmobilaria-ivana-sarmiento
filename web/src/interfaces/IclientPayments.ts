@@ -26,17 +26,19 @@ export interface IClienyPayment {
 	createdAt: string
 	updatedAt: string
 	deletedAt: null
-	rentingAmount : number	
+	rentingAmount: number
 	Contract: Contract
 	PaymentType: PaymentType
-	printData? : any
+	printData?: any
+	obs?: string
+	paidTotal: number
 }
 
 export interface Contract {
 	id: number
 	PropertyId: number
 	ClientId: number
-	Client : IPerson,
+	Client: IPerson,
 	Property: Iproperty
 	startDate: string
 	endDate: string

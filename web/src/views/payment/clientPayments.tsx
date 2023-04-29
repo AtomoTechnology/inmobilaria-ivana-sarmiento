@@ -69,6 +69,7 @@ const ClientPayments = () => {
 		recharge: 0,
 		qteDays: 0,
 		dailyPunitive: 0,
+		PropertyId: null,
 		paidTotal: 0,
 		obs: ''
 	})
@@ -159,20 +160,23 @@ const ClientPayments = () => {
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		values.total = eventTotal.current + expsTotal.current + debtsTotal.current + recharge
-		const { error, ok } = validateForm({ ...values }, ['paidTotal', 'extraExpenses', 'qteDays', 'recharge', 'dailyPunitive'])
+		values.total = GG.checked ? Number((Number(GG.amount) + eventTotal.current + expsTotal.current + debtsTotal.current + recharge).toFixed(2)) : Number((eventTotal.current + expsTotal.current + debtsTotal.current + recharge).toFixed(2))
+		console.log('values', values.total)
+		const { error, ok } = validateForm({ ...values }, ['paidTotal', 'extraExpenses', 'qteDays', 'recharge', 'dailyPunitive', 'obs', 'PropertyId',])
 		setErrors(error)
 		if (!ok) return false
-
-		// console.log({ ...values, expenseDetails: [...selectedExpensesClient, ...selectedDebts], eventualityDetails: selectedEventualities })
+		let testExp = GG.checked ? [...selectedExpensesClient, ...selectedDebts, GG] : [...selectedExpensesClient, ...selectedDebts]
+		console.log({ ...values, testExp, eventualityDetails: selectedEventualities })
+		// return
 		// @ts-expect-error
 		values.ContractId = values.ContractId!.id
 
 		try {
 			setSavingOrUpdating(true)
+			let cleanExps = GG.checked ? [...selectedExpensesClient, ...selectedDebts, GG] : [...selectedExpensesClient, ...selectedDebts]
 			const res = await http.post('/payment-clients', {
 				...values,
-				expenseDetails: [...selectedExpensesClient, ...selectedDebts],
+				expenseDetails: cleanExps,
 				eventualityDetails: selectedEventualities,
 			})
 			if (res.data.ok) {
@@ -231,23 +235,41 @@ const ClientPayments = () => {
 		let _selectedExps = [...selectedExpensesClient]
 		if (e.checked) _selectedExps.push(e.value)
 		else _selectedExps = _selectedExps.filter((evt) => evt.id !== e.value.id)
-		expsTotal.current = _selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0)
+		expsTotal.current = Number(_selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0).toFixed(2))
 		setSelectedExpensesClient(_selectedExps)
 	}
 
 	const onDebtsChanges = (e: CheckboxChangeEvent) => {
 		let _selectedExps = [...selectedDebts]
-		if (e.checked) _selectedExps.push(e.value)
-		else _selectedExps = _selectedExps.filter((evt) => evt.id !== e.value.id)
-		debtsTotal.current = _selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0)
+		if (e.checked) {
+			_selectedExps.push(e.value)
+			if (e.value.rent) {
+				if (confirm('Deseas cobrar los punitorias ?') === true) {
+					let p = debts.find((d) => d.debtParentId === e.value.id)!
+					_selectedExps.push(p)
+				}
+			}
+		}
+		else {
+			_selectedExps = _selectedExps.filter((evt) => evt.id !== e.value.id)
+			if (e.value.rent) {
+				_selectedExps = _selectedExps.filter((evt) => evt?.debtParentId !== e.value.id)
+			}
+		}
+		debtsTotal.current = Number(_selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0).toFixed(2))
 		setSelectedDebts(_selectedExps)
 	}
+
+	// const updateTotal = () => {
+	// 	const total = GG.checked ? eventTotal.current + expsTotal.current + debtsTotal.current + recharge + GG.amount : eventTotal.current + expsTotal.current + debtsTotal.current + recharge
+	// 	handleInputChange(total, 'total')
+	// }
 
 	const onEventualityChange = (e: CheckboxChangeEvent) => {
 		let _selectedEvents = [...selectedEventualities]
 		if (e.checked) _selectedEvents.push(e.value)
 		else _selectedEvents = _selectedEvents.filter((evt) => evt.id !== e.value.id)
-		eventTotal.current = _selectedEvents.reduce((acc: any, cur: any) => acc + cur.clientAmount, 0)
+		eventTotal.current = Number(_selectedEvents.reduce((acc: any, cur: any) => acc + cur.clientAmount, 0).toFixed(2))
 		setSelectedEventualities(_selectedEvents)
 	}
 
@@ -261,7 +283,9 @@ const ClientPayments = () => {
 		setEventualityDetails([])
 		setExpenseDetails([])
 		setDebts([])
+		setGestionExpensePorc(2)
 		setSelectedDebts([])
+		reset()
 		eventTotal.current = 0
 		expsTotal.current = 0
 		debtsTotal.current = 0
@@ -290,12 +314,15 @@ const ClientPayments = () => {
 		// TODO validate if the contract has a payment for the current month TODO : CHANGES THAT
 		try {
 			setLoadingExpenses(true)
-			const res = await http.get(`/payment-clients?Contractid=${e.value.id}&month=${month}&year=${year}&include=true`)
+			console.log('ID CONTR ::: ', e.value.id)
+			const res = await http.get(`/payment-clients?ContractId=${e.value.id}&month=${month}&year=${year}&paidCurrentMonth=1&include=true`)
+			console.log('res ::: ', res.data)
 			if (res.data.results > 0) {
 				setUpToDate(true)
 				updateAll({
 					...values,
 					ContractId: e.value,
+					PropertyId: e.value.PropertyId,
 					total: 0,
 					recharge: 0,
 					qteDays: 0,
@@ -325,7 +352,7 @@ const ClientPayments = () => {
 					description: 'ALQUILERES  ' + e.value.Property.street + ' ' + e.value?.Property?.number + ' ' + e.value?.Property?.floor + ' ' + e.value?.Property?.dept + ' ' + month + '/' + year,
 					amount: e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount,
 					createdAt: (new Date().getTime().toString()),
-					// rent: true,
+					paidCurrentMonth: true,
 					id: UUID()
 				},
 				{
@@ -338,7 +365,18 @@ const ClientPayments = () => {
 					createdAt: (new Date().getTime().toString()),
 					id: UUID()
 				},
-				...docsExps.data.data.map((d) => ({ ...d, description: d.description + ' ' + month + '/' + year }))
+				...docsExps.data.data.filter((d) => {
+					if (d.description !== 'AGUAS' && d.description !== 'API') {
+						return { ...d, description: d.description + ' ' + month + '/' + year }
+					} else {
+						if (d.description === 'AGUAS' && ((new Date().getMonth() + 1) % 2) === 0) {
+							return { ...d, description: d.description + ' ' + month + '/' + year }
+						}
+						if (d.description === 'API' && ((new Date().getMonth() + 1) % 2) !== 0) {
+							return { ...d, description: d.description + ' ' + month + '/' + year }
+						}
+					}
+				})
 			])
 			setGG({
 				ContractId: e.value.id,
@@ -346,10 +384,12 @@ const ClientPayments = () => {
 				updatedAt: new Date().toISOString(),
 				deletedAt: null,
 				description: 'GASTOS DE GESTION  ' + ' ' + month + '/' + year,
-				amount: gestionExpensePorc * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount,
+				amount: (gestionExpensePorc / 100) * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount,
 				createdAt: (new Date().getTime().toString()),
-				id: UUID()
+				id: UUID(),
+				checked: false
 			},)
+
 			setDebts(docsDebts.data.data)
 
 			docsDebts.data.data.map((d) => {
@@ -358,12 +398,15 @@ const ClientPayments = () => {
 					setDebts((debts) => [...debts,
 					{
 						...d,
-						description: 'RECARGO ' + d.description,
+						description: 'PUNITORIOS ' + d.description,
 						amount: Number((qtyDay * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (Number(dp.data.data[0].value) / 100)).toFixed(2)),
 						createdAt: (new Date().getTime().toString()),
 						rent: false,
-						id: Number(Math.floor(Math.random() * 10000).toFixed(0) + d.id.toFixed(0) + new Date().getTime().toFixed(0)),
-						recharge: true
+						debtParentId: d.id!,
+						debt: false,
+						id: UUID(),
+						// id: 1,
+						recharge: true,
 					}
 					])
 				}
@@ -373,17 +416,22 @@ const ClientPayments = () => {
 				let qte = day - 5
 				updateAll({
 					...values,
+					PropertyId: e.value.PropertyId,
 					recharge: Number(
 						(qte * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (Number(dp.data.data[0].value) / 100)).toFixed(2)
 					),
 					qteDays: qte,
 					ContractId: e.value,
 					dailyPunitive: e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (Number(dp.data.data[0].value) / 100),
+					total: Number(
+						(qte * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (Number(dp.data.data[0].value) / 100)).toFixed(2)
+					),
 				})
 			} else {
 				updateAll({
 					...values,
 					ContractId: e.value,
+					PropertyId: e.value.PropertyId,
 				})
 			}
 
@@ -461,7 +509,7 @@ const ClientPayments = () => {
 							/>
 							<Column
 								field='total'
-								body={(data) => <span>${data.total}</span>}
+								body={(data) => <span>${data.paidTotal > 0 ? data.paidTotal : data.total}</span>}
 								header='Total Cobrado'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
@@ -470,7 +518,7 @@ const ClientPayments = () => {
 							<Column
 								field='PaymentType.name'
 								// body={(data) => <span>${data.total}</span>}
-								header='Formato de pago'
+								header='Format de pago'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 								sortable
@@ -495,15 +543,16 @@ const ClientPayments = () => {
 				show={show}
 				savingOrUpdating={savingOrUpdating}
 				setShow={setShow}
+				customTitle='Revertir Cobro'
+				customMessage={`¿Estás seguro que querés revertir el cobro de ${currentPayment.current?.Contract.Client.fullName} ${currentPayment.current?.month}/${currentPayment.current?.year}?`}
 				destroy={() => destroy(currentPayment.current?.id!)}
-				text={`El cobro de ${currentPayment.current?.month} ${currentPayment.current?.Contract.Client.fullName} - ${currentPayment.current?.year}`}
 			/>
 			<CreateModal
 				show={downloadPdf}
 				closeModal={closePrintPdfModal}
 				overlayClick={false}
 				// className='shadow-none border-0 w-full sm:w-[640px] md:w-[768px] lg:w-[1024px] !p-3'
-				titleText={`Recibo de ${currentPayment.current?.month} - ${currentPayment.current?.year}`}
+				titleText={`Recibo  ${currentPayment.current?.month}/${currentPayment.current?.year}`}
 			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
 				<CloseOnClick action={closePrintPdfModal} />
@@ -513,7 +562,7 @@ const ClientPayments = () => {
 						{
 							[1, 2].map((pdf, index) => (
 								<div key={index} className="flex justify-between flex-col border border-gray-200 dark:border-slate-600 p-1 text-xs  h-[95%] w-[500px]">
-									<div className="header-pdf flex justify-between border border-gray-200 dark:border-slate-600  p-2">
+									<div className="header-pdf flex items-center justify-between border border-gray-200 dark:border-slate-600  p-2">
 										<div className="left w-[50%] flex items-center flex-col gap-y-2">
 											<div className='logo-app flex items-center'>
 												<img
@@ -525,14 +574,14 @@ const ClientPayments = () => {
 											</div>
 											<div className="flex flex-col items-center">
 
-												<span className="text-2xl font-semibold uppercase">Centro</span>
+												<span className="text-lg font-semibold uppercase">Centro</span>
 												<span className="text-md font-semibold ">Administracion de  </span>
-												<span className="text-sm font-semibold ">Consorcios y Propiedades</span>
+												<span className="text-xs  ">Consorcios y Propiedades</span>
 											</div>
 
 										</div>
 										<div className="right w-[50%] ">
-											<div className="flex flex-col items-center text-sm">
+											<div className="flex flex-col items-center text-xs">
 												<span>Alquileres - Ventas - Tasaciones</span>
 												<span>San Martin 1514  Tel: 4483280</span>
 												<span>2000 - Rosario - Santa Fe </span>
@@ -571,12 +620,13 @@ const ClientPayments = () => {
 													</span>
 												</div>
 											</div>
-											<div className='flex flex-col font-semibold items-center'>
-												<span>Vencimiento</span>
-												<span>
+											<div className='flex flex-col  items-center'>
+												<span className=''>Vencimiento</span>
+												<span className=''>
 													del contrato
 												</span>
-												<span>
+												<span className='!text-xs font-semibold'>
+													{formatDateDDMMYYYY(currentPayment.current?.Contract.startDate!)} {' / '}
 													{formatDateDDMMYYYY(currentPayment.current?.Contract.endDate!)}
 												</span>
 											</div>
@@ -589,7 +639,7 @@ const ClientPayments = () => {
 										{currentPayment.current?.expenseDetails.map((evt, index) => (
 											<div
 												key={index}
-												className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
+												className='align-items-center uppercase text-xs  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
 											>
 												<span className=''>{evt.description}</span>
 												<span>${evt.amount}</span>
@@ -599,7 +649,7 @@ const ClientPayments = () => {
 										{
 											currentPayment.current?.recharge! > 0 && (
 												<div
-													className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between dark:border-slate-600    border-gray-300'
+													className='align-items-center uppercase text-xs  flex gap-x-3 items-center  justify-between dark:border-slate-600    border-gray-300'
 												>
 													<span className=''>PUNITORIOS  {currentPayment.current?.month}   {currentPayment.current?.year.toString()}</span>
 													<span>${currentPayment.current?.recharge}</span>
@@ -609,7 +659,7 @@ const ClientPayments = () => {
 										{currentPayment.current?.eventualityDetails.map((evt, index) => (
 											<div
 												key={index}
-												className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
+												className='align-items-center uppercase text-xs  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
 											>
 												<span className=''>{evt.description}</span>
 												<span>${evt.clientAmount}</span>
@@ -617,12 +667,37 @@ const ClientPayments = () => {
 											</div>
 										))}
 
+										{
+											currentPayment.current?.obs && (
+												<div
+
+													className='text-xs  dark:border-slate-600     border-gray-300'
+												>
+													<span className=''>Observaciones : </span>
+													<span>{currentPayment.current?.obs}</span>
+												</div>)
+										}
+
 									</div>
 									<div className="mt-auto p-2  border border-gray-200 dark:border-slate-600 ">
+
+										{
+											// @ts-expect-error
+											currentPayment.current?.paidTotal > 0 && (
+												<div
+													className='align-items-center font-semibold uppercase text-xs  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
+												>
+													<span className=''>Total cobrado  </span>
+													<span className=''>${currentPayment.current?.paidTotal}</span>
+
+												</div>
+											)
+										}
+
 										<div
-											className='align-items-center font-semibold uppercase text-sm  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
+											className='align-items-center font-semibold uppercase text-xs  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
 										>
-											<span className=''>Total a cobrar </span>
+											<span className=''>Total  </span>
 											<span className=''>${currentPayment.current?.total}</span>
 
 										</div>
@@ -641,7 +716,7 @@ const ClientPayments = () => {
 					</div>
 					<div className="flex gap-x-2">
 						<button className='btn sec  !my-4' disabled={loadingPdf} onClick={closePrintPdfModal}> Cancelar </button>
-						<button className='btn gradient  !my-4' disabled={loadingPdf} onClick={handleDownloadPdf}> {loadingPdf ? 'Descargando ... ' : 'Descargar recibo'} </button>
+						<button className='btn gradient !text-sm !my-4' disabled={loadingPdf} onClick={handleDownloadPdf}> {loadingPdf ? 'DESCARGANDO... ' : 'DESCARGAR'} </button>
 					</div>
 				</Box>
 			</CreateModal>
@@ -712,7 +787,7 @@ const ClientPayments = () => {
 							(upToDate && ContractId) && (
 								<div className="text-green-500 dark:text-green-400 text-center my-2">
 									{/* @ts-ignore */}
-									El contrato  {ContractId.Property.street!} {ContractId?.Property?.number} {ContractId?.Property?.floor}-{ContractId?.Property?.dept} ya pago el mes de {month} {year}
+									El contrato  {ContractId?.Property?.street!} {ContractId?.Property?.number} {ContractId?.Property?.floor}-{ContractId?.Property?.dept} ya pago el mes de {month} {year}
 								</div>
 							)
 						}
@@ -743,12 +818,14 @@ const ClientPayments = () => {
 											{expenseDetails.map((evt, index) => (
 												<div
 													key={evt.id.toString() + evt.createdAt + index + evt.amount + evt.description}
+													title={upToDate ? 'Ya cobraste este  mes de ' + month + ' ' + year : ''}
 													className='align-items-center flex items-center flex-wrap   border border-gray-300 dark:border-slate-500 p-2'
 												>
 													<Checkbox
 														inputId={evt.id.toString() + evt.createdAt + index + evt.amount + evt.description}
 														name='expenseClients'
 														value={evt}
+														disabled={upToDate}
 														onChange={onExpensesClienteChange}
 														checked={selectedExpensesClient.some((item: any) => item.id === evt.id)}
 													/>
@@ -766,13 +843,15 @@ const ClientPayments = () => {
 											>
 												<Checkbox
 													inputId={GG.id.toString() + GG.createdAt + GG.amount + GG.description}
-													name='expenseClients'
+													name='expense-gestion'
 													value={GG}
-													onChange={onExpensesClienteChange}
-													checked={selectedExpensesClient.some((item: any) => item.id === GG.id)}
+													disabled={upToDate}
+													title={upToDate ? 'Ya cobraste este  mes de ' + month + ' ' + year : ''}
+													onChange={() => { setGG((prev: any) => ({ ...prev, checked: !GG.checked })) }}
+													checked={GG.checked}
 												/>
 												<label
-													htmlFor={GG.toString() + GG.createdAt + GG.amount + GG.description}
+													htmlFor={GG.id.toString() + GG.createdAt + GG.amount + GG.description}
 													className='ml-2'
 												>
 													${GG.amount} | {GG.description}
@@ -824,6 +903,7 @@ const ClientPayments = () => {
 														inputId={evt.updatedAt + evt.id + evt.description + evt.amount + index}
 														value={evt}
 														name='debtsClients'
+														disabled={evt.debtParentId !== undefined}
 														onChange={onDebtsChanges}
 														checked={selectedDebts.some((item: any) => item.id === evt.id)}
 													/>
@@ -899,22 +979,22 @@ const ClientPayments = () => {
 						<FieldsetGroup>
 							<FieldsetGroup className='w-full sm:w-[50%]'>
 								<fieldset className=''>
-									<label htmlFor=''>Total event.</label>
+									<label htmlFor=''>Total Event. {eventTotal.current}</label>
 									<input
 										placeholder='1234.90'
 										type='number'
 										disabled={true}
-										value={eventTotal.current}
+										value={eventTotal.current.toFixed(2)}
 										onChange={(value) => { }}
 									/>
 								</fieldset>
 								<fieldset className=''>
-									<label htmlFor=''>Total Imp.</label>
+									<label htmlFor=''>Total Imp. {expsTotal.current + debtsTotal.current}</label>
 									<input
 										placeholder='1234.90'
 										type='number'
 										disabled={true}
-										value={expsTotal.current + debtsTotal.current}
+										value={(expsTotal.current + debtsTotal.current).toFixed(2)}
 										onChange={(value) => { }}
 									/>
 								</fieldset>
@@ -930,12 +1010,13 @@ const ClientPayments = () => {
 										type='number'
 										value={qteDays ?? ''}
 										onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-											// handleInputChange(e.target.value, 'qteDays')
 											updateAll({
 												...values,
 												qteDays: Number(e.target.value),
 												recharge: Number((Number(e.target.value) * dailyPunitive).toFixed(2)),
+												// total: GG.checked ? eventTotal.current + expsTotal.current + debtsTotal.current + Number((Number(e.target.value) * dailyPunitive).toFixed(2)) + GG.amount : eventTotal.current + expsTotal.current + debtsTotal.current + Number((Number(e.target.value) * dailyPunitive).toFixed(2))
 											})
+
 										}}
 									/>
 								</fieldset>
@@ -960,24 +1041,31 @@ const ClientPayments = () => {
 									disabled={true}
 									name='total'
 									type='number'
-									value={eventTotal.current + expsTotal.current + debtsTotal.current + recharge}
+									value={GG.checked ? (eventTotal.current + expsTotal.current + debtsTotal.current + recharge + Number(GG.amount)).toFixed(2) : (eventTotal.current + expsTotal.current + debtsTotal.current + recharge).toFixed(2)}
 									onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value, 'total')}
 								/>
 							</fieldset>
 							<CustomInput
 								initialValue={paidTotal || ''}
 								type='number'
-								placeholder={(eventTotal.current + expsTotal.current + debtsTotal.current + recharge).toFixed()}
+								placeholder={'0.00'}
 								onChange={(v) => { handleInputChange(Number(v), 'paidTotal') }}
 								label='Total cobrado'
 							/>
 						</FieldsetGroup>
+						{
+							paidTotal > 0 && (<div className='text-green-500 dark:text-green-300 p-1 mt-2'>Se agregará una eventualidad con un monto de : {'$'}
+								{
+									GG.checked ? (eventTotal.current + expsTotal.current + debtsTotal.current + recharge + Number(GG.amount) - paidTotal).toFixed(2) : (eventTotal.current + expsTotal.current + debtsTotal.current + recharge - paidTotal).toFixed(2)
+								}</div>)
+						}
 
 						<CustomTextArea
 							initialValue={obs || ''}
-							placeholder='Descriocion del pago'
+							placeholder='Pago  transferencia bancaria'
 							onChange={(v) => { handleInputChange(v, 'obs') }}
 							label='Observaciones'
+							optional
 						/>
 
 
@@ -1011,6 +1099,20 @@ const ClientPayments = () => {
 
 											</div>
 										))}
+										{
+											GG.checked && (
+												<div
+													key={GG.id}
+													className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+												>
+													<span className=''>{GG.description}</span>
+													<span>${GG.amount}</span>
+
+												</div>
+											)
+
+										}
+
 										{selectedEventualities.map((evt, index) => (
 											<div
 												key={index}
@@ -1049,8 +1151,18 @@ const ClientPayments = () => {
 											className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between  mt-3  border-gray-300'
 										>
 											<span className=''>Total a cobrar </span>
-											<span>${eventTotal.current + expsTotal.current + debtsTotal.current + recharge}</span>
+											{
+												paidTotal > 0 ? (
+													<span className=''>${paidTotal}</span>
+												) : (
 
+													GG.checked ? (
+														<span>$   {(Number(GG.amount) + eventTotal.current + expsTotal.current + debtsTotal.current + recharge).toFixed(2)}</span>
+
+													) : (<span>$ {(eventTotal.current + expsTotal.current + debtsTotal.current + recharge).toFixed(2)}</span>)
+
+												)
+											}
 										</div>
 									</div>
 								</div>

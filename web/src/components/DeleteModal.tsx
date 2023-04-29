@@ -3,7 +3,9 @@ import Box from './Box';
 import InlineDots from './loadings/Inlinedots';
 
 
-const DeleteModal = ({ show, setShow, destroy, text, savingOrUpdating }: { show: boolean, setShow: any, destroy: any, text: string, savingOrUpdating: boolean }) => {
+
+interface Props { show: boolean, setShow: any, destroy: any, text?: string, savingOrUpdating: boolean, customTitle?: string, customMessage?: string }
+const DeleteModal = ({ show, setShow, destroy, text, savingOrUpdating, customTitle, customMessage }: Props) => {
 
   const closeModal = () => setShow(!show);
 
@@ -22,11 +24,16 @@ const DeleteModal = ({ show, setShow, destroy, text, savingOrUpdating }: { show:
     >
       <Box className="modal-content  max-w-[400px] flex flex-col">
         <div className=" flex justify-between">
-          <h2 className='title-form text-2xl'>Borrar registro</h2>
+          <h2 className='title-form text-2xl'>  {customTitle ? customTitle : 'Borrar registro'}</h2>
         </div>
         <br />
         <span className="message">
-          ¿Estás seguro de eliminar : <span className="text-base text-red-500 dark:text-red-400 font-bold">{text} ?</span>
+
+          {customMessage ? customMessage : (
+            <span>
+              ¿Estás seguro de eliminar : <span className="text-base text-red-500 dark:text-red-400 font-bold">{text} ?</span>
+            </span>
+          )}
         </span>
         <section className="action flex items-center gap-x-3 mt-8">
           <button className='btn sec !py-1' disabled={savingOrUpdating} onClick={closeModal} >Cancelar</button>

@@ -41,6 +41,7 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
     },
+    obs: DataTypes.STRING(500),
     month: {
       type: DataTypes.STRING(15),
       allowNull: false,
@@ -111,10 +112,10 @@ module.exports = (sequelize, DataTypes) => {
         fields: ["OwnerId", "month", "year"],
       },
     ],
-    paranoid: true,
     sequelize,
-    tableName : 'paymentowners',
+    tableName: 'paymentowners',
     modelName: 'PaymentOwner',
+    paranoid: true,
   });
   return PaymentOwner;
 };

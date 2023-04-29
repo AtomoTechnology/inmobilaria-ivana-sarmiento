@@ -2,7 +2,7 @@
 const { Model } = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
 	class JobLog extends Model {
-		static associate(models) {}
+		static associate(models) { }
 	}
 	JobLog.init(
 		{
@@ -31,8 +31,8 @@ module.exports = (sequelize, DataTypes) => {
 		{
 			sequelize,
 			modelName: 'JobLog',
-			tableName : 'joblogs',
-			paranoid: true,
+			tableName: 'joblogs',
+			// paranoid: true,
 		}
 	)
 	return JobLog

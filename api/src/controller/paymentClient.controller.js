@@ -53,31 +53,13 @@ exports.Post = catchAsync(async (req, res, next) => {
   // return
   const transact = await sequelize.transaction();
   try {
-    const payment = await PaymentClient.create(req.body, {
-      transaction: transact,
-    });
+
     console.log('BODYYY :::: ', req.body)
     console.log('PAID ::: ', req.body.paidTotal, ' TOTAL ::: ', req.body.total)
-    if (req.body.paidTotal && req.body.paidTotal > 0 && req.body.paidTotal !== req.body.total) {
-      // add a eventualities with the difference
-      console.log('entro acaaaaaaa ')
-      await Eventuality.create({
-        description: 'Diferencia a favor sobre el cobro ' + req.body.month + '/' + req.body.year,
-        ownerAmount: 0,
-        clientAmount: req.body.total - req.body.paidTotal,
-        amount: req.body.total - req.body.paidTotal,
-        clientPaid: false,
-        ownerPaid: true,
-        expiredDate: new Date().getTime() + 30 * 24 * 60 * 60 * 1000,  //actual date plus 1 month
-        ContractId: req.body.ContractId,
-      }, {
-        transaction: transact,
-      });
 
-    }
     if (req.body.expenseDetails.length > 0) {
       for (let j = 0; j < req.body.expenseDetails.length; j++) {
-        if (req.body.expenseDetails[j].debt) {
+        if (req.body.expenseDetails[j]?.debt) {
           await DebtClient.update(
             {
               paid: true,
@@ -87,11 +69,45 @@ exports.Post = catchAsync(async (req, res, next) => {
               where: {
                 id: req.body.expenseDetails[j].id,
               },
+              transaction: transact
             }
           );
         }
+
+        if (req.body.expenseDetails[j].paidCurrentMonth) {
+          req.body.paidCurrentMonth = true
+        }
+
       }
     }
+
+    console.log('BODYYY BEFORE INSERT  :::: ', req.body)
+    const payment = await PaymentClient.create(req.body, {
+      transaction: transact,
+    });
+
+    if (req.body.paidTotal && req.body.paidTotal > 0 && req.body.paidTotal !== req.body.total) {
+      // add a eventualities with the difference
+      console.log('entro acaaaaaaa ')
+      let text = req.body.paidTotal > req.body.total ? 'A cuenta ' : 'Saldo '
+      await Eventuality.create({
+        description: text + req.body.month + '/' + req.body.year,
+        ownerAmount: 0,
+        clientAmount: req.body.total - req.body.paidTotal,
+        amount: req.body.total - req.body.paidTotal,
+        clientPaid: false,
+        isReverted: true,
+        ownerPaid: true,
+        expiredDate: new Date().getTime() + 30 * 24 * 60 * 60 * 1000,  //actual date plus 1 month
+        // ContractId: req.body.ContractId,
+        paymentId: payment.id,
+        PropertyId: req.body.PropertyId,
+      }, {
+        transaction: transact,
+      });
+
+    }
+
 
     if (req.body.eventualityDetails.length > 0) {
       for (let j = 0; j < req.body.eventualityDetails.length; j++) {
@@ -103,10 +119,12 @@ exports.Post = catchAsync(async (req, res, next) => {
             where: {
               id: req.body.eventualityDetails[j].id,
             },
+            transaction: transact
           }
         );
       }
     }
+
 
     await transact.commit();
     return res.json({
@@ -118,6 +136,7 @@ exports.Post = catchAsync(async (req, res, next) => {
     });
   } catch (error) {
     await transact.rollback();
+    // return next()
     throw error;
   }
 });
@@ -141,15 +160,18 @@ exports.Put = update(PaymentClient, [
   "year",
   "eventualityDetails",
   "ExpenseDetails",
+  'obs'
 ]);
 exports.allDebt = (req, res, next) => { };
 
 exports.Destroy = catchAsync(async (req, res, next) => {
+
+  const payment = await PaymentClient.findByPk(req.params.id);
+  if (!payment) return next(new AppError('No existe el pago', 404))
+
   const transact = await sequelize.transaction();
   try {
-    const payment = await PaymentClient.findByPk(req.params.id, {
-      transaction: transact,
-    });
+
 
     if (payment.expenseDetails.length > 0) {
       for (let j = 0; j < payment.expenseDetails.length; j++) {
@@ -166,12 +188,19 @@ exports.Destroy = catchAsync(async (req, res, next) => {
               where: {
                 id: payment.expenseDetails[j].id,
               },
+              transaction: transact
             },
-            { transaction: transact }
           );
         }
       }
     }
+
+    await Eventuality.destroy(
+      {
+        where: { paymentId: payment.id, isReverted: true },
+        transaction: transact
+      }
+    );
 
     if (payment.eventualityDetails.length > 0) {
       for (let j = 0; j < payment.eventualityDetails.length; j++) {
@@ -183,11 +212,12 @@ exports.Destroy = catchAsync(async (req, res, next) => {
             where: {
               id: payment.eventualityDetails[j].id,
             },
+            transaction: transact
           },
-          { transaction: transact }
         );
       }
     }
+
     await PaymentClient.destroy(
       { where: { id: req.params.id }, force: true },
       { transaction: transact }

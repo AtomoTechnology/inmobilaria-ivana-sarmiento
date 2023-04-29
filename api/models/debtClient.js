@@ -100,7 +100,7 @@ module.exports = (sequelize, DataTypes) => {
 			updatedAt: DataTypes.DATEONLY,
 		},
 		{
-			paranoid: true,
+			// paranoid: true,
 			sequelize,
 			tableName: 'debtclients',
 			modelName: 'DebtClient',

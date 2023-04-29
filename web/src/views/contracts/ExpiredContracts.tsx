@@ -106,7 +106,7 @@ const ExpiredContracts = () => {
 		<BoxContainerPage className=''>
 
 			<Box className='expired-contracts !p-0 !m-0 !border-0 !shadow-none !bg-transparent flex items-end gap-x-4'>
-				<fieldset className='w-fit mb-0 '>
+				<fieldset className='w-full sm:w-40 mb-0 '>
 					<label htmlFor='days'>Cantidad de días</label>
 					<Dropdown
 						value={days}
@@ -132,31 +132,50 @@ const ExpiredContracts = () => {
 				</h2>
 				<Box className='!p-0 !m-0 '>
 					<div className='' >
-						<table className='w-full p-6 !overflow-x-auto text-sm text-left whitespace-nowrap'>
-							<thead className=' rounded-t-lg  overflow-hidden'>
-								<tr className='bg-gray-100 dark:bg-slate-700'>
-									<th className='p-3'>Vence el</th>
-									<th className='p-3'>Resta</th>
-									<th className='p-3'>Carpeta</th>
-									<th className='p-3'>Propiedad</th>
-									<th className='p-3'>Propietario</th>
-									<th className='p-3'>Inquilino</th>
-									<th className='p-3'>Monto Alq.</th>
-									<th className='p-3'>Alq. Neto</th>
-									<th className='p-3'>Año</th>
-									<th className='p-3'>Observaciones</th>
-								</tr>
-							</thead>
-							<tbody className=''>
+						<div className='w-full  !overflow-x-auto text-xs text-left whitespace-nowrap'>
+							<div className=' rounded-t-lg   overflow-hidden'>
+								<div className='flex px-1  py-3  font-semibold border-b'>
+									<div className='w-[80px]'>
+										<span className='p-3 pl-0'>Vence el</span>
+									</div>
+									<div className='w-[40px] '>
+										<span className='p-3 pl-0'>Resta</span>
+									</div>
+									<div className='w-[40px] '>
+										<span className='p-3 pl-0'>Cpta</span>
+									</div>
+									<div className='w-[150px] '>
+										<span className='p-3 pl-0'>Propiedad</span>
+									</div>
+									<div className='w-[150px] '>
+										<span className='p-3 pl-0'>Propietario</span>
+									</div>
+									<div className='w-[150px] '>
+										<span className='p-3 pl-0'>Inquilino</span>
+									</div>
+									<div className='w-[80px] '>
+										<span className='p-3 pl-0'>Monto Alq.</span>
+									</div>
+									<div className='w-[80px]'>
+										<span className='p-3 pl-0'>Alq. Neto</span>
+									</div>
+									<div className='w-[40px] '>
+										<span className='p-3 pl-0 '>Año</span>
+									</div>
+									<div className='w-[220px] '>
+										<span className='p-3 pl-0'>Observaciones</span>
+									</div>
+								</div>
+							</div>
+							<div className=''>
 								{data?.data.map((c: any) => (
-									<tr key={c.id} className=''>
-										<td className='px-3 py-2'>
+									<div key={c.id} className='flex px-1 border-b'>
+										<p className='w-[80px]  my-1  truncate p-2 px-0'>
 											{/* {formatDateDDMMYYYY(c.endDate)} |
 											{formatDateDDMMYYYY(c.startDate)} | */}
 											{formatDateDDMMYYYY(addDate(c.startDate, diferenceBetweentwoDatesInYears(c.startDate, new Date().toISOString().slice(0, 10)), 'years').toISOString().slice(0, 10))}
-										</td>
-										<td className='px-3 py-2'>
-
+										</p>
+										<p className='w-[40px]  my-1  truncate p-2 px-0'>
 											{
 												diffenceBetweenDates(c.startDate, new Date().toISOString()) <= 365 ?
 													(365 - diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10))) :
@@ -167,30 +186,23 @@ const ExpiredContracts = () => {
 															: (1095 - diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10)))
 													)
 											}
-										</td>
-										<td className='px-3 py-2'>{c.Property.folderNumber}</td>
-										<td className='px-3 py-2'>
-											{c.Property.street} {c.Property.number} {c.Property.dept} - {c.Property.floor}
-										</td>
-										<td className='px-3 py-2'> {c.Property.Owner?.fullName}</td>
-										<td className='px-3 py-2'> {c.Client.fullName}</td>
-										<td className='px-3 py-2'>${c.PriceHistorials[c.PriceHistorials.length - 1].amount}</td>
-										<td className='px-3 py-2'>${c.PriceHistorials[c.PriceHistorials.length - 1].amount - (c.PriceHistorials[c.PriceHistorials?.length - 1].amount * (c.Property.Owner.commision / 100))}</td>
-										<td className='px-3 py-2'>
+										</p>
+										<p className='w-[40px]  my-1  truncate p-2 px-0'>{c.Property.folderNumber}</p>
+										<p className='w-[150px]  my-1   truncate p-2 px-0  '>{c.Property.street} {c.Property.number} {c.Property.dept} - {c.Property.floor}</p>
+										<p className='w-[150px]  my-1  truncate p-2 px-0'>{c.Property.Owner?.fullName}</p>
+										<p className='w-[150px]  my-1  truncate p-2 px-0'> {c.Client.fullName}</p>
+										<p className='w-[80px]  my-1  truncate p-2 px-0'>${c.PriceHistorials[c.PriceHistorials.length - 1].amount}</p>
+										<p className='w-[80px]  my-1  truncate p-2 px-0'>${c.PriceHistorials[c.PriceHistorials.length - 1].amount - (c.PriceHistorials[c.PriceHistorials?.length - 1].amount * (c.Property.Owner.commision / 100))}</p>
+										<p className='w-[40px]  my-1  truncate p-2 px-0'>
 											<span className={`${diferenceBetweentwoDatesInYears(c.startDate, new Date().toISOString().slice(0, 10)) === 3 && 'text-yellow-500 font-bold'}`}>
 												{diferenceBetweentwoDatesInYears(c.startDate, new Date().toISOString().slice(0, 10))}
 											</span>
-										</td>
-										<td
-											className='px-3 py-2'
-											title={c.description}
-										>
-											{c.description.slice(0, 20) || '--'} {c.description.length > 20 ? '...' : ''}
-										</td>
-									</tr>
+										</p>
+										<p className='w-[220px] truncate my-1  p-2 px-0' title={c.description}>{c.description}</p>
+									</div>
 								))}
-							</tbody>
-						</table>
+							</div>
+						</div>
 					</div>
 				</Box>
 			</div >
