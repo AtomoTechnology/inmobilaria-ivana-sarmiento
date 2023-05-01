@@ -285,7 +285,7 @@ const Contracts = () => {
 			<div className='flex gap-x-3 items-center justify-start'>
 				{/* <SeeIcon action={() => navigate(`/contracts/${rowData.id}/${rowData.uuid}`)} /> */}
 				{rowData.state !== 'Finalizado' && (<AddGuarantee q={rowData.Assurances.length} action={() => showAddGuarantee(rowData)} />)}
-				<TbReportMoney size={25} title='Agregar Eventualidad' onClick={() => openModalAddEvent(rowData)} />
+				{/* <TbReportMoney size={25} title='Agregar Eventualidad' onClick={() => openModalAddEvent(rowData)} /> */}
 				<EditIcon action={() => edit(rowData)} />
 				<DeleteIcon action={() => ConfirmDestroy(rowData)} />
 			</div>
@@ -339,6 +339,7 @@ const Contracts = () => {
 		}
 	}
 	const openCreateOrEditModel = () => {
+		propertyQuery.refetch()
 		setEditMode(false)
 		currentContract.current = null
 		setShowCreateModal(true)

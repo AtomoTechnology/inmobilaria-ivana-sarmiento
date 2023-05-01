@@ -24,6 +24,7 @@ import { validateForm } from '../../helpers/form'
 import HeaderData from '../../components/HeaderData'
 import RefreshData from '../../components/RefreshData'
 import FormActionBtns from '../../components/FormActionBtns'
+import DeleteIcon from '../../components/icons/DeleteIcon'
 
 const HistorialPrices = () => {
 	const [showCreateModal, setShowCreateModal] = useState(false)
@@ -90,6 +91,7 @@ const HistorialPrices = () => {
 	}
 	const openModalAddPrice = (data: Contract) => {
 		reset()
+		setEditMode(false)
 		currentPrice.current = null
 		currentContract.current = data
 		let prevYear = data.PriceHistorials[data.PriceHistorials.length! - 1].year
@@ -225,7 +227,7 @@ const HistorialPrices = () => {
 		return (
 			<div className='flex gap-x-3 items-center justify-center'>
 				<EditIcon action={() => edit(rowData)} />
-				{/* <DeleteIcon action={() => ConfirmDestroy(rowData)} /> */}
+				<DeleteIcon action={() => ConfirmDestroy(rowData)} />
 			</div>
 		)
 	}
@@ -402,6 +404,7 @@ const HistorialPrices = () => {
 					<CustomInput
 						placeholder='40'
 						type='number'
+						min={0}
 						initialValue={percent}
 						label='Porcentaje de aumento'
 						onChange={(value) => {

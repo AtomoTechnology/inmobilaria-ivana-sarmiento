@@ -17,7 +17,7 @@ export const validateForm = (data: Object, notAllowedKeys: string[] = []): { ok:
                 }
                 break;
             case "number":
-                if (!value) {
+                if (value === undefined || value === null || Number.isNaN(value)) {
                     error[key] = true;
                     ok = false;
                 }

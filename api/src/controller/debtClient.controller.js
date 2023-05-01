@@ -46,10 +46,14 @@ exports.Put = update(DebtClient, ['month', 'year', 'ExpenseDetails'])
 exports.Destroy = destroy(DebtClient)
 
 exports.jobDebtsClients = catchAsync(async (req, res, next) => {
+	// TODO :: generate debts for a specific month and year and alose an specific client
+
 	console.log("Ingreso en el job")
-	const month = new Date().getMonth()
-	const year = new Date().getFullYear()
+	const month = req.query.month ? req.query.month : new Date().getMonth()
+	const year = req.query.year ? req.query.year : new Date().getFullYear()
 	console.log('MONTH ::: ', monthsInSpanish[month - 1])
+
+	// return
 
 
 	const docs = await PaymentClient.findAll({
@@ -100,9 +104,8 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 			if (!exist) {
 
 				await DebtClient.create({
-					description: 'ALQUILER ' + docs2[k].Property.street + ' ' + docs2[k].Property.number + ' ' + docs2[k].Property.dept + '-' +
-						docs2[k].Property.floor + ' ' + monthsInSpanish[month - 1] + '/' + year,
-
+					description: 'ALQUILER ' + docs2[k].Property.street + ' ' + docs2[k].Property.number + ' ' +
+						docs2[k].Property.floor + ' ' + docs2[k].Property.dept + ' ' + monthsInSpanish[month - 1] + '/' + year,
 					amount: docs2[k].PriceHistorials.sort((a, b) => a.amount - b.amount)[docs2[k].PriceHistorials.length - 1].amount,
 					year,
 					month,

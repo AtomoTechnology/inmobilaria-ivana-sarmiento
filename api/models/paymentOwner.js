@@ -66,6 +66,7 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
     },
+    obs: DataTypes.STRING(500),
     total: {
       type: DataTypes.FLOAT,
       allowNull: false,
@@ -77,6 +78,11 @@ module.exports = (sequelize, DataTypes) => {
           msg: "El total de pago es obligatorio",
         },
       },
+    },
+    paidCurrentMonth: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
     expenseDetails: {
       type: DataTypes.TEXT("long"),
@@ -109,7 +115,10 @@ module.exports = (sequelize, DataTypes) => {
     indexes: [
       {
         unique: true,
-        fields: ["OwnerId", "month", "year"],
+        fields: ["OwnerId", "month", "year", 'paidCurrentMonth'],
+        where: {
+          paidCurrentMonth: 1
+        }
       },
     ],
     sequelize,

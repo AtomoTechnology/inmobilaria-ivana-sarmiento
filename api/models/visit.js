@@ -67,7 +67,23 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         type: DataTypes.STRING,
       },
+      participants: {
+        allowNull: true,
+        type: DataTypes.TEXT("long"),
+        get: function () {
+          if (!this.getDataValue("participants")) return null;
+          return JSON.parse(this.getDataValue("participants"));
+        },
+        set: function (value) {
+          return this.setDataValue(
+            "participants",
+            JSON.stringify(value || "")
+          );
+        },
+      },
     },
+
+
     {
       indexes: [
         {

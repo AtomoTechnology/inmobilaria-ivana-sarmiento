@@ -35,6 +35,7 @@ import HeaderData from '../../components/HeaderData'
 import { FilterMatchMode } from 'primereact/api'
 import { EmptyData } from '../../components/EmptyData'
 import FormActionBtns from '../../components/FormActionBtns'
+import CustomTextArea from '../../components/CustomTextArea'
 const OwnerPayment = () => {
 	const [showCreateModal, setShowCreateModal] = useState(false)
 	const [show, setShow] = useState(false)
@@ -47,6 +48,7 @@ const OwnerPayment = () => {
 		total,
 		values,
 		handleInputChange,
+		obs,
 		reset,
 	} = useForm({
 		OwnerId: null,
@@ -54,6 +56,7 @@ const OwnerPayment = () => {
 		month: monthsInSpanish[new Date().getMonth()],
 		year: new Date().getFullYear(),
 		total: 0,
+		obs: ''
 	})
 	const [errors, setErrors] = useState<any>()
 	const [editMode, setEditMode] = useState(false)
@@ -126,20 +129,23 @@ const OwnerPayment = () => {
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
+		// console.log('YTOA CONT ::: ', contractRows.length)
 		values.total = eventTotal.current + expsTotal.current + debtsTotal.current
-		const { error, ok } = validateForm({ ...values })
+		const { error, ok } = validateForm({ ...values }, ['obs'])
 		setErrors(error)
 		if (!ok) return false
 		// return
-		// @ts-expect-error
-		values.OwnerId = values.OwnerId!.id
+		// values.OwnerId = values.OwnerId!.id
 		try {
-			setSavingOrUpdating(true)
+			// setSavingOrUpdating(true)
 
 			const res = await http.post('/payment-owners', {
 				...values,
+				// @ts-expect-error
+				OwnerId: values.OwnerId!.id,
 				expenseDetails: [...selectedExpensesClient, ...selectedDebts],
 				eventualityDetails: selectedEventualities,
+				totalContract: contractRows.length
 			})
 			if (res.data.ok) {
 				ownerPaymentQuery.refetch()
@@ -191,7 +197,15 @@ const OwnerPayment = () => {
 
 	const onExpensesClienteChange = (e: CheckboxChangeEvent) => {
 		let _selectedExps = [...selectedExpensesClient]
-		if (e.checked) _selectedExps.push(e.value)
+		if (e.checked) {
+			_selectedExps.push(e.value)
+			// if (e.value.rent) {
+			// 		let p = debts.find((d) => d.debtParentId === e.value.id)!
+			// 		_selectedExps.push(p)
+
+			// }
+
+		}
 		else _selectedExps = _selectedExps.filter((evt) => evt.id !== e.value.id)
 		expsTotal.current = _selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0)
 		setSelectedExpensesClient(_selectedExps)
@@ -238,7 +252,7 @@ const OwnerPayment = () => {
 
 		// validate if the contract has a payment for the current month
 		try {
-			const res = await http.get(`/payment-owners?OwnerId=${e.value.id}&month=${month}&year=${year}&include=true`)
+			const res = await http.get(`/payment-owners?OwnerId=${e.value.id}&month=${month}&year=${year}&paidCurrentMonth=1&include=true`)
 			if (res.data.results > 0) {
 				setUpToDate(true)
 				updateAll({
@@ -273,6 +287,8 @@ const OwnerPayment = () => {
 							description: 'ALQUILER ' + contract?.Property?.street + ' ' + contract?.Property?.number + ' ' + contract?.Property?.floor + '-' + contract?.Property?.dept + ' ' + month + '/' + year,
 							id: Number(Math.floor(Math.random() * 100000).toFixed(0) + contract.id.toFixed(0) + new Date().getTime().toFixed(0)),
 							ContractId: contract.id,
+							paidCurrentMonth: true,
+							rent: true,
 							createdAt: new Date().toISOString(),
 							updatedAt: new Date().toISOString(),
 						},
@@ -281,24 +297,25 @@ const OwnerPayment = () => {
 							description: 'HONORARIOS ' + contract?.Property?.street + ' ' + contract?.Property?.number + ' ' + contract?.Property?.floor + '-' + contract?.Property?.dept + ' ' + month + '/' + year,
 							id: Number(Math.floor(Math.random() * 10000).toFixed(0) + contract.id.toFixed(0) + new Date().getTime().toFixed(0)),
 							ContractId: contract.id,
+							// rentId :contract.id,
 							createdAt: new Date().toISOString(),
 							updatedAt: new Date().toISOString(),
 						},
 						// ...docsExps.data.data.map((d) => ({ ...d, description: d.description + ' ' + month + '/' + year })),
 						...docsExps.data.data.filter((d) => {
 							if (d.description !== 'AGUAS' && d.description !== 'API') {
-								return { ...d, description: d.description + ' ' + month + '/' + year }
+								return { ...d }
 							} else {
 								if (d.description === 'AGUAS' && ((new Date().getMonth() + 1) % 2) === 0) {
-									return { ...d, description: d.description + ' ' + month + '/' + year }
+									return { ...d }
 								}
 								if (d.description === 'API' && ((new Date().getMonth() + 1) % 2) !== 0) {
-									return { ...d, description: d.description + ' ' + month + '/' + year }
+									return { ...d }
 								}
 							}
-						})
+						}).map((d) => ({ ...d, description: d.description + ' ' + month + '/' + year })),
 					],
-					eventualityDetails: docsEvents.data.data,
+					eventualityDetails: docsEvents.data.data.map((d) => ({ ...d, ContractId: contract.id, description: d.description + ' | ' + contract?.Property?.street + ' ' + contract?.Property?.number + ' ' + contract?.Property?.floor + '-' + contract?.Property?.dept + ' ' + month + '/' + year })),
 					debts: docsDebts.data.data,
 					contract: contract,
 				}]);
@@ -309,6 +326,7 @@ const OwnerPayment = () => {
 
 	const printPdf = async (data: IClienyPayment) => {
 		currentPayment.current = data
+		console.log(data)
 
 		let pd: any = {};
 		data.eventualityDetails.map((d) => {
@@ -452,8 +470,9 @@ const OwnerPayment = () => {
 				savingOrUpdating={savingOrUpdating}
 				show={show}
 				setShow={setShow}
+				customTitle='Revertir Cobro'
+				customMessage={`¿Estás seguro que querés revertir el cobro de ${currentPayment.current?.Owner?.fullName} ${currentPayment.current?.month}/${currentPayment.current?.year}?`}
 				destroy={() => destroy(currentPayment.current?.id!)}
-				text={`El cobro de  ${currentPayment.current?.Owner!.fullName} ${currentPayment.current?.month} - ${currentPayment.current?.year}`}
 			/>
 
 			<CreateModal
@@ -681,6 +700,13 @@ const OwnerPayment = () => {
 								</fieldset>
 							</FieldsetGroup>
 						</FieldsetGroup>
+						<CustomTextArea
+							initialValue={obs || ''}
+							placeholder='Pago  transferencia bancaria'
+							onChange={(v) => { handleInputChange(v, 'obs') }}
+							label='Observaciones'
+							optional
+						/>
 						<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
 					</form>
 					{
@@ -755,20 +781,21 @@ const OwnerPayment = () => {
 						{
 							[1, 2].map((pdf, index) => (
 								<div key={index} className="flex  justify-between flex-col border border-gray-200 dark:border-slate-600 p-1  h-[95%] w-[500px]">
-									<div className="header-pdf flex justify-between items-center border border-gray-200 dark:border-slate-600  p-2">
+									<div className="header-pdf flex items-center justify-between border border-gray-200 dark:border-slate-600  p-2">
 										<div className="left w-[50%] flex items-center flex-col gap-y-2">
 											<div className='logo-app flex items-center'>
 												<img
-													width={100}
-													className='min-w-[100px] object-cover'
+													width={60}
+													className='min-w-[60px] object-cover'
 													src={logoApp}
 													alt='LOGO CENTRO'
 												/>
 											</div>
 											<div className="flex flex-col items-center">
+
 												<span className="text-lg font-semibold uppercase">Centro</span>
-												<span className="text-md font-semibold ">Administracion de  </span>
-												<span className="text-sm font-semibold ">Consorcios y Propiedades</span>
+												<span className="text-xs font-semibold ">Administracion de  </span>
+												<span className="text-xs font-semibold ">Consorcios y Propiedades</span>
 											</div>
 
 										</div>
@@ -777,7 +804,7 @@ const OwnerPayment = () => {
 												<span>Alquileres - Ventas - Tasaciones</span>
 												<span>San Martin 1514  Tel: 4483280</span>
 												<span>2000 - Rosario - Santa Fe </span>
-												<span>inmobilaria@centro.com.ar</span>
+												<span>inmobiliaria.centro.1980@gmail.com</span>
 												<span>www.centro.com.ar</span>
 												<div className="">
 													<span className='flex gap-x-2'>
@@ -788,6 +815,7 @@ const OwnerPayment = () => {
 											</div>
 										</div>
 									</div>
+
 									<div className="client-data border text-xs border-gray-200 dark:border-slate-600  my-2 p-2 flex ">
 										<div className="flex flex-col gap-y-2 flex-1">
 											<span>
@@ -825,7 +853,7 @@ const OwnerPayment = () => {
 
 									<div className='payment-pdf mb-2   flex-1 gap-y-2 flex flex-col '>
 
-										{currentPayment.current?.printData.map((con: any, index: any) => (
+										{currentPayment.current?.printData?.map((con: any, index: any) => (
 											<div key={index} className=" border border-gray-200 p-2">
 												{
 													con.map((evt: any, k: any) => (
@@ -841,18 +869,34 @@ const OwnerPayment = () => {
 
 											</div>
 										))}
+										{
+											currentPayment.current?.obs && (
+												<div
 
+													className='text-xs border p-1 pb-2 mt-1 dark:border-slate-600     border-gray-300'
+												>
+													<span className='font-medium'>Observaciones : </span>
+													<span>{currentPayment.current?.obs}</span>
+												</div>)
+										}
 
 									</div>
-									<div className="mt-auto p-2  border border-gray-200 dark:border-slate-600 ">
+									<div className="mt-auto p-2 font-normal border border-gray-200 dark:border-slate-600 ">
 										<div
-											className='align-items-center font-semibold uppercase text-xs  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
+											className='align-items-center  text-xs  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
 										>
 											<span className=''>Total a pagar </span>
 											<span className=''>$ {currentPayment.current?.total}</span>
 
 										</div>
-										<div className="sign-aclaration my-1">
+										<div
+											className='align-items-center   text-xs  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
+										>
+											<span className=''>Format de pago  </span>
+											<span className=''>{currentPayment.current?.PaymentType.name}</span>
+
+										</div>
+										<div className="sign-aclaration my-1 text-xs font-normal">
 											<div className="sign my-2">
 												<span>Firma : </span>
 											</div>

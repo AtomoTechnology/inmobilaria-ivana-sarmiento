@@ -128,6 +128,9 @@ module.exports = (sequelize, DataTypes) => {
         {
           unique: true,
           fields: ["ContractId", "month", "year", 'paidCurrentMonth'],
+          where: {
+            paidCurrentMonth: 1
+          }
         },
       ],
       sequelize,

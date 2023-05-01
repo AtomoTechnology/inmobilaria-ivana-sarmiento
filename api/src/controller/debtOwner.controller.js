@@ -7,6 +7,7 @@ const {
 	PaymentOwner,
 	Owner,
 	OwnerExpense,
+	OwnerRentPaid,
 	JobLog,
 } = require("../../models");
 
@@ -57,26 +58,33 @@ exports.Put = update(DebtOwner, ["month", "year", "ExpenseDetails"]);
 exports.Destroy = destroy(DebtOwner);
 
 exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
+	// TODO :: generate debts for a specific month and year and alose an specific owner
 	console.log("Ingreso en el job");
-	const month = new Date().getMonth();
-	const year = new Date().getFullYear();
+	const month = req.query.month ? req.query.month : new Date().getMonth()
+	const year = req.query.year ? req.query.year : new Date().getFullYear()
 
 	const docs = await PaymentOwner.findAll(
 		{
-			where: { [Op.and]: { month: monthsInSpanish[month - 1], year } },
+			where: {
+				month: monthsInSpanish[month - 1],
+				year,
+				paidCurrentMonth: true,
+
+			},
 			attributes: [[sequelize.fn("DISTINCT", sequelize.col("OwnerId")), "OwnerId"]],
 		}
 	);
 
+
 	let ids = [];
 	if (docs.length > 0) ids = docs.map((doc) => doc.OwnerId);
-	console.log("IDS11 OWNERS QUE COBRARON EN EL MES ANTERIOR ::: ", ids);
+	console.log("IDS11 OWNERS QUE COBRARON TODOS SUS CONTARTOS  EN EL MES ANTERIOR ::: ", ids);
 
 
 	const docs2 = await Owner.findAll(
 		{
 			where: { id: { [Op.notIn]: ids } },
-			include: [{ model: Property }]
+			// include: [{ model: Property }]
 		}
 	);
 
@@ -115,10 +123,14 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 
 	const transact = await sequelize.transaction();
 	try {
-
 		for (let k = 0; k < contractNotPaid.length; k++) {
 			const exist = await DebtOwner.findOne({ where: { year, month, ContractId: contractNotPaid[k].id, }, });
-			if (!exist) {
+			const exist2 = await OwnerRentPaid.findOne({ where: { year, month: monthsInSpanish[month - 1], ContractId: contractNotPaid[k].id, OwnerId: contractNotPaid[k].Property.Owner.id }, });
+			console.log('existe 1 : ', exist, 'existe 2 :: ', exist2)
+			if (exist2) {
+				console.log('existe 2 papa ', exist2.id)
+			}
+			if (!exist && !exist2) {
 				await DebtOwner.create(
 					{
 						description:
@@ -127,10 +139,10 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 							" " +
 							contractNotPaid[k].Property.number +
 							" " +
-							contractNotPaid[k].Property.dept +
-							"-" +
 							contractNotPaid[k].Property.floor +
 							" " +
+							contractNotPaid[k].Property.dept +
+							"-" +
 							monthsInSpanish[month - 1] +
 							"/" +
 							year,
@@ -152,10 +164,10 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 							" " +
 							contractNotPaid[k].Property.number +
 							" " +
-							contractNotPaid[k].Property.dept +
-							"-" +
 							contractNotPaid[k].Property.floor +
 							" " +
+							contractNotPaid[k].Property.dept +
+							"-" +
 							monthsInSpanish[month - 1] +
 							"/" +
 							year,
@@ -190,6 +202,10 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 
 		await JobLog.create({ type: "debts", state: "success", message: "DEBTS OWNER JOB DONE SUCCESSFULLY.", }, { transaction: transact, });
 		await transact.commit();
+		return res.json({
+			status: "success",
+			contractNotPaid
+		})
 
 	} catch (error) {
 		await JobLog.create({ type: "debts", state: "fail", message: error.message || "Something went wrong.", });

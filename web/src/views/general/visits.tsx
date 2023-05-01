@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react'
-import { DataTable } from 'primereact/datatable'
+import { DataTable, DataTableExpandedRows } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import Box from '../../components/Box'
 import EditIcon from '../../components/icons/EditIcon'
@@ -25,6 +25,13 @@ import { EmptyData } from '../../components/EmptyData'
 import FormActionBtns from '../../components/FormActionBtns'
 import { validateForm } from '../../helpers/form'
 import { FilterMatchMode } from 'primereact/api'
+import CustomTextArea from '../../components/CustomTextArea'
+import { UUID } from '../../helpers/general'
+interface IVisitor {
+	id: string
+	fullName: string
+	phone: string
+}
 
 const Visits = () => {
 	const [showCreateModal, setShowCreateModal] = useState(false)
@@ -37,14 +44,24 @@ const Visits = () => {
 		fullName: '',
 		PropertyId: 0,
 	})
+	const { fullName: XfullName, phone: Xphone, values: Vvalues, handleInputChange: VhandleInputChange, reset: Vreset } = useForm({
+
+		phone: '',
+		fullName: '',
+
+	})
 	const [globalFilterValue, setGlobalFilterValue] = useState('')
 	const [errors, setErrors] = useState<any>()
 	const [editMode, setEditMode] = useState(false)
 	const currentVisit = useRef<IVisit | null>()
+	const [addVisitor, setAddVisitor] = useState(false)
+	const [addingNewVisitor, setAddingNewVisitor] = useState(false)
+	const [otherVistors, setOtherVistors] = useState<IVisitor[]>([])
 
 	const { showAndHideModal } = useShowAndHideModal()
 	const { data, isError, isLoading, error, isFetching, refetch } = useVisits()
 	const propertyQuery = useProperties()
+	const [expandedRows, setExpandedRows] = useState<DataTableExpandedRows>()
 
 	const [filters, setFilters] = useState({
 		global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -101,6 +118,7 @@ const Visits = () => {
 				setSavingOrUpdating(true)
 				const res = await http.put(`/visits/${currentVisit.current?.id}`, {
 					...values,
+					participants: otherVistors,
 				})
 				if (res.data.ok) {
 					data?.data &&
@@ -111,6 +129,7 @@ const Visits = () => {
 							return z
 						}))
 					reset()
+					setOtherVistors([])
 					setShowCreateModal(false)
 					showAndHideModal('Editado', res.data.message)
 				} else {
@@ -124,10 +143,11 @@ const Visits = () => {
 		} else {
 			try {
 				setSavingOrUpdating(true)
-				const res = await http.post('/visits', { ...values })
+				const res = await http.post('/visits', { ...values, participants: otherVistors })
 				if (res.data.ok) {
 					data?.data.unshift({ ...res.data.data, Property: propertyQuery.data?.data.find((p) => p.id === PropertyId) })
 					reset()
+					setOtherVistors([])
 					setShowCreateModal(false)
 					showAndHideModal('Guardado', res.data.message)
 				} else {
@@ -148,6 +168,22 @@ const Visits = () => {
 		setErrors({})
 	}
 
+	const closeAddVisitor = () => {
+		Vreset()
+		setAddVisitor(false)
+	}
+
+	const handleAddNewVistor = async (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault()
+		const { error, ok } = validateForm({ ...Vvalues })
+		if (!ok) return false
+		setAddingNewVisitor(true)
+		setOtherVistors([...otherVistors, { ...Vvalues, id: UUID() }])
+		setAddingNewVisitor(false)
+		closeAddVisitor()
+	}
+	const deleteVisitor = (vis: any) => setOtherVistors(otherVistors.filter((v) => v.id !== vis.id))
+
 	const actionBodyTemplate = (rowData: any) => {
 		return (
 			<div className='flex gap-x-3 items-center justify-center'>
@@ -161,6 +197,41 @@ const Visits = () => {
 		currentVisit.current = null
 		setShowCreateModal(true)
 	}
+	// @ts-expect-error
+	const allowExpansion = (rowData: IVisit) => rowData?.participants?.length > 0 || false
+
+	const rowExpansionTemplate = (data: IVisit) => {
+		return (
+			<div className='p-3'>
+				{/* <h2 className='text-lg font-semibold'></h2> */}
+				<DataTable
+					size='small'
+					dataKey='id'
+					className='!overflow-hidden   !border-none'
+					responsiveLayout='scroll'
+					value={data.participants}>
+					<Column
+						field='fullName'
+						body={(data) => <span>{data.fullName} </span>}
+						header='Nombre'
+						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+						sortable
+					></Column>
+					<Column
+						field='phone'
+						body={(data) => <span>{data.phone} </span>}
+						header='Celular'
+						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+					></Column>
+				</DataTable>
+			</div>
+
+		)
+
+	}
+
 	if (isLoading) return <Loading />
 	if (isError) return <RequestError error={error} />
 
@@ -185,6 +256,9 @@ const Visits = () => {
 							filters={filters}
 							globalFilterFields={['fullName', 'phone', 'Property.street']}
 							dataKey='id'
+							expandedRows={expandedRows}
+							rowExpansionTemplate={rowExpansionTemplate}
+							onRowToggle={(e: any) => setExpandedRows(e.data)}
 							// paginator
 							// rows={10}
 							// paginatorLeft={<RefreshData action={refetch} />}
@@ -192,6 +266,12 @@ const Visits = () => {
 							// currentPageReportTemplate='{first} al {last} de {totalRecords}'
 							responsiveLayout='scroll'
 						>
+							<Column
+								expander={allowExpansion}
+								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+								className={`dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 `}
+								style={{ width: '0.5rem' }}
+							/>
 							<Column
 								header='Dirección'
 								body={(data) => (
@@ -255,6 +335,39 @@ const Visits = () => {
 				text={`${currentVisit.current?.fullName}`}
 			/>
 
+
+			<CreateModal
+				show={addVisitor}
+				closeModal={closeAddVisitor}
+				overlayClick={false}
+				className=''
+				titleText={`Agregar persona`}
+			>
+				<form action="" onSubmit={handleAddNewVistor}>
+					<div>
+						<CustomInput
+							placeholder='Juan jose'
+							initialValue={XfullName}
+							onChange={(value) => VhandleInputChange(value, 'fullName')}
+							maxLength={100}
+							label='Nombre Completo'
+							name=''
+							required
+						/>
+						<CustomInput
+							placeholder='3410101010'
+							initialValue={Xphone}
+							onChange={(value) => VhandleInputChange(value, 'phone')}
+							maxLength={20}
+							label='Télefono'
+							required
+						/>
+					</div>
+					<FormActionBtns savingOrUpdating={addingNewVisitor} onClose={closeAddVisitor} />
+				</form>
+
+			</CreateModal>
+
 			<CreateModal
 				show={showCreateModal}
 				closeModal={closeCreateModal}
@@ -299,6 +412,13 @@ const Visits = () => {
 						)}
 						{errors?.PropertyId && <FormError text='La propiedad es obligatoria.' />}
 					</fieldset>
+					{
+						(!!fullName && !!phone) && (
+							<div className="add-more-visitors w-full grid items-center mt-2 border border-gray-400 bg-transparent  border-dashed ">
+								<button type='button' className='btn !bg-transparent dark:text-slate-400 ' onClick={() => setAddVisitor(true)}>Agregar</button>
+							</div>
+						)
+					}
 					<FieldsetGroup>
 						<CustomInput
 							placeholder='Juan jose'
@@ -306,6 +426,7 @@ const Visits = () => {
 							onChange={(value) => handleInputChange(value, 'fullName')}
 							maxLength={100}
 							label='Nombre Completo'
+							name=''
 							required
 							hasError={errors?.fullName}
 							errorText='El nombre es obligatorio.'
@@ -321,14 +442,29 @@ const Visits = () => {
 							errorText='El télefono es obligatorio.'
 						/>
 					</FieldsetGroup>
+					{
+						otherVistors.length > 0 && (
+							<div className="flex flex-col gap-y-4 mt-4   relative">
+								{
+									otherVistors?.map((vis: IVisitor) => (
+										<div className='relative'>
+											<div className="absolute top-1 right-1">
+												<DeleteIcon action={() => deleteVisitor(vis)} />
+											</div>
+											<div className="flex items-center !border !border-gray-300 justify-between rounded shadow  dark:!border-slate-600 p-1 px-2 ">
+												<div title={vis.fullName} className='w-[220px] truncate '>{vis.fullName}</div>
+												<div className='w-[220px] '>{vis.phone}</div>
+											</div>
+										</div>
+
+									))
+								}
+							</div>
+						)
+					}
+
+
 					<FieldsetGroup>
-						<CustomInput
-							placeholder='Puede llegar tarde el inquilino'
-							initialValue={description}
-							onChange={(value) => handleInputChange(value, 'description')}
-							label='Nota'
-							optional
-						/>
 						<CustomInput
 							placeholder='Fecha visita'
 							type='datetime-local'
@@ -340,6 +476,13 @@ const Visits = () => {
 							errorText='La fecha es obligatoria.'
 						/>
 					</FieldsetGroup>
+					<CustomTextArea
+						placeholder='Puede llegar tarde el inquilino'
+						initialValue={description}
+						onChange={(value) => handleInputChange(value, 'description')}
+						label='Nota'
+						optional
+					/>
 					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
 				</form>
 			</CreateModal>

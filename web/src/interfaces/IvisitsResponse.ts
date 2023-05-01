@@ -21,4 +21,5 @@ export interface IVisit {
 	createdAt: string
 	updatedAt: string
 	deletedAt: null
+	participants?: []
 }

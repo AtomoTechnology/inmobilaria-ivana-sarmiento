@@ -13,6 +13,7 @@ type Props = {
   hasError?: boolean
   errorText?: string
   optional?: boolean
+  name?: string
 };
 
 const CustomTextArea = (
@@ -21,6 +22,7 @@ const CustomTextArea = (
     onChange,
     className = '',
     label = undefined,
+    name = undefined,
     required = false,
     hasError = false,
     maxLength = undefined,
@@ -43,7 +45,7 @@ const CustomTextArea = (
         maxLength={maxLength}
         required={required}
         minLength={minLength}
-        name={label?.replaceAll(' ', '_')}
+        name={!!name ? name : label?.replaceAll(' ', '_')}
         placeholder={placeholder}
       />
       {hasError && <FormError text={errorText} />}

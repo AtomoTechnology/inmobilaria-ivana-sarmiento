@@ -17,6 +17,7 @@ type Props = {
 	hasError?: boolean
 	errorText?: string
 	optional?: boolean
+	name?: string
 }
 
 const CustomInput = ({
@@ -29,6 +30,7 @@ const CustomInput = ({
 	className = '',
 	disabled = false,
 	label = undefined,
+	name = undefined,
 	required = false,
 	hasError = false,
 	maxLength = undefined,
@@ -51,7 +53,7 @@ const CustomInput = ({
 				maxLength={maxLength}
 				minLength={minLength}
 				max={max}
-				name={label?.replaceAll(' ', '_')}
+				name={!!name ? name : label?.replaceAll(' ', '_')}
 				required={required}
 				min={min}
 				type={type}

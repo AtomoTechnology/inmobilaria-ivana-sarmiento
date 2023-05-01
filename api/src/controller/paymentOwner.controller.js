@@ -4,6 +4,7 @@ const {
 	Owner,
 	Client,
 	Property,
+	OwnerRentPaid,
 	Contract,
 	PaymentType,
 	DebtOwner,
@@ -49,8 +50,24 @@ exports.Paginate = paginate(PaymentOwner, {
 })
 
 exports.Post = catchAsync(async (req, res, next) => {
+
+
+	// return
 	const transact = await sequelize.transaction();
 	try {
+
+		let paidAll = 0
+		for (let j = 0; j < req.body.expenseDetails.length; j++) {
+			if (req.body.expenseDetails[j].paidCurrentMonth !== undefined && req.body.expenseDetails[j].paidCurrentMonth === true) {
+				paidAll = paidAll + 1
+			}
+		}
+
+		// console.log('PAID ALL :: ', paidAll, 'TOTAL :::', req.body.totalContract)
+		req.body.paidCurrentMonth = paidAll === req.body.totalContract
+		// console.log(req.body)
+
+		// return
 		const payment = await PaymentOwner.create(req.body, {
 			transaction: transact,
 		});
@@ -68,7 +85,23 @@ exports.Post = catchAsync(async (req, res, next) => {
 							where: {
 								id: req.body.expenseDetails[j].id,
 							},
+							transaction: transact,
 						}
+					);
+				}
+
+				if (req.body.expenseDetails[j].paidCurrentMonth) {
+					await OwnerRentPaid.create(
+						{
+							amount: req.body.expenseDetails[j].amount,
+							description: req.body.expenseDetails[j].description,
+							ContractId: req.body.expenseDetails[j].ContractId,
+							OwnerId: req.body.OwnerId,
+							month: req.body.month,
+							year: req.body.year,
+							PaymentOwnerId: payment.id,
+						},
+						{ transaction: transact, }
 					);
 				}
 			}
@@ -84,6 +117,7 @@ exports.Post = catchAsync(async (req, res, next) => {
 						where: {
 							id: req.body.eventualityDetails[j].id,
 						},
+						transaction: transact,
 					}
 				);
 			}

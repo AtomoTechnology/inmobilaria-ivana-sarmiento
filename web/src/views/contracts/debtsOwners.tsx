@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { DataTable, DataTableExpandedRows } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import Box from '../../components/Box'
@@ -13,6 +13,10 @@ import { diferenceBetweentwoDatesInYears, formatDateDDMMYYYY } from '../../helpe
 import RefreshData from '../../components/RefreshData'
 import HeaderData from '../../components/HeaderData'
 import { EmptyData } from '../../components/EmptyData'
+import DeleteIcon from '../../components/icons/DeleteIcon'
+import useShowAndHideModal from '../../hooks/useShowAndHideModal'
+import http from '../../api/axios'
+import DeleteModal from '../../components/DeleteModal'
 
 const DebtsOwners = () => {
 
@@ -26,7 +30,10 @@ const DebtsOwners = () => {
 	const [expandedRows, setExpandedRows] = useState<DataTableExpandedRows>()
 
 	const { data, isError, isLoading, error, isFetching, refetch } = useContracts('/debts/owner/all')
-
+	const [show, setShow] = useState(false)
+	const { showAndHideModal } = useShowAndHideModal()
+	const currentDebt = useRef<any | null>()
+	const [savingOrUpdating, setSavingOrUpdating] = useState(false)
 	const onGlobalFilterChange = (val: any) => {
 		const value = val
 		let _filters = { ...filters }
@@ -34,7 +41,36 @@ const DebtsOwners = () => {
 		setFilters(_filters)
 		setGlobalFilterValue(value)
 	}
+	const ConfirmDestroy = (data: any) => {
+		setShow(!show)
+		currentDebt.current = data
+	}
 
+	const destroy = async (id: number) => {
+		try {
+			setSavingOrUpdating(true)
+			const res = await http.delete('/debt-owners/' + id)
+			if (res.data.ok) {
+				refetch()
+				setShow(false)
+				showAndHideModal('Borrado', res.data.message)
+			} else {
+				showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
+			}
+		} catch (error: any) {
+			if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+		} finally {
+			setSavingOrUpdating(false)
+		}
+	}
+	const actionBodyTemplate2 = (rowData: any) => {
+		return (
+			<div className='flex gap-x-3 items-center justify-center'>
+				{/* <EditIcon action={() => edit(rowData)} /> */}
+				<DeleteIcon action={() => ConfirmDestroy(rowData)} />
+			</div>
+		)
+	}
 	const allowExpansion = (rowData: Contract) => rowData?.DebtOwners.length > 0 || false
 
 	const rowExpansionTemplate = (data: Contract) => {
@@ -85,6 +121,13 @@ const DebtsOwners = () => {
 						body={(data) => <span className={`p-1 rounded-full px-2  ${data.paid ? 'text-green-400' : 'text-red-400'}`}> {data.paid ? 'Pagado' : 'Sin pagar'} {data.paid && formatDateDDMMYYYY(data.paidDate.slice(0, 10))} </span>}
 						header='Pago'
 					></Column>
+					<Column
+						body={actionBodyTemplate2}
+						headerClassName='!border-none dark:!bg-gray-800'
+						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+						exportable={false}
+						style={{ width: 90 }}
+					/>
 
 				</DataTable>
 			</div>
@@ -222,7 +265,13 @@ const DebtsOwners = () => {
 
 			}
 
-
+			<DeleteModal
+				show={show}
+				setShow={setShow}
+				savingOrUpdating={savingOrUpdating}
+				destroy={() => destroy(currentDebt.current?.id!)}
+				text={`La deuda del periodo ${currentDebt.current?.month}/${currentDebt.current?.year} de  monto   $ ${currentDebt.current?.amount}`}
+			/>
 			{isFetching && (<Loading h={40} w={40} />)}
 		</div>
 	)
