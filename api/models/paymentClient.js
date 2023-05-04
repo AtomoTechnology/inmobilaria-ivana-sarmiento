@@ -124,15 +124,15 @@ module.exports = (sequelize, DataTypes) => {
 
     },
     {
-      indexes: [
-        {
-          unique: true,
-          fields: ["ContractId", "month", "year", 'paidCurrentMonth'],
-          where: {
-            paidCurrentMonth: 1
-          }
-        },
-      ],
+      // indexes: [
+      //   {
+      //     unique: true,
+      //     fields: ["ContractId", "month", "year", 'paidCurrentMonth'],
+      //     // where: {
+      //     //   paidCurrentMonth: 1
+      //     // }
+      //   },
+      // ],
       sequelize,
       modelName: "PaymentClient",
       tableName: 'paymentclients',

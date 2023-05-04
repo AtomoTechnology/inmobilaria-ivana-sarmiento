@@ -5,9 +5,7 @@ import { useContractDetail } from '../../hooks/useContractDetail'
 const ContractDetail = () => {
 	const params = useParams()
 	const { data, isLoading, error, isError } = useContractDetail(Number(params.id))
-	// console.log(data)
 
-	// console.log(params)
 	return <div className='text-white'>{JSON.stringify(data?.data, null, 4)}</div>
 }
 

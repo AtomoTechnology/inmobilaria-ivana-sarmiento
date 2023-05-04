@@ -11,6 +11,7 @@ import { jsPDF } from "jspdf"
 // @ts-expect-error
 import html2pdf from 'html2pdf.js'
 import BoxContainerPage from '../../components/BoxContainerPage'
+import { IHistorialPrice } from '../../interfaces/Icontracts'
 
 const ExpiredContracts = () => {
 	const [days, setDays] = useState(60)
@@ -134,7 +135,7 @@ const ExpiredContracts = () => {
 					<div className='' >
 						<div className='w-full  !overflow-x-auto text-xs text-left whitespace-nowrap'>
 							<div className=' rounded-t-lg   overflow-hidden'>
-								<div className='flex px-1  py-3  font-semibold border-b'>
+								<div className='flex px-1  py-3  font-semibold border-b dark:border-slate-500'>
 									<div className='w-[80px]'>
 										<span className='p-3 pl-0'>Vence el</span>
 									</div>
@@ -169,7 +170,7 @@ const ExpiredContracts = () => {
 							</div>
 							<div className=''>
 								{data?.data.map((c: any) => (
-									<div key={c.id} className='flex px-1 border-b'>
+									<div key={c.id} className='flex px-1 border-b dark:border-slate-700'>
 										<p className='w-[80px]  my-1  truncate p-2 px-0'>
 											{/* {formatDateDDMMYYYY(c.endDate)} |
 											{formatDateDDMMYYYY(c.startDate)} | */}
@@ -177,7 +178,7 @@ const ExpiredContracts = () => {
 										</p>
 										<p className='w-[40px]  my-1  truncate p-2 px-0'>
 											{
-												diffenceBetweenDates(c.startDate, new Date().toISOString()) <= 365 ?
+												diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10)) <= 365 ?
 													(365 - diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10))) :
 													(
 														(diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10)) > 365 && diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10)) <= 730) ? (
@@ -191,8 +192,8 @@ const ExpiredContracts = () => {
 										<p className='w-[150px]  my-1   truncate p-2 px-0  '>{c.Property.street} {c.Property.number} {c.Property.dept} - {c.Property.floor}</p>
 										<p className='w-[150px]  my-1  truncate p-2 px-0'>{c.Property.Owner?.fullName}</p>
 										<p className='w-[150px]  my-1  truncate p-2 px-0'> {c.Client.fullName}</p>
-										<p className='w-[80px]  my-1  truncate p-2 px-0'>${c.PriceHistorials[c.PriceHistorials.length - 1].amount}</p>
-										<p className='w-[80px]  my-1  truncate p-2 px-0'>${c.PriceHistorials[c.PriceHistorials.length - 1].amount - (c.PriceHistorials[c.PriceHistorials?.length - 1].amount * (c.Property.Owner.commision / 100))}</p>
+										<p className='w-[80px]  my-1  truncate p-2 px-0'>${c.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[c.PriceHistorials.length - 1].amount}</p>
+										<p className='w-[80px]  my-1  truncate p-2 px-0'>${c.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[c.PriceHistorials.length - 1].amount - (c.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[c.PriceHistorials?.length - 1].amount * (c.Property.Owner.commision / 100))}</p>
 										<p className='w-[40px]  my-1  truncate p-2 px-0'>
 											<span className={`${diferenceBetweentwoDatesInYears(c.startDate, new Date().toISOString().slice(0, 10)) === 3 && 'text-yellow-500 font-bold'}`}>
 												{diferenceBetweentwoDatesInYears(c.startDate, new Date().toISOString().slice(0, 10))}

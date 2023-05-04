@@ -59,7 +59,6 @@ const Eventualities = () => {
 
 
 	const edit = (data: IEventuality) => {
-		console.log(data)
 		updateAll({ ...data })
 		setShowCreateModal(true)
 		setEditMode(true)

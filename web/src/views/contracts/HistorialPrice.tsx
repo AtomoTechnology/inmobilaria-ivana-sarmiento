@@ -25,6 +25,7 @@ import HeaderData from '../../components/HeaderData'
 import RefreshData from '../../components/RefreshData'
 import FormActionBtns from '../../components/FormActionBtns'
 import DeleteIcon from '../../components/icons/DeleteIcon'
+import BoxContainerPage from '../../components/BoxContainerPage'
 
 const HistorialPrices = () => {
 	const [showCreateModal, setShowCreateModal] = useState(false)
@@ -94,8 +95,8 @@ const HistorialPrices = () => {
 		setEditMode(false)
 		currentPrice.current = null
 		currentContract.current = data
-		let prevYear = data.PriceHistorials[data.PriceHistorials.length! - 1].year
-		let prevAmount = data.PriceHistorials[data.PriceHistorials.length! - 1].amount
+		let prevYear = data.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[data.PriceHistorials.length! - 1].year
+		let prevAmount = data.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[data.PriceHistorials.length! - 1].amount
 		updateAll({ ...values, year: prevYear + 1, amount: prevAmount, ContractId: data.id })
 		setShowCreateModal(true)
 	}
@@ -235,7 +236,7 @@ const HistorialPrices = () => {
 	if (isError) return <RequestError error={error} />
 
 	return (
-		<div className='container m-auto  flex sm:mx-0  flex-col justify-center sm:justify-center'>
+		<BoxContainerPage >
 			<HeaderData showBtn={false} action={() => { }} text='Histórico de precio de los Contratos' />
 			<CustomInput
 				onChange={(val) => onGlobalFilterChange(val)}
@@ -330,7 +331,7 @@ const HistorialPrices = () => {
 						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 					/>
 					<Column
-						field='state'
+						field=''
 						header='Año'
 						body={(data: Contract) => (
 							<span className={`${diferenceBetweentwoDatesInYears(data.startDate, new Date().toISOString().slice(0, 10)) === 3 && 'text-yellow-500 font-bold'}`}>
@@ -345,7 +346,7 @@ const HistorialPrices = () => {
 						header='Monto Actual'
 						body={(data) => (
 							<span >
-								$ {data.PriceHistorials[data.PriceHistorials.length - 1]?.amount}
+								$ {data.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[data.PriceHistorials.length - 1]?.amount}
 							</span>
 						)}
 						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
@@ -455,7 +456,7 @@ const HistorialPrices = () => {
 					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
 				</form>
 			</CreateModal>
-		</div>
+		</BoxContainerPage>
 	)
 }
 

@@ -19,11 +19,9 @@ const {
   paginate,
   findOne,
   update,
-  destroy,
 } = require("../Generic/FactoryGeneric");
 const AppError = require("../../helpers/AppError");
 const { catchAsync } = require("../../helpers/catchAsync");
-const { addDays } = require("../../helpers/date");
 
 exports.GetAll = all(Contract, {
   include: [
@@ -146,9 +144,6 @@ exports.GetById = findOne(Contract, {
       model: PriceHistorial,
     },
     {
-      model: Eventuality,
-    },
-    {
       model: ClientExpense,
     },
     {
@@ -171,7 +166,6 @@ exports.Destroy = catchAsync(async (req, res, next) => {
   const id = req.params.id;
   const contract = await Contract.findOne({ where: { id } });
   if (!contract) return next(new AppError("No se encontró el contrato", 400));
-  console.log('contract :: ', contract)
   const debts = await DebtClient.findAll({ where: { ContractId: id, paid: false } });
   if (debts.length > 0) return next(new AppError("No se puede eliminar el contrato, existen deudas pendientes", 400));
 
@@ -191,7 +185,6 @@ exports.Destroy = catchAsync(async (req, res, next) => {
 
 
   const result = await sequelize.transaction(async (t) => {
-    console.log('contract', contract)
     await Property.update(
       { state: "Libre" },
       {
@@ -209,12 +202,6 @@ exports.Destroy = catchAsync(async (req, res, next) => {
     });
   });
 
-  // const transact = await sequelize.transaction();
-  // try {    
-  // } catch (error) {
-  //   await transact.rollback();
-  //   throw error;
-  // }
 });
 
 exports.ExpiredContracts = catchAsync(async (req, res, next) => {
@@ -230,7 +217,7 @@ exports.ExpiredContracts = catchAsync(async (req, res, next) => {
             sequelize.col("startDate")
           ),
           {
-            [Op.between]: [364 - days, 365],
+            [Op.between]: [365.25 - days, 365.25],
           }
         ),
         sequelize.where(
@@ -240,7 +227,7 @@ exports.ExpiredContracts = catchAsync(async (req, res, next) => {
             sequelize.col("startDate")
           ),
           {
-            [Op.between]: [729 - days, 730],
+            [Op.between]: [730.5 - days, 730.5],
           }
         ),
         sequelize.where(
@@ -250,7 +237,7 @@ exports.ExpiredContracts = catchAsync(async (req, res, next) => {
             sequelize.col("startDate")
           ),
           {
-            [Op.between]: [1094 - days, 1095],
+            [Op.between]: [1095.75 - days, 1095.75],
           }
         ),
       ],

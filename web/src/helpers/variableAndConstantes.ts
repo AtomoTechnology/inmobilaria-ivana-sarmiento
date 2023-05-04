@@ -18,7 +18,6 @@ export const monthsInSpanish = [
 ]
 
 // export const selectedYears = () => {
-// 	console.log('in')
 // 	const year = new Date().getFullYear()
 // 	return [year - 3, year - 2, year - 1, year, year + 1, year + 2, year + 3, year + 4]
 // }

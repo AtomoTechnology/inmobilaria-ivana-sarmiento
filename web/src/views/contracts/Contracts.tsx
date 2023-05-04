@@ -21,7 +21,7 @@ import { useContracts } from '../../hooks/useContracts'
 import { useClients } from '../../hooks/useClients'
 import AddGuarantee from '../../components/icons/AddGuarantee'
 import SeeIcon from '../../components/icons/SeeIcon'
-import { Contract } from '../../interfaces/Icontracts'
+import { Contract, IHistorialPrice } from '../../interfaces/Icontracts'
 import { useNavigate } from 'react-router-dom'
 import { TbReportMoney } from 'react-icons/tb'
 import CloseOnClick from '../../components/CloseOnClick'
@@ -454,7 +454,7 @@ const Contracts = () => {
 									header='Monto Actual'
 									body={(data) => (
 										<span >
-											${data.PriceHistorials[data.PriceHistorials?.length - 1]?.amount}
+											${data.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[data.PriceHistorials?.length - 1]?.amount}
 										</span>
 									)}
 									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'

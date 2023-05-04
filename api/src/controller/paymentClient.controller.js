@@ -49,13 +49,8 @@ exports.Paginate = paginate(PaymentClient, {
 });
 
 exports.Post = catchAsync(async (req, res, next) => {
-  // console.log(req.body)
-  // return
   const transact = await sequelize.transaction();
   try {
-
-    console.log('BODYYY :::: ', req.body)
-    console.log('PAID ::: ', req.body.paidTotal, ' TOTAL ::: ', req.body.total)
 
     if (req.body.expenseDetails.length > 0) {
       for (let j = 0; j < req.body.expenseDetails.length; j++) {
@@ -81,14 +76,12 @@ exports.Post = catchAsync(async (req, res, next) => {
       }
     }
 
-    console.log('BODYYY BEFORE INSERT  :::: ', req.body)
     const payment = await PaymentClient.create(req.body, {
       transaction: transact,
     });
 
     if (req.body.paidTotal && req.body.paidTotal > 0 && req.body.paidTotal !== req.body.total) {
       // add a eventualities with the difference
-      console.log('entro acaaaaaaa ')
       let text = req.body.paidTotal > req.body.total ? 'A cuenta ' : 'Saldo '
       await Eventuality.create({
         description: text + req.body.month + '/' + req.body.year,

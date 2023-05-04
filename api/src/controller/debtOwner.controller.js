@@ -58,8 +58,6 @@ exports.Put = update(DebtOwner, ["month", "year", "ExpenseDetails"]);
 exports.Destroy = destroy(DebtOwner);
 
 exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
-	// TODO :: generate debts for a specific month and year and alose an specific owner
-	console.log("Ingreso en el job");
 	const month = req.query.month ? req.query.month : new Date().getMonth()
 	const year = req.query.year ? req.query.year : new Date().getFullYear()
 
@@ -78,7 +76,6 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 
 	let ids = [];
 	if (docs.length > 0) ids = docs.map((doc) => doc.OwnerId);
-	console.log("IDS11 OWNERS QUE COBRARON TODOS SUS CONTARTOS  EN EL MES ANTERIOR ::: ", ids);
 
 
 	const docs2 = await Owner.findAll(
@@ -90,7 +87,6 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 
 	let ids2 = [];
 	if (docs2.length > 0) ids2 = docs2.map((doc) => doc.id)
-	console.log("IDS222 OWNERS QUE  NOOO COBRARON EN EL MES ANTERIOR ::: ", ids2);
 
 
 
@@ -101,7 +97,6 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 
 	let ids3 = [];
 	if (properties.length > 0) ids3 = properties.map((doc) => doc.id);
-	console.log("IDS3333 propiedades QUE NOOO  COBRARON EN EL MES ANTERIOR ::: ", ids3);
 
 
 	const contractNotPaid = await Contract.findAll(
@@ -126,10 +121,7 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 		for (let k = 0; k < contractNotPaid.length; k++) {
 			const exist = await DebtOwner.findOne({ where: { year, month, ContractId: contractNotPaid[k].id, }, });
 			const exist2 = await OwnerRentPaid.findOne({ where: { year, month: monthsInSpanish[month - 1], ContractId: contractNotPaid[k].id, OwnerId: contractNotPaid[k].Property.Owner.id }, });
-			console.log('existe 1 : ', exist, 'existe 2 :: ', exist2)
-			if (exist2) {
-				console.log('existe 2 papa ', exist2.id)
-			}
+
 			if (!exist && !exist2) {
 				await DebtOwner.create(
 					{
@@ -202,10 +194,10 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 
 		await JobLog.create({ type: "debts", state: "success", message: "DEBTS OWNER JOB DONE SUCCESSFULLY.", }, { transaction: transact, });
 		await transact.commit();
-		return res.json({
-			status: "success",
-			contractNotPaid
-		})
+		// return res.json({
+		// 	status: "success",
+		// 	contractNotPaid
+		// })
 
 	} catch (error) {
 		await JobLog.create({ type: "debts", state: "fail", message: error.message || "Something went wrong.", });

@@ -128,3 +128,5 @@ GRANT ALL PRIVILEGES ON . TO 'dev'@'%' WITH GRANT OPTION;
     "password": "ivana.2023",
     "database": "novaitfl_ivanadb",
     "host": "localhost",
+
+PASSWORD SERVER ::: DtwpvC2auN6y	

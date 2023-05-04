@@ -5,14 +5,7 @@ const { catchAsync } = require('../../helpers/catchAsync')
 const { Op } = require('sequelize')
 const { monthsInSpanish } = require('../../helpers/variablesAndConstantes')
 
-exports.GetAll = all(DebtClient, {
-	// include: [
-	// 	{
-	// 		model: Contract,
-	// 		include: { model: Property },
-	// 	},
-	// ],
-})
+exports.GetAll = all(DebtClient)
 
 exports.Post = catchAsync(async (req, res, next) => {
 	const transact = await sequelize.transaction()
@@ -46,36 +39,27 @@ exports.Put = update(DebtClient, ['month', 'year', 'ExpenseDetails'])
 exports.Destroy = destroy(DebtClient)
 
 exports.jobDebtsClients = catchAsync(async (req, res, next) => {
-	// TODO :: generate debts for a specific month and year and alose an specific client
 
-	console.log("Ingreso en el job")
 	const month = req.query.month ? req.query.month : new Date().getMonth()
 	const year = req.query.year ? req.query.year : new Date().getFullYear()
-	console.log('MONTH ::: ', monthsInSpanish[month - 1])
-
-	// return
-
-
-	const docs = await PaymentClient.findAll({
-		where: {
-			[Op.and]: {
-				month: monthsInSpanish[month - 1],
-				year,
-				paidCurrentMonth: true,
-			},
-		},
-		attributes: [[sequelize.fn('DISTINCT', sequelize.col('ContractId')), 'ContractId']],
-	})
-
-	let ids = []
-	if (docs.length > 0) ids = docs.map(doc => doc.ContractId)
-	console.log('IDS :: ', ids)
+	const mothYearText = monthsInSpanish[month - 1] + '/' + year
+	console.log('mothYearText :: ', mothYearText)
+	// const docs = await PaymentClient.findAll({
+	// 	where: {
+	// 		[Op.and]: {
+	// 			month: monthsInSpanish[month - 1],
+	// 			year,
+	// 			paidCurrentMonth: true,
+	// 		},
+	// 	},
+	// 	attributes: [[sequelize.fn('DISTINCT', sequelize.col('ContractId')), 'ContractId']],
+	// })
+	// let ids = []
+	// if (docs.length > 0) ids = docs.map(doc => doc.ContractId)
 
 	const docs2 = await Contract.findAll({
 		where: {
-			id: {
-				[Op.notIn]: ids,
-			},
+			// id: {			// 	[Op.in]: req.query.ids.split(','),			// },
 			state: 'En curso',
 			startDate: { [Op.lt]: new Date(year, month - 1, new Date(year, month, 0).getDate()) },
 			endDate: { [Op.gt]: new Date() },
@@ -83,46 +67,65 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 		include: [
 			{ model: ClientExpense },
 			{ model: Property },
-			{ model: PriceHistorial }
+			{ model: PriceHistorial },
 		],
 	})
 
-
+	// return res.json({ ok: true, results: docs2.length, data: docs2, })
 
 	const transact = await sequelize.transaction()
 
 	try {
 
 		for (let k = 0; k < docs2.length; k++) {
-			const exist = await DebtClient.findOne({
-				where: {
-					year,
-					month,
-					ContractId: docs2[k].id
-				}
-			})
+			let prevExps = []
+			let pmtContr = await PaymentClient.findAll({ where: { month: monthsInSpanish[month - 1], year, ContractId: docs2[k].id } })
+			pmtContr.forEach((p) => prevExps.push(...p.expenseDetails))
+
+			const exist = await DebtClient.findOne({ where: { year, month, ContractId: docs2[k].id } })
+
 			if (!exist) {
-
-				await DebtClient.create({
-					description: 'ALQUILER ' + docs2[k].Property.street + ' ' + docs2[k].Property.number + ' ' +
-						docs2[k].Property.floor + ' ' + docs2[k].Property.dept + ' ' + monthsInSpanish[month - 1] + '/' + year,
-					amount: docs2[k].PriceHistorials.sort((a, b) => a.amount - b.amount)[docs2[k].PriceHistorials.length - 1].amount,
-					year,
-					month,
-					rent: true,
-					ContractId: docs2[k].id,
-				}, { transaction: transact })
-
-				for (let l = 0; l < docs2[k].ClientExpenses.length; l++) {
+				let textRent = 'ALQUILER ' + docs2[k].Property.street + ' ' + docs2[k].Property.number + ' ' + docs2[k].Property.floor + ' ' + docs2[k].Property.dept + ' ' + mothYearText
+				if (prevExps.filter(pe => pe.ContractId === docs2[k].id && pe.description === textRent).length <= 0) {
 					await DebtClient.create({
-						description: docs2[k].ClientExpenses[l].description + ' ' + monthsInSpanish[month - 1] + '/' + year,
-						amount: docs2[k].ClientExpenses[l].amount,
+						description: textRent,
+						amount: docs2[k].PriceHistorials.sort((a, b) => a.id - b.id)[docs2[k].PriceHistorials.length - 1].amount,
+						year,
+						month,
+						rent: true,
+						ContractId: docs2[k].id,
+					}, { transaction: transact })
+				}
+
+				if (prevExps.filter(pe => pe.ContractId === docs2[k].id && pe.description === `GASTOS DE GESTION ${mothYearText}`).length <= 0) {
+					await DebtClient.create({
+						description: `GASTOS DE GESTION ${mothYearText}`,
+						amount: docs2[k].PriceHistorials.sort((a, b) => a.id - b.id)[docs2[k].PriceHistorials.length - 1].amount * (3 / 100),
 						year,
 						month,
 						ContractId: docs2[k].id,
-					},
-						{ transaction: transact }
-					)
+					}, { transaction: transact })
+				}
+
+				for (let l = 0; l < docs2[k].ClientExpenses.length; l++) {
+					if (prevExps.filter(pe => pe.ContractId === docs2[k].ClientExpenses[l].ContractId && pe.description === docs2[k].ClientExpenses[l].description + ' ' + mothYearText).length <= 0) {
+						if (
+							(docs2[k].ClientExpenses[l].description !== 'AGUAS' && docs2[k].ClientExpenses[l].description !== 'API') ||
+							(docs2[k].ClientExpenses[l].description === 'AGUAS' && (month % 2) === 0) ||
+							(docs2[k].ClientExpenses[l].description === 'API' && (month % 2) !== 0)
+						) {
+							await DebtClient.create({
+								description: docs2[k].ClientExpenses[l].description + ' ' + mothYearText,
+								amount: docs2[k].ClientExpenses[l].amount,
+								year,
+								month,
+								ContractId: docs2[k].id,
+							},
+								{ transaction: transact }
+							)
+						}
+					}
+
 				}
 			}
 		}

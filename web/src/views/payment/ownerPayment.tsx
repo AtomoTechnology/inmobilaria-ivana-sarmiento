@@ -36,6 +36,7 @@ import { FilterMatchMode } from 'primereact/api'
 import { EmptyData } from '../../components/EmptyData'
 import FormActionBtns from '../../components/FormActionBtns'
 import CustomTextArea from '../../components/CustomTextArea'
+import { IHistorialPrice } from '../../interfaces/Icontracts'
 const OwnerPayment = () => {
 	const [showCreateModal, setShowCreateModal] = useState(false)
 	const [show, setShow] = useState(false)
@@ -129,7 +130,6 @@ const OwnerPayment = () => {
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		// console.log('YTOA CONT ::: ', contractRows.length)
 		values.total = eventTotal.current + expsTotal.current + debtsTotal.current
 		const { error, ok } = validateForm({ ...values }, ['obs'])
 		setErrors(error)
@@ -137,8 +137,7 @@ const OwnerPayment = () => {
 		// return
 		// values.OwnerId = values.OwnerId!.id
 		try {
-			// setSavingOrUpdating(true)
-
+			setSavingOrUpdating(true)
 			const res = await http.post('/payment-owners', {
 				...values,
 				// @ts-expect-error
@@ -271,9 +270,6 @@ const OwnerPayment = () => {
 			const ownerContracts = await http.get(`contracts/owner/${e.value.id}/all`)
 			ownerContracts.data.data.map(async (contract: any) => {
 
-				console.log(contract)
-
-
 				const docsExpss = http.get<IClientExpensesResponseSimple>(`/owner-expenses?ContractId=${contract.id}&include=true`)
 				const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?ownerPaid=0&PropertyId=${contract.PropertyId}&include=true`)
 				const docsDebtss = http.get<IdebtsResponse>(`/debt-owners?paid=0&ContractId=${contract.id}`)
@@ -283,7 +279,7 @@ const OwnerPayment = () => {
 
 					expenseDetails: [
 						{
-							amount: contract.PriceHistorials[contract.PriceHistorials?.length - 1]?.amount,
+							amount: contract.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[contract.PriceHistorials?.length - 1]?.amount,
 							description: 'ALQUILER ' + contract?.Property?.street + ' ' + contract?.Property?.number + ' ' + contract?.Property?.floor + '-' + contract?.Property?.dept + ' ' + month + '/' + year,
 							id: Number(Math.floor(Math.random() * 100000).toFixed(0) + contract.id.toFixed(0) + new Date().getTime().toFixed(0)),
 							ContractId: contract.id,
@@ -293,7 +289,7 @@ const OwnerPayment = () => {
 							updatedAt: new Date().toISOString(),
 						},
 						{
-							amount: - (contract.PriceHistorials[contract.PriceHistorials?.length - 1]?.amount * e.value.commision / 100),
+							amount: - (contract.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[contract.PriceHistorials?.length - 1]?.amount * e.value.commision / 100),
 							description: 'HONORARIOS ' + contract?.Property?.street + ' ' + contract?.Property?.number + ' ' + contract?.Property?.floor + '-' + contract?.Property?.dept + ' ' + month + '/' + year,
 							id: Number(Math.floor(Math.random() * 10000).toFixed(0) + contract.id.toFixed(0) + new Date().getTime().toFixed(0)),
 							ContractId: contract.id,
@@ -326,8 +322,6 @@ const OwnerPayment = () => {
 
 	const printPdf = async (data: IClienyPayment) => {
 		currentPayment.current = data
-		console.log(data)
-
 		let pd: any = {};
 		data.eventualityDetails.map((d) => {
 			if (pd.hasOwnProperty(d.ContractId)) {

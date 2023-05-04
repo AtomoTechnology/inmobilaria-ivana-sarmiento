@@ -21,8 +21,6 @@ const handleSequelizeUniqueConstraintErrorPaymentOwner = (error) =>
 const handleSequelizeUniqueConstraintErrorVisit = (error) =>
 	new AppError('Esta persona ya tiene una visita pactada para esa propiedad con esa fecha.', 400)
 const handleSequelizeUniqueConstraintError = (error) => {
-
-	console.log('ERROR AHORA :::: ', error)
 	return new AppError(error.errors.map((e) => e.message).join(',,'), 400)
 }
 
@@ -71,8 +69,6 @@ exports.globalError = (err, req, res, next) => {
 	err.statusCode = err.statusCode || 500
 	err.status = err.status || 'error'
 	let error = Object.assign(err)
-	// console.log("error.errors", error.errors[0].message)
-	// console.log('Message ::: ', error.errors[0].message)
 	if (error.errors !== undefined) {
 		switch (error.errors[0].message) {
 			case 'contracts__property_id__client_id_start_date_end_date must be unique':
@@ -87,7 +83,7 @@ exports.globalError = (err, req, res, next) => {
 			case 'paymentclients__contract_id_month_year_paid_current_month must be unique':
 				error = handleSequelizeUniqueConstraintErrorPaymentClient(error)
 				break
-			case 'payment_owners__owner_id_month_year must be unique':
+			case 'paymentowners__owner_id_month_year_paid_current_month must be unique':
 				error = handleSequelizeUniqueConstraintErrorPaymentOwner(error)
 				break
 			default:

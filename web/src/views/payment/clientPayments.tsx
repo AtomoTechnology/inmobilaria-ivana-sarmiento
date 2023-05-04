@@ -39,6 +39,7 @@ import { FilterMatchMode } from 'primereact/api'
 import FormActionBtns from '../../components/FormActionBtns'
 import { UUID } from '../../helpers/general'
 import CustomTextArea from '../../components/CustomTextArea'
+import { IHistorialPrice } from '../../interfaces/Icontracts'
 const ClientPayments = () => {
 
 	const [showCreateModal, setShowCreateModal] = useState(false)
@@ -101,6 +102,10 @@ const ClientPayments = () => {
 		'Contract.Property.street': { value: null, matchMode: FilterMatchMode.CONTAINS }
 	})
 	const [loadingExpenses, setLoadingExpenses] = useState(false)
+	const [lastPayment, setLastPayment] = useState<any[]>([])
+
+	const [qtePayment, setQtePayment] = useState(0)
+
 
 	const paymentTypeQuery = usePaymentTypes()
 	const { data, isError, isLoading, error, isFetching, refetch } = useClientPayments()
@@ -161,14 +166,10 @@ const ClientPayments = () => {
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		values.total = GG.checked ? Number((Number(GG.amount) + eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0)).toFixed(2)) : Number((eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0)).toFixed(2))
-		console.log('values', values.total)
 		const { error, ok } = validateForm({ ...values }, ['paidTotal', 'extraExpenses', 'qteDays', 'recharge', 'dailyPunitive', 'obs', 'PropertyId',])
 		setErrors(error)
 		if (!ok) return false
 		let testExp = GG.checked ? [...selectedExpensesClient, ...selectedDebts, GG] : [...selectedExpensesClient, ...selectedDebts]
-		console.log({ ...values, testExp, eventualityDetails: selectedEventualities })
-		// return
-
 
 		try {
 			setSavingOrUpdating(true)
@@ -286,6 +287,7 @@ const ClientPayments = () => {
 		setDebts([])
 		setGestionExpensePorc(2)
 		setSelectedDebts([])
+		setLastPayment([])
 		reset()
 		eventTotal.current = 0
 		expsTotal.current = 0
@@ -313,12 +315,13 @@ const ClientPayments = () => {
 		}
 
 		// TODO validate if the contract has a payment for the current month TODO : CHANGES THAT
+		// &paidCurrentMonth=1
 		try {
 			setLoadingExpenses(true)
-			console.log('ID CONTR ::: ', e.value.id)
-			const res = await http.get(`/payment-clients?ContractId=${e.value.id}&month=${month}&year=${year}&paidCurrentMonth=1&include=true`)
-			console.log('res ::: ', res.data)
+			const res = await http.get(`/payment-clients?ContractId=${e.value.id}&month=${month}&year=${year}&include=true`)
 			if (res.data.results > 0) {
+				res.data.data.map((p: any) => setLastPayment((prev: any) => ([...prev, ...p.expenseDetails])))
+				setQtePayment(res.data.results)
 				setUpToDate(true)
 				updateAll({
 					...values,
@@ -342,7 +345,6 @@ const ClientPayments = () => {
 			const dps = http.get<IConfigResponse>(`/config?key=punitorio_diario,gastos_bancarios:or`)
 			const docsDebtss = http.get<IdebtsResponse>(`/debt-clients?paid=0&ContractId=${e.value.id}`)
 			const [docsExps, docsEvents, dp, docsDebts] = await Promise.all([docsExpss, docsEventss, dps, docsDebtss])
-			console.log('DP :::: ', dp)
 			let dailyPunitive = Number(dp.data.data.find((d) => d.key === 'punitorio_diario')?.value)
 			let bankExpenses = Number(dp.data.data.find((d) => d.key === 'gastos_bancarios')?.value)
 			setEventualityDetails(docsEvents.data.data)
@@ -352,8 +354,8 @@ const ClientPayments = () => {
 					date: new Date().toISOString().slice(0, 10),
 					updatedAt: new Date().toISOString(),
 					deletedAt: null,
-					description: 'ALQUILERES  ' + e.value.Property.street + ' ' + e.value?.Property?.number + ' ' + e.value?.Property?.floor + ' ' + e.value?.Property?.dept + ' ' + month + '/' + year,
-					amount: e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount,
+					description: 'ALQUILER ' + e.value.Property.street + ' ' + e.value?.Property?.number + ' ' + e.value?.Property?.floor + ' ' + e.value?.Property?.dept + ' ' + month + '/' + year,
+					amount: e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount,
 					createdAt: (new Date().getTime().toString()),
 					paidCurrentMonth: true,
 					id: UUID()
@@ -363,7 +365,7 @@ const ClientPayments = () => {
 					date: new Date().toISOString().slice(0, 10),
 					updatedAt: new Date().toISOString(),
 					deletedAt: null,
-					description: 'GASTOS BANCARIOS  ' + ' ' + month + '/' + year,
+					description: 'GASTOS BANCARIOS' + ' ' + month + '/' + year,
 					amount: bankExpenses,
 					createdAt: (new Date().getTime().toString()),
 					id: UUID()
@@ -386,8 +388,8 @@ const ClientPayments = () => {
 				date: new Date().toISOString().slice(0, 10),
 				updatedAt: new Date().toISOString(),
 				deletedAt: null,
-				description: 'GASTOS DE GESTION  ' + ' ' + month + '/' + year,
-				amount: (gestionExpensePorc / 100) * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount,
+				description: 'GASTOS DE GESTION ' + month + '/' + year,
+				amount: (gestionExpensePorc / 100) * e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount,
 				createdAt: (new Date().getTime().toString()),
 				id: UUID(),
 				checked: false
@@ -415,19 +417,19 @@ const ClientPayments = () => {
 				}
 			})
 			let day = new Date().getDate()
-			if (day === 1) {
-				let qte = 10 - 5
+			if (day > 5) {
+				let qte = day - 5
 				updateAll({
 					...values,
 					PropertyId: e.value.PropertyId,
 					recharge: Number(
-						(qte * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (dailyPunitive / 100)).toFixed(2)
+						(qte * e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount * (dailyPunitive / 100)).toFixed(2)
 					),
 					qteDays: qte,
 					ContractId: e.value,
-					dailyPunitive: e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (dailyPunitive / 100),
+					dailyPunitive: e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount * (dailyPunitive / 100),
 					total: Number(
-						(qte * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (dailyPunitive / 100)).toFixed(2)
+						(qte * e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount * (dailyPunitive / 100)).toFixed(2)
 					),
 				})
 			} else {
@@ -442,7 +444,7 @@ const ClientPayments = () => {
 		finally { setLoadingExpenses(false) }
 
 	}
-
+	console.log(lastPayment)
 	const openCreateOrEditModel = () => {
 		setEditMode(false)
 		currentPayment.current = null
@@ -451,7 +453,6 @@ const ClientPayments = () => {
 
 	if (isLoading) return <Loading />
 	if (isError) return <RequestError error={error} />
-	console.log(values)
 	return (
 		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
 			<HeaderData action={openCreateOrEditModel} text='Cobro a Inquilino' />
@@ -569,14 +570,13 @@ const ClientPayments = () => {
 										<div className="left w-[50%] flex items-center flex-col gap-y-2">
 											<div className='logo-app flex items-center'>
 												<img
-													width={100}
-													className='min-w-[100px] object-cover'
+													width={60}
+													className='min-w-[60px] object-cover'
 													src={logoApp}
 													alt='LOGO CENTRO'
 												/>
 											</div>
 											<div className="flex flex-col items-center">
-
 												<span className="text-lg font-semibold uppercase">Centro</span>
 												<span className="text-md font-semibold ">Administracion de  </span>
 												<span className="text-xs  ">Consorcios y Propiedades</span>
@@ -794,7 +794,7 @@ const ClientPayments = () => {
 									onChange={(e) => {
 										setGestionExpensePorc(Number(e.target.value))
 										// @ts-expect-error
-										setGG((prev: any) => ({ ...prev, amount: ((Number(e.target.value) / 100) * ContractId?.PriceHistorials[ContractId?.PriceHistorials.length - 1]?.amount).toFixed(2) }))
+										setGG((prev: any) => ({ ...prev, amount: ((Number(e.target.value) / 100) * ContractId?.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[ContractId?.PriceHistorials.length - 1]?.amount).toFixed(2) }))
 									}}
 
 								/>
@@ -806,7 +806,7 @@ const ClientPayments = () => {
 							(upToDate && ContractId) && (
 								<div className="text-green-500 dark:text-green-400 text-center my-2">
 									{/* @ts-ignore */}
-									El contrato  {ContractId?.Property?.street!} {ContractId?.Property?.number} {ContractId?.Property?.floor}-{ContractId?.Property?.dept} ya pago el mes de {month} {year}
+									Ya cobraste {lastPayment.length} conceptos   para el mes de {month} {year}
 								</div>
 							)
 						}
@@ -837,20 +837,20 @@ const ClientPayments = () => {
 											{expenseDetails.map((evt, index) => (
 												<div
 													key={evt.id.toString() + evt.createdAt + index + evt.amount + evt.description}
-													title={upToDate ? 'Ya cobraste este  mes de ' + month + ' ' + year : ''}
+													title={lastPayment.filter((item: any) => item.description === evt.description && item.ContractId === evt.ContractId).length > 0 ? 'Ya cobraste este concepto en el mes actual' : ''}
 													className='align-items-center flex items-center flex-wrap   border border-gray-300 dark:border-slate-500 p-2'
 												>
 													<Checkbox
 														inputId={evt.id.toString() + evt.createdAt + index + evt.amount + evt.description}
 														name='expenseClients'
 														value={evt}
-														disabled={upToDate}
+														disabled={lastPayment.filter((item: any) => item.description === evt.description && item.ContractId === evt.ContractId).length > 0}
 														onChange={onExpensesClienteChange}
 														checked={selectedExpensesClient.some((item: any) => item.id === evt.id)}
 													/>
 													<label
 														htmlFor={evt.id.toString() + evt.createdAt + index + evt.amount + evt.description}
-														className='ml-2'
+														className={` ml-2  ${lastPayment.filter((item: any) => item.description === evt.description && item.ContractId === evt.ContractId).length > 0 ? ' cursor-not-allowed opacity-60 line-through' : 'cursor-pointer'} `}
 													>
 														${evt.amount} | {evt.description}
 													</label>
@@ -864,14 +864,15 @@ const ClientPayments = () => {
 													inputId={GG.id.toString() + GG.createdAt + GG.amount + GG.description}
 													name='expense-gestion'
 													value={GG}
-													disabled={upToDate}
+													disabled={lastPayment.filter((item: any) => item.description === GG.description && item.ContractId === GG.ContractId).length > 0}
 													title={upToDate ? 'Ya cobraste este  mes de ' + month + ' ' + year : ''}
 													onChange={() => { setGG((prev: any) => ({ ...prev, checked: !GG.checked })) }}
 													checked={GG.checked}
 												/>
 												<label
 													htmlFor={GG.id.toString() + GG.createdAt + GG.amount + GG.description}
-													className='ml-2'
+													className={` ml-2  ${lastPayment.filter((item: any) => item.description === GG.description && item.ContractId === GG.ContractId).length > 0 ? ' cursor-not-allowed opacity-60 line-through' : 'cursor-pointer'} `}
+												// disabled={lastPayment.filter((item: any) => item.description === GG.description && item.ContractId === GG.ContractId).length > 0}
 												>
 													${GG.amount} | {GG.description}
 												</label>

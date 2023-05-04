@@ -116,9 +116,9 @@ module.exports = (sequelize, DataTypes) => {
       {
         unique: true,
         fields: ["OwnerId", "month", "year", 'paidCurrentMonth'],
-        where: {
-          paidCurrentMonth: 1
-        }
+        // where: {
+        //   paidCurrentMonth: 1
+        // }
       },
     ],
     sequelize,

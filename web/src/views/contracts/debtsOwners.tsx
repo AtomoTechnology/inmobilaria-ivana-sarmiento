@@ -8,7 +8,7 @@ import RequestError from '../../components/RequestError'
 import { RowsToShow } from '../../helpers/variableAndConstantes'
 import { FilterMatchMode } from 'primereact/api'
 import { useContracts } from '../../hooks/useContracts'
-import { Contract, } from '../../interfaces/Icontracts'
+import { Contract, IHistorialPrice, } from '../../interfaces/Icontracts'
 import { diferenceBetweentwoDatesInYears, formatDateDDMMYYYY } from '../../helpers/date'
 import RefreshData from '../../components/RefreshData'
 import HeaderData from '../../components/HeaderData'
@@ -249,7 +249,7 @@ const DebtsOwners = () => {
 									header='Monto Actual'
 									body={(data) => (
 										<span className={`font-bold`}>
-											${data.PriceHistorials[data.PriceHistorials.length - 1]?.amount}
+											${data.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[data.PriceHistorials.length - 1]?.amount}
 										</span>
 									)}
 									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'

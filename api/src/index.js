@@ -29,6 +29,8 @@ const {
   PaymentType,
   PropertyType,
   Owner,
+  Claim,
+  Visit,
   DebtOwner,
   DebtClient,
   sequelize,
@@ -63,6 +65,7 @@ app.get("/api/v1/migration-from-prod", catchAsync(async (req, res, next) => {
   })
 
 
+
   const auths = await http.get('/auth')
   const zones = await http.get('/zones')
   const paymentTypes = await http.get('/paymenttypes')
@@ -72,8 +75,10 @@ app.get("/api/v1/migration-from-prod", catchAsync(async (req, res, next) => {
   const clients = await http.get('/clients')
   const properties = await http.get('/properties')
   const contracts = await http.get('/contracts')
-  // console.log(contracts.data.data)
-
+  const visits = await http.get('/visits')
+  const claims = await http.get('/claims')
+  // console.log('hello')
+  // return
   auths.data.data.map(async (auth) => { await Auth.create(auth,) })
   zones.data.data.map(async (zone) => { await Zone.create(zone,) })
   paymentTypes.data.data.map(async (paymentType) => { await PaymentType.create(paymentType,) })
@@ -82,6 +87,8 @@ app.get("/api/v1/migration-from-prod", catchAsync(async (req, res, next) => {
   owners.data.data.map(async (owner) => { await Owner.create(owner,) })
   clients.data.data.map(async (client) => { await Client.create(client,) })
   properties.data.data.map(async (property) => { await Property.create(property,) })
+  visits.data.data.map(async (visit) => { await Visit.create(visit,) })
+  claims.data.data.map(async (claim) => { await Claim.create(claim,) })
   contracts.data.data.map(async (contract) => {
 
     const newContract = await Contract.create(contract)
@@ -101,7 +108,7 @@ app.get("/api/v1/migration-from-prod", catchAsync(async (req, res, next) => {
     ownerExpenses.data.data.map(async (ownerExpense) => { await OwnerExpense.create({ ...ownerExpense }) })
 
     const eventualities = await http.get(`/eventualities?ContractId=${contract.id}`)
-    eventualities.data.data.map(async (eventuality) => { await Eventuality.create({ ...eventuality, PropertyId: contract.PropertyId }) })
+    eventualities.data.data.map(async (eventuality) => { await Eventuality.create({ ...eventuality, PropertyId: contract.PropertyId, isReverted: false }) })
 
   })
 
@@ -114,7 +121,9 @@ app.get("/api/v1/migration-from-prod", catchAsync(async (req, res, next) => {
     clients: clients.data.results,
     properties: properties.data.results,
     contracts: contracts.data.results,
-    cont: contracts.data.data
+    cont: contracts.data.data,
+    visits: visits.data.data,
+    claims: claims.data.data
   });
   // const result = await sequelize.transaction(async (t) => { });
 
