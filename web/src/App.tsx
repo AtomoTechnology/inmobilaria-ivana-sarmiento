@@ -74,6 +74,7 @@ const App = () => {
 			<header className='header bg-white sticky z-20 top-0 dark:bg-gray-900 shadow border-b border-gray-200 dark:border-slate-700'>
 				<nav className='flex justify-between px-4 items-center h-full'>
 					<Link to='/' className='logo-app'>
+						{/* <span className='title-form text-2xl sm:3xl'>TEST MODE!</span> */}
 						<img
 							width={100}
 							className='min-w-[100px] object-cover'
@@ -147,7 +148,7 @@ const App = () => {
 										src={logoApp}
 										alt='LOGO CENTRO'
 									/>
-
+									{/* <span className='dark:text-white text-slate-800 font-bold text-2xl sm:3xl'>TEST MODE!</span> */}
 									<p className='mt-5 text-base sm:text-lg text-white  sm:mt-0'>© Copyright 2021 Centro-Administracion</p>
 								</div>
 

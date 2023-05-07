@@ -5,7 +5,7 @@ const { Auth } = require('../../models');
 const crypto = require('crypto');
 const { Op } = require('sequelize');
 
-const { all, findOne, update, destroy } = require('../Generic/FactoryGeneric');
+const { all, findOne } = require('../Generic/FactoryGeneric');
 
 const createToken = (user) => {
   return jwt.sign(user, process.env.SECRET_TOKEN, {

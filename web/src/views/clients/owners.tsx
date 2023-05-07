@@ -408,7 +408,7 @@ const Owners = () => {
 								onChange={(value) => handleInputChange(value, 'commision')}
 								label='%Comision'
 								max={100}
-								min={1}
+								min={0}
 								required
 								hasError={errors?.commision}
 								errorText='La comision es obligatoria.'

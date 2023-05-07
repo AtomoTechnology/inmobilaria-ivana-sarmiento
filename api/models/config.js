@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
 				type: DataTypes.STRING(50),
 				allowNull: false,
 				set(value) {
-					this.setDataValue('key', value.trim().replaceAll(' ', '-').toLowerCase())
+					this.setDataValue('key', value.trim().replace(/ /g, '_').toLowerCase())
 				},
 				unique: {
 					msg: 'Ya existe un registro con esa clave.',

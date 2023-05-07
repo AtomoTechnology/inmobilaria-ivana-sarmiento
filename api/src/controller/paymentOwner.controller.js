@@ -1,35 +1,12 @@
-const {
-	PaymentOwner,
-	Eventuality,
-	Owner,
-	Client,
-	Property,
-	OwnerRentPaid,
-	Contract,
-	PaymentType,
-	DebtOwner,
-	sequelize
-} = require('../../models')
+const { PaymentOwner, Eventuality, Owner, Property, Contract, PaymentType, DebtOwner, sequelize } = require('../../models')
 
-const {
-	all,
-	paginate,
-	create,
-	findOne,
-	update,
-	destroy
-} = require('../Generic/FactoryGeneric')
-const {
-	catchAsync
-} = require('../../helpers/catchAsync')
+const { all, paginate, findOne, update, } = require('../Generic/FactoryGeneric')
+const { catchAsync } = require('../../helpers/catchAsync')
 
 exports.GetAll = all(PaymentOwner, {
 	include: [
 		{
 			model: Owner,
-			// include: {
-			// 	model: Property,
-			// },
 		},
 		{
 			model: PaymentType,
@@ -54,17 +31,7 @@ exports.Post = catchAsync(async (req, res, next) => {
 	const transact = await sequelize.transaction();
 	try {
 
-		let paidAll = 0
-		for (let j = 0; j < req.body.expenseDetails.length; j++) {
-			if (req.body.expenseDetails[j].paidCurrentMonth !== undefined && req.body.expenseDetails[j].paidCurrentMonth === true) {
-				paidAll = paidAll + 1
-			}
-		}
-
-		req.body.paidCurrentMonth = paidAll === req.body.totalContract
-		const payment = await PaymentOwner.create(req.body, {
-			transaction: transact,
-		});
+		const payment = await PaymentOwner.create(req.body, { transaction: transact, });
 
 		if (req.body.expenseDetails.length > 0) {
 			for (let j = 0; j < req.body.expenseDetails.length; j++) {
@@ -75,28 +42,12 @@ exports.Post = catchAsync(async (req, res, next) => {
 							paidDate: new Date(),
 						},
 						{
-							where: {
-								id: req.body.expenseDetails[j].id,
-							},
+							where: { id: req.body.expenseDetails[j].id, },
 							transaction: transact,
 						}
 					);
 				}
 
-				if (req.body.expenseDetails[j].paidCurrentMonth) {
-					await OwnerRentPaid.create(
-						{
-							amount: req.body.expenseDetails[j].amount,
-							description: req.body.expenseDetails[j].description,
-							ContractId: req.body.expenseDetails[j].ContractId,
-							OwnerId: req.body.OwnerId,
-							month: req.body.month,
-							year: req.body.year,
-							PaymentOwnerId: payment.id,
-						},
-						{ transaction: transact, }
-					);
-				}
 			}
 		}
 
@@ -151,15 +102,11 @@ exports.Put = update(PaymentOwner, [
 	'eventualityDetails',
 	'ExpenseDetails',
 	'obs'
-
 ])
 exports.Destroy = catchAsync(async (req, res, next) => {
+	const payment = await PaymentOwner.findByPk(req.params.id);
 	const transact = await sequelize.transaction();
 	try {
-		const payment = await PaymentOwner.findByPk(req.params.id, {
-			transaction: transact,
-		});
-
 		if (payment.expenseDetails.length > 0) {
 			for (let j = 0; j < payment.expenseDetails.length; j++) {
 				if (
@@ -171,11 +118,9 @@ exports.Destroy = catchAsync(async (req, res, next) => {
 							paidDate: null,
 						},
 						{
-							where: {
-								id: payment.expenseDetails[j].id,
-							},
+							where: { id: payment.expenseDetails[j].id, },
+							transaction: transact
 						},
-						{ transaction: transact }
 					);
 				}
 			}
@@ -191,15 +136,11 @@ exports.Destroy = catchAsync(async (req, res, next) => {
 						where: {
 							id: payment.eventualityDetails[j].id,
 						},
-					},
-					{ transaction: transact }
-				);
+						transaction: transact
+					},);
 			}
 		}
-		await PaymentOwner.destroy(
-			{ where: { id: req.params.id }, force: true },
-			{ transaction: transact }
-		);
+		await PaymentOwner.destroy({ where: { id: req.params.id }, force: true, transaction: transact });
 		await transact.commit();
 		return res.json({
 			code: 200,

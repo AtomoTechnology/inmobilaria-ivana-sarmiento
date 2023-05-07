@@ -12,10 +12,8 @@ const {
 const {
   all,
   paginate,
-  create,
   findOne,
   update,
-  destroy,
 } = require("../Generic/FactoryGeneric");
 const { catchAsync } = require("../../helpers/catchAsync");
 
@@ -69,16 +67,10 @@ exports.Post = catchAsync(async (req, res, next) => {
           );
         }
 
-        if (req.body.expenseDetails[j].paidCurrentMonth) {
-          req.body.paidCurrentMonth = true
-        }
-
       }
     }
 
-    const payment = await PaymentClient.create(req.body, {
-      transaction: transact,
-    });
+    const payment = await PaymentClient.create(req.body, { transaction: transact });
 
     if (req.body.paidTotal && req.body.paidTotal > 0 && req.body.paidTotal !== req.body.total) {
       // add a eventualities with the difference
@@ -105,13 +97,9 @@ exports.Post = catchAsync(async (req, res, next) => {
     if (req.body.eventualityDetails.length > 0) {
       for (let j = 0; j < req.body.eventualityDetails.length; j++) {
         await Eventuality.update(
+          { clientPaid: true },
           {
-            clientPaid: true,
-          },
-          {
-            where: {
-              id: req.body.eventualityDetails[j].id,
-            },
+            where: { id: req.body.eventualityDetails[j].id },
             transaction: transact
           }
         );
@@ -165,7 +153,6 @@ exports.Destroy = catchAsync(async (req, res, next) => {
   const transact = await sequelize.transaction();
   try {
 
-
     if (payment.expenseDetails.length > 0) {
       for (let j = 0; j < payment.expenseDetails.length; j++) {
         if (
@@ -198,13 +185,9 @@ exports.Destroy = catchAsync(async (req, res, next) => {
     if (payment.eventualityDetails.length > 0) {
       for (let j = 0; j < payment.eventualityDetails.length; j++) {
         await Eventuality.update(
+          { clientPaid: false },
           {
-            clientPaid: false,
-          },
-          {
-            where: {
-              id: payment.eventualityDetails[j].id,
-            },
+            where: { id: payment.eventualityDetails[j].id },
             transaction: transact
           },
         );

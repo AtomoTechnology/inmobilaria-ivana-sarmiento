@@ -56,7 +56,6 @@ exports.Put = update(Property, [
 	'nroPartAPI',
 	'nroPartGas',
 	'folderNumber',
-
 	,
 ])
 exports.Destroy = destroy(Property)

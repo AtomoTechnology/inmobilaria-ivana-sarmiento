@@ -104,9 +104,6 @@ const ClientPayments = () => {
 	const [loadingExpenses, setLoadingExpenses] = useState(false)
 	const [lastPayment, setLastPayment] = useState<any[]>([])
 
-	const [qtePayment, setQtePayment] = useState(0)
-
-
 	const paymentTypeQuery = usePaymentTypes()
 	const { data, isError, isLoading, error, isFetching, refetch } = useClientPayments()
 	const contractQuery = useContracts()
@@ -321,7 +318,6 @@ const ClientPayments = () => {
 			const res = await http.get(`/payment-clients?ContractId=${e.value.id}&month=${month}&year=${year}&include=true`)
 			if (res.data.results > 0) {
 				res.data.data.map((p: any) => setLastPayment((prev: any) => ([...prev, ...p.expenseDetails])))
-				setQtePayment(res.data.results)
 				setUpToDate(true)
 				updateAll({
 					...values,
@@ -444,7 +440,6 @@ const ClientPayments = () => {
 		finally { setLoadingExpenses(false) }
 
 	}
-	console.log(lastPayment)
 	const openCreateOrEditModel = () => {
 		setEditMode(false)
 		currentPayment.current = null

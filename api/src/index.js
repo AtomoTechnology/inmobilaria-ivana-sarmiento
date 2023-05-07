@@ -77,8 +77,6 @@ app.get("/api/v1/migration-from-prod", catchAsync(async (req, res, next) => {
   const contracts = await http.get('/contracts')
   const visits = await http.get('/visits')
   const claims = await http.get('/claims')
-  // console.log('hello')
-  // return
   auths.data.data.map(async (auth) => { await Auth.create(auth,) })
   zones.data.data.map(async (zone) => { await Zone.create(zone,) })
   paymentTypes.data.data.map(async (paymentType) => { await PaymentType.create(paymentType,) })

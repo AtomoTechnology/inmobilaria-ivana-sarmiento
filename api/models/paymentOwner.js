@@ -112,15 +112,6 @@ module.exports = (sequelize, DataTypes) => {
     },
     createdAt: DataTypes.DATEONLY,
   }, {
-    indexes: [
-      {
-        unique: true,
-        fields: ["OwnerId", "month", "year", 'paidCurrentMonth'],
-        // where: {
-        //   paidCurrentMonth: 1
-        // }
-      },
-    ],
     sequelize,
     tableName: 'paymentowners',
     modelName: 'PaymentOwner',

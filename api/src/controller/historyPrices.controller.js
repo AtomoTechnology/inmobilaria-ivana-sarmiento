@@ -1,4 +1,4 @@
-const { Contract, PriceHistorial } = require('../../models')
+const { PriceHistorial } = require('../../models')
 
 const { all, paginate, create, findOne, update, destroy } = require('../Generic/FactoryGeneric')
 

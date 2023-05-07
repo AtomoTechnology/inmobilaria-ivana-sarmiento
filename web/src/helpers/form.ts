@@ -46,6 +46,5 @@ export const validateForm = (data: Object, notAllowedKeys: string[] = []): { ok:
             ok = false;
         }
     });
-    // console.log('ERRORS ::: ', error)
     return { error, ok };
 };

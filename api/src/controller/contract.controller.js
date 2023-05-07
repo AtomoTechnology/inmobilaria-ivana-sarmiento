@@ -1,25 +1,6 @@
-const {
-  Contract,
-  Client,
-  Assurance,
-  ClientExpense,
-  OwnerExpense,
-  Property,
-  sequelize,
-  PriceHistorial,
-  Owner,
-  DebtOwner,
-  DebtClient,
-  Eventuality,
-} = require("../../models");
+const { Contract, Client, Assurance, ClientExpense, OwnerExpense, Property, sequelize, PriceHistorial, Owner, DebtOwner, DebtClient, Eventuality, } = require("../../models");
 const { Op } = require("sequelize");
-
-const {
-  all,
-  paginate,
-  findOne,
-  update,
-} = require("../Generic/FactoryGeneric");
+const { all, paginate, findOne, update, } = require("../Generic/FactoryGeneric");
 const AppError = require("../../helpers/AppError");
 const { catchAsync } = require("../../helpers/catchAsync");
 
@@ -33,45 +14,37 @@ exports.GetAll = all(Contract, {
 });
 exports.Paginate = paginate(Contract, {
   include: [
-    {
-      model: Client,
-    },
-    {
-      model: Property,
-    },
+    { model: Client },
+    { model: Property },
   ],
 });
 
 exports.GetOwnerContracts = catchAsync(async (req, res, next) => {
   const { id } = req.params;
+
   const properties = await Property.findAll({
     where: {
       OwnerId: id,
-      // TODO ::: state: 'Ocupado' should i add this?
+      state: "Ocupado",
     },
     attributes: ['id']
   });
   const ids = properties.map((p) => p.id);
   const contracts = await Contract.findAll({
     where: {
-      PropertyId: {
-        [Op.in]: ids
-      }
+      PropertyId: { [Op.in]: ids },
+      state: "En curso",
+      startDate: { [Op.lte]: new Date(), },
+      endDate: { [Op.gt]: new Date() },
     },
     include: [
       { model: PriceHistorial },
       { model: Client },
-      {
-        model: Property,
-        include: {
-          model: Owner,
-        },
-      },
+      { model: Property },
     ],
   });
   return res.json({
     code: 200,
-    text: 'was there brothers....',
     status: "success",
     ok: true,
     results: contracts.length,

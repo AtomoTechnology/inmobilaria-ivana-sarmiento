@@ -43,7 +43,6 @@ export const validateMail = (mail: string): boolean => {
 };
 
 
-
 export const menuItems = [
 	{
 		to: null,

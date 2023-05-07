@@ -1,41 +1,14 @@
-const { DebtClient, Contract, Property, ClientExpense, Client, sequelize, PriceHistorial, JobLog, PaymentClient, } = require('../../models')
+const { DebtClient, Contract, Property, ClientExpense, sequelize, PriceHistorial, JobLog, PaymentClient, } = require('../../models')
 
-const { all, findOne, update, destroy } = require('../Generic/FactoryGeneric')
+const { all, findOne, update, destroy, create } = require('../Generic/FactoryGeneric')
 const { catchAsync } = require('../../helpers/catchAsync')
 const { Op } = require('sequelize')
 const { monthsInSpanish } = require('../../helpers/variablesAndConstantes')
 
 exports.GetAll = all(DebtClient)
-
-exports.Post = catchAsync(async (req, res, next) => {
-	const transact = await sequelize.transaction()
-	try {
-		const cont = await DebtClient.create(req.body, {
-			transaction: transact
-		})
-
-		await transact.commit()
-		return res.json({
-			code: 200,
-			status: 'success',
-			ok: true,
-			message: 'El registro fue guardado con exito',
-			data: cont,
-		})
-	} catch (error) {
-		await transact.rollback()
-		throw error
-	}
-})
-
-exports.GetById = findOne(DebtClient, {
-	include: [{
-		model: Contract,
-	},],
-})
-
-exports.Put = update(DebtClient, ['month', 'year', 'ExpenseDetails'])
-
+exports.Post = create(DebtClient, ['month', 'year', 'ContractId', 'amount', 'description'])
+exports.GetById = findOne(DebtClient, { include: [{ model: Contract },] })
+exports.Put = update(DebtClient, ['month', 'year', 'ContractId', 'amount', 'description'])
 exports.Destroy = destroy(DebtClient)
 
 exports.jobDebtsClients = catchAsync(async (req, res, next) => {
@@ -43,19 +16,6 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 	const month = req.query.month ? req.query.month : new Date().getMonth()
 	const year = req.query.year ? req.query.year : new Date().getFullYear()
 	const mothYearText = monthsInSpanish[month - 1] + '/' + year
-	console.log('mothYearText :: ', mothYearText)
-	// const docs = await PaymentClient.findAll({
-	// 	where: {
-	// 		[Op.and]: {
-	// 			month: monthsInSpanish[month - 1],
-	// 			year,
-	// 			paidCurrentMonth: true,
-	// 		},
-	// 	},
-	// 	attributes: [[sequelize.fn('DISTINCT', sequelize.col('ContractId')), 'ContractId']],
-	// })
-	// let ids = []
-	// if (docs.length > 0) ids = docs.map(doc => doc.ContractId)
 
 	const docs2 = await Contract.findAll({
 		where: {
