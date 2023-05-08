@@ -51,3 +51,16 @@ WHERE
 
 
 
+select * from contracts con 
+inner join properties pro 
+on con.PropertyId =  pro.id 
+where PropertyId in(select id from properties where state = 'Libre')
+and con.state = 'En curso'
+;
+
+start transaction ; 
+update properties set state = 'Ocupado' where id = 39 ;
+commit ;
+
+
+

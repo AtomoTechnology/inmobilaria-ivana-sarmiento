@@ -560,7 +560,7 @@ const ClientPayments = () => {
 					<div id='pdf-download' className="flex gap-x-2 ">
 						{
 							[1, 2].map((pdf, index) => (
-								<div key={index} className="flex justify-between flex-col border border-gray-200 dark:border-slate-600 p-1 text-xs  h-[95%] w-[500px]">
+								<div key={index} className="flex justify-between flex-col border border-gray-200 dark:border-slate-600 p-1 text-xs  h-[95%] !w-[550px]">
 									<div className="header-pdf flex items-center justify-between border border-gray-200 dark:border-slate-600  p-2">
 										<div className="left w-[50%] flex items-center flex-col gap-y-2">
 											<div className='logo-app flex items-center'>
@@ -700,7 +700,7 @@ const ClientPayments = () => {
 														className='align-items-center   text-xs  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
 													>
 														<span className=''>Diferencia </span>
-														<span className=''>${currentPayment.current?.total! - currentPayment.current?.paidTotal!}</span>
+														<span className=''>${Math.ceil(currentPayment.current?.total! - currentPayment.current?.paidTotal!)}</span>
 
 													</div>
 												</>

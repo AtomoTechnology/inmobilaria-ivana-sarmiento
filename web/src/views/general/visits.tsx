@@ -80,6 +80,7 @@ const Visits = () => {
 
 	const edit = (data: IVisit) => {
 		updateAll({ ...data, date: formatDateForInput(data.date), PropertyId: data.Property.id })
+		setOtherVistors(data.participants!)
 		setShowCreateModal(true)
 		setEditMode(true)
 		currentVisit.current = data
@@ -110,7 +111,7 @@ const Visits = () => {
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		const { error, ok } = validateForm({ ...values }, ['description'])
+		const { error, ok } = validateForm({ ...values }, ['description', 'participants'])
 		setErrors(error)
 		if (!ok) return false
 		if (editMode) {
@@ -124,7 +125,7 @@ const Visits = () => {
 					data?.data &&
 						(data.data = data?.data.map((z: any) => {
 							if (z.id === currentVisit.current?.id) {
-								z = { ...values, Property: propertyQuery.data?.data.find((p) => p.id === PropertyId) } // eslint-disable-line no-use-before-define
+								z = { ...values, participants: otherVistors, Property: propertyQuery.data?.data.find((p) => p.id === PropertyId) } // eslint-disable-line no-use-before-define
 							}
 							return z
 						}))
@@ -415,7 +416,7 @@ const Visits = () => {
 					{
 						(!!fullName && !!phone) && (
 							<div className="add-more-visitors w-full grid items-center mt-2 border border-gray-400 bg-transparent  border-dashed ">
-								<button type='button' className='btn !bg-transparent dark:text-slate-400 ' onClick={() => setAddVisitor(true)}>Agregar</button>
+								<button type='button' className='btn !bg-transparent dark:text-slate-400 hover:!text-blue-400 ' onClick={() => setAddVisitor(true)}>Agregar</button>
 							</div>
 						)
 					}
@@ -447,7 +448,7 @@ const Visits = () => {
 							<div className="flex flex-col gap-y-4 mt-4   relative">
 								{
 									otherVistors?.map((vis: IVisitor) => (
-										<div className='relative'>
+										<div className='relative' key={vis.id}>
 											<div className="absolute top-1 right-1">
 												<DeleteIcon action={() => deleteVisitor(vis)} />
 											</div>
