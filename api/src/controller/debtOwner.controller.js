@@ -17,7 +17,7 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 	const mothYearText = monthsInSpanish[month - 1] + '/' + year
 	const owners = await Owner.findAll(
 		{
-			where: { id: 15 },
+			// where: { id: 15 },
 			include: [{ model: Property }]
 		}
 	);
