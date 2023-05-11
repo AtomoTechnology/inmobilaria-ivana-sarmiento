@@ -476,3 +476,18 @@ form.disabled-all {
 	border: 1px solid rgb(65, 92, 110);
 	color: rgb(138, 155, 172);
 }
+
+.p-column-filter.p-fluid.p-column-filter-menu{
+	/* background-color: #fa6ffa ; */
+	width: 30px;
+	height: 30px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 50%;
+	border: 0.1px solid rgb(233, 168, 253);
+	margin-left: 10px;
+}
+.p-column-filter.p-fluid.p-column-filter-menu button {
+	color: rgb(233, 168, 253) !important;
+}

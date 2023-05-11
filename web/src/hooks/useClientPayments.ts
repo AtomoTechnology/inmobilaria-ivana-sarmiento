@@ -3,7 +3,7 @@ import http from '../api/axios'
 import { IClienyPaymentsResponse } from '../interfaces/IclientPayments'
 
 const GetAllClientPayments = async () => {
-	const { data } = await http.get<IClienyPaymentsResponse>('/payment-clients')
+	const { data } = await http.get<IClienyPaymentsResponse>('/payment-clients?sort=id:desc')
 	return data
 }
 

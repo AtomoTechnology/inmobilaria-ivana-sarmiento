@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
-import { DataTable } from 'primereact/datatable'
-import { Column } from 'primereact/column'
+import { DataTable, DataTableFilterMeta } from 'primereact/datatable'
+import { Column, ColumnFilterElementTemplateOptions } from 'primereact/column'
 import Box from '../../components/Box'
 import DeleteModal from '../../components/DeleteModal'
 import Loading from '../../components/Loading'
@@ -37,6 +37,7 @@ import { EmptyData } from '../../components/EmptyData'
 import FormActionBtns from '../../components/FormActionBtns'
 import CustomTextArea from '../../components/CustomTextArea'
 import { IHistorialPrice } from '../../interfaces/Icontracts'
+import { roundUp } from '../../helpers/numbers'
 const OwnerPayment = () => {
 	const [showCreateModal, setShowCreateModal] = useState(false)
 	const [show, setShow] = useState(false)
@@ -80,18 +81,22 @@ const OwnerPayment = () => {
 	const [lastPayment, setLastPayment] = useState<any[]>([])
 
 	const [contractRows, setContractRows] = useState<any[]>([])
-	const [globalFilterValue, setGlobalFilterValue] = useState('')
-	const [filters, setFilters] = useState({
+	// const [globalFilterValue, setGlobalFilterValue] = useState('')
+
+	const [filters, setFilters] = useState<DataTableFilterMeta>({
 		global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 		month: { value: null, matchMode: FilterMatchMode.CONTAINS },
 		year: { value: null, matchMode: FilterMatchMode.CONTAINS },
-		'Contract.Property.street': { value: null, matchMode: FilterMatchMode.CONTAINS }
-	})
+		'Owner.fullName': { value: null, matchMode: FilterMatchMode.CONTAINS },
+		createdAt: { value: null, matchMode: FilterMatchMode.EQUALS },
+		'PaymentType.name': { value: null, matchMode: FilterMatchMode.EQUALS },
+	});
 	const ownerPaymentQuery = useOwnerPayments()
 	const { data, isError, isLoading, error, isFetching } = useOwners()
 	const [loadingExpenses, setLoadingExpenses] = useState(false)
 	// const contractQuery = useContracts()
 	const paymentTypeQuery = usePaymentTypes()
+
 
 	const edit = (data: IClienyPayment) => {
 		// handleInputChange(data.name, 'name')
@@ -104,13 +109,96 @@ const OwnerPayment = () => {
 		setShow(!show)
 		currentPayment.current = data
 	}
-	const onGlobalFilterChange = (val: any) => {
-		const value = val
-		let _filters = { ...filters }
-		_filters['global'].value = value
-		setFilters(_filters)
-		setGlobalFilterValue(value)
+	// const onGlobalFilterChange = (val: any) => {
+	// 	const value = val
+	// 	let _filters = { ...filters }
+	// 	_filters['global'].value = value
+	// 	setFilters(_filters)
+	// 	setGlobalFilterValue(value)
+	// }
+
+	const resetFilters = () => {
+		setFilters({
+			global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+			month: { value: null, matchMode: FilterMatchMode.CONTAINS },
+			year: { value: null, matchMode: FilterMatchMode.CONTAINS },
+			'Owner.fullName': { value: null, matchMode: FilterMatchMode.CONTAINS },
+			createdAt: { value: null, matchMode: FilterMatchMode.EQUALS },
+			'PaymentType.name': { value: null, matchMode: FilterMatchMode.EQUALS },
+		})
 	}
+
+	const monthFilterTemplate = (option: ColumnFilterElementTemplateOptions) => {
+		return (
+			<Box className='!m-0 !p-0' >
+
+				<Dropdown
+					value={option.value}
+					onChange={(e: DropdownChangeEvent) => option.filterApplyCallback(e.value)}
+					options={monthsInSpanish}
+					showClear
+					placeholder='elije mes'
+					className='h-[42px]   items-center w-full !border-gray-200 shadow '
+				/>
+			</Box>
+		)
+
+	}
+
+	const dateFilterTemplate = (option: ColumnFilterElementTemplateOptions) => {
+		return (
+			<Box className='!m-0 !p-0' >
+
+				<CustomInput
+					initialValue={option.value ?? ''}
+					onChange={(e: string) => option.filterApplyCallback(e)}
+					type='date'
+					placeholder='elije fecha'
+					fieldsetClassName='!mt-0'
+				/>
+			</Box>
+		)
+
+	}
+	const paymentTypeFilterTemplate = (option: ColumnFilterElementTemplateOptions) => {
+		return (
+			<Box className='!m-0 !p-0' >
+				<Dropdown
+					value={option.value ?? ''}
+					onChange={(e: DropdownChangeEvent) => option.filterApplyCallback(e.value)}
+					options={paymentTypeQuery?.data?.data}
+					optionLabel='name'
+					showClear
+					optionValue='name'
+					placeholder='elije format de pago'
+					className='h-[42px]   items-center w-full !border-gray-200 shadow '
+				/>
+			</Box>
+		)
+
+	}
+	const ownersFilterTemplate = (option: ColumnFilterElementTemplateOptions) => {
+		return (
+			<Box className='!m-0 !p-0' >
+				<Dropdown
+					value={option.value ?? ''}
+					onChange={(e: DropdownChangeEvent) => option.filterApplyCallback(e.value)}
+					options={data?.data}
+					optionLabel='fullName'
+					showClear
+					filterBy='fullName'
+					optionValue='fullName'
+					placeholder='elije propietario'
+					filter
+					filterPlaceholder='Busca propietario'
+					className='h-[42px]   items-center w-64 !border-gray-200 shadow '
+				/>
+			</Box>
+		)
+
+	}
+
+
 	const destroy = async (id: number) => {
 		try {
 			setSavingOrUpdating(true)
@@ -381,21 +469,29 @@ const OwnerPayment = () => {
 			<HeaderData action={openCreateOrEditModel} text='Pago a propietario' />
 			{ownerPaymentQuery?.data?.data.length > 0 ? (
 				<>
-					<CustomInput
+					<button
+						className='btn dark:bg-transparent dark:text-slate-400 dark:border hover:!text-slate-500 active:text-slate-500 border-slate-700 '
+						onClick={resetFilters}>
+						Borrar filtros
+					</button>
+					{/* <CustomInput
 						onChange={(val) => onGlobalFilterChange(val)}
 						className=' w-auto mx-2 sm:mx-0 sm:w-96'
 						initialValue={globalFilterValue}
 						placeholder='Buscar cobro'
 						type='search'
-					/>
+					/> */}
 					<Box className='!p-0 !overflow-hidden !border-none sm:mx-0   mb-4 '>
 						<DataTable
 							size='small'
-							emptyMessage='Aún no hay cobro'
+							emptyMessage='No hay cobro para eso filtro'
 							className='!overflow-hidden   !border-none'
 							value={ownerPaymentQuery?.data?.data}
 							dataKey='id'
 							responsiveLayout='scroll'
+							filterDisplay='menu'
+							filters={filters}
+							globalFilterFields={['month', 'year', 'Owner.fullName', 'createdAt', 'PaymentType.name']}
 						// paginator
 						// rows={10}
 						// paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
@@ -413,6 +509,14 @@ const OwnerPayment = () => {
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 								sortable
+								filter
+								// showFilterMenu={false}
+								// showClearButton={false}
+								filterMenuClassName='!bg-gray-100 dark:!bg-slate-700 dark:!text-slate-400 dark:!border-slate-600'
+								showClearButton={false}
+								showFilterMatchModes={false}
+								showApplyButton={false}
+								filterElement={ownersFilterTemplate}
 							/>
 							<Column
 								field='month'
@@ -421,6 +525,12 @@ const OwnerPayment = () => {
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 								sortable
+								filter
+								filterMenuClassName='!bg-gray-100 dark:!bg-slate-700 dark:!text-slate-400 dark:!border-slate-600'
+								showClearButton={false}
+								showFilterMatchModes={false}
+								showApplyButton={false}
+								filterElement={monthFilterTemplate}
 							/>
 							<Column
 								field='createdAt'
@@ -429,10 +539,16 @@ const OwnerPayment = () => {
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 								sortable
+								filter
+								filterMenuClassName='!bg-gray-100 dark:!bg-slate-700 dark:!text-slate-400 dark:!border-slate-600'
+								showClearButton={false}
+								showFilterMatchModes={false}
+								showApplyButton={false}
+								filterElement={dateFilterTemplate}
 							/>
 							<Column
 								field='total'
-								body={(data) => <span>${data.total}</span>}
+								body={(data) => <span>${roundUp(data.total)}</span>}
 								header='Total Cobrado'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
@@ -445,6 +561,12 @@ const OwnerPayment = () => {
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 								sortable
+								filter
+								filterMenuClassName='!bg-gray-100 dark:!bg-slate-700 dark:!text-slate-400 dark:!border-slate-600'
+								showClearButton={false}
+								showFilterMatchModes={false}
+								showApplyButton={false}
+								filterElement={paymentTypeFilterTemplate}
 							/>
 							<Column
 								body={actionBodyTemplate}
@@ -760,7 +882,7 @@ const OwnerPayment = () => {
 											className='align-items-center font-bold uppercase text-sm mt-3 flex gap-x-3 items-center  justify-between    border-gray-300'
 										>
 											<span className=''>Total a pagar </span>
-											<span>${eventTotal.current + expsTotal.current + debtsTotal.current}</span>
+											<span>${roundUp(eventTotal.current + expsTotal.current + debtsTotal.current)}</span>
 										</div>
 									</div>
 								</div>
@@ -775,9 +897,7 @@ const OwnerPayment = () => {
 				show={downloadPdf}
 				closeModal={closePrintPdfModal}
 				overlayClick={false}
-				// className='shadow-none border-0 w-full sm:w-[640px] md:w-[768px] lg:w-[1024px] !p-3'
 				titleText={`Recibo de ${currentPayment.current?.month} - ${currentPayment.current?.year}`}
-			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
 				<CloseOnClick action={closePrintPdfModal} />
 
@@ -785,7 +905,7 @@ const OwnerPayment = () => {
 					<div id='pdf-download' className="flex gap-x-2 ">
 						{
 							[1, 2].map((pdf, index) => (
-								<div key={index} className="flex  justify-between flex-col border border-gray-200 dark:border-slate-600 p-1  h-[95%] w-[500px]">
+								<div key={index} className="flex  justify-between flex-col border border-gray-200 dark:border-slate-600 p-1  min-h-[750px] w-[500px]">
 									<div className="header-pdf flex items-center justify-between border border-gray-200 dark:border-slate-600  p-2">
 										<div className="left w-[50%] flex items-center flex-col gap-y-2">
 											<div className='logo-app flex items-center'>
@@ -834,9 +954,6 @@ const OwnerPayment = () => {
 										</div>
 										<div className="w-30  flex gap-x-4">
 											<div className="">
-
-												{/* <div>C {currentPayment.current?.Contract.Property.folderNumber} </div> */}
-
 												<div className="">
 													<span className='flex gap-x-2'>
 														<span>Recibo</span>
@@ -844,15 +961,6 @@ const OwnerPayment = () => {
 													</span>
 												</div>
 											</div>
-											{/* <div className='flex flex-col font-semibold items-center'>
-												<span>Vencimiento</span>
-												<span>
-													del contrato
-												</span>
-												<span>
-													{formatDateDDMMYYYY(currentPayment.current?.Contract.endDate!)}
-												</span>
-											</div> */}
 										</div>
 									</div>
 
@@ -891,7 +999,7 @@ const OwnerPayment = () => {
 											className='align-items-center  text-xs  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
 										>
 											<span className=''>Total a pagar </span>
-											<span className=''>$ {currentPayment.current?.total}</span>
+											<span className=''>$ {roundUp(currentPayment.current?.total!)}</span>
 
 										</div>
 										<div
@@ -916,7 +1024,8 @@ const OwnerPayment = () => {
 					</div>
 					<div className="flex gap-x-2">
 						<button className='btn sec  !my-4' disabled={loadingPdf} onClick={closePrintPdfModal}> Cancelar </button>
-						<button className='btn gradient  !my-4' disabled={loadingPdf} onClick={handleDownloadPdf}> {loadingPdf ? 'Descargando ... ' : 'Descargar recibo'} </button>
+						{/* <a className='btn primary  !my-4' href={`mailto:${currentPayment.current?.Owner?.email}?subject={'Recibo ' ${currentPayment.current?.month}/${currentPayment.current?.year}}`}  > Enviar por mail </a> */}
+						<button className='btn gradient  !my-4' disabled={loadingPdf} onClick={handleDownloadPdf}> {loadingPdf ? 'Descargando ... ' : 'Descargar'} </button>
 					</div>
 				</Box>
 			</CreateModal>

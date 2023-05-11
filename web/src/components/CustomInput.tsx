@@ -18,6 +18,7 @@ type Props = {
 	errorText?: string
 	optional?: boolean
 	name?: string
+	fieldsetClassName?: string
 }
 
 const CustomInput = ({
@@ -36,11 +37,12 @@ const CustomInput = ({
 	maxLength = undefined,
 	minLength = undefined,
 	errorText = 'El campo es obligatorio',
-	optional = false
+	optional = false,
+	fieldsetClassName = ''
 }: Props) => {
 	const [value, setValue] = useState<string | number>(initialValue)
 	return (
-		<fieldset>
+		<fieldset className={fieldsetClassName}>
 			{label && (<label htmlFor={label?.replaceAll(' ', '_')}>{label} {optional && (<span className='text-xs opacity-50'>(opcional)</span>)} </label>)}
 			<input
 				onChange={(e) => {

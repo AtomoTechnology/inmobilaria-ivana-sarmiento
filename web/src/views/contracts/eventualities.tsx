@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { DataTable } from 'primereact/datatable'
-import { Column } from 'primereact/column'
+import { Column, ColumnFilterElementTemplateOptions } from 'primereact/column'
 import Box from '../../components/Box'
 import EditIcon from '../../components/icons/EditIcon'
 import DeleteIcon from '../../components/icons/DeleteIcon'
@@ -14,12 +14,12 @@ import FormError from '../../components/FormError'
 import RequestError from '../../components/RequestError'
 import { useContracts } from '../../hooks/useContracts'
 import FieldsetGroup from '../../components/FieldsetGroup'
-import { Dropdown } from 'primereact/dropdown'
-import { FilterMatchMode } from 'primereact/api'
+import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
+import { FilterMatchMode, FilterOperator } from 'primereact/api'
 import { useEventualities } from '../../hooks/useEventualities'
 import { IEventuality } from '../../interfaces/Ieventualities'
 import CustomTextArea from '../../components/CustomTextArea'
-import { diffenceBetweenDates, formatDateDDMMYYYY } from '../../helpers/date'
+import { addDate, diffenceBetweenDates, formatDateDDMMYYYY } from '../../helpers/date'
 import useShowAndHideModal from '../../hooks/useShowAndHideModal'
 import { validateForm } from '../../helpers/form'
 import HeaderData from '../../components/HeaderData'
@@ -40,7 +40,7 @@ const Eventualities = () => {
 		clientAmount: 0,
 		ownerAmount: 0,
 		description: '',
-		expiredDate: new Date().toISOString().slice(0, 10),
+		expiredDate: addDate(new Date().toISOString(), 1, 'days').toISOString().slice(0, 10),
 	})
 	const [savingOrUpdating, setSavingOrUpdating] = useState(false)
 	const [errors, setErrors] = useState<any>()
@@ -48,8 +48,13 @@ const Eventualities = () => {
 	const [globalFilterValue, setGlobalFilterValue] = useState('')
 	const [filters, setFilters] = useState({
 		global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-		description: { value: null, matchMode: FilterMatchMode.CONTAINS },
-		'Property.street': { value: null, matchMode: FilterMatchMode.CONTAINS },
+		description: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+		// 'Property.id': { value: null, matchMode: FilterMatchMode.EQUALS },
+		// 'Property.number': { value: null, matchMode: FilterMatchMode.CONTAINS },
+		PropertyId: { value: null, matchMode: FilterMatchMode.EQUALS },
+		// 'Property.street': { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+		// description: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+		// PropertyId: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
 	})
 	const currentEventuality = useRef<IEventuality | null>()
 	const { showAndHideModal } = useShowAndHideModal()
@@ -71,6 +76,7 @@ const Eventualities = () => {
 	}
 
 	const onGlobalFilterChange = (val: any) => {
+		setGlobalFilterValue('')
 		const value = val
 		let _filters = { ...filters }
 		_filters['global'].value = value
@@ -96,7 +102,7 @@ const Eventualities = () => {
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		const { error, ok } = validateForm({ ...values }, ['clientPaid', 'ownerPaid', 'isReverted', 'ContractId'])
+		const { error, ok } = validateForm({ ...values }, ['clientPaid', 'ownerPaid', 'isReverted', 'paymentId'])
 		setErrors(error)
 		if (!ok) return false
 		if (editMode) {
@@ -161,7 +167,29 @@ const Eventualities = () => {
 		currentEventuality.current = null
 		setShowCreateModal(true)
 	}
+	const propertiesFilterTemplate = (option: ColumnFilterElementTemplateOptions) => {
+		return (
+			<Box className='!m-0 !p-0' >
+				<Dropdown
+					value={option.value}
+					// name='PropertyId'
+					onChange={(e: DropdownChangeEvent) => option.filterApplyCallback(e.value)}
+					options={propertyQuery.data?.data}
+					optionLabel='id'
+					showClear
+					filterPlaceholder='Busca propiedad'
+					optionValue='id'
+					filterBy='street,number,dept,floor'
+					placeholder='Elije una propiedad'
+					filter
+					valueTemplate={(data, props) => !data ? props.placeholder : <span>{data.street} {data.number} {data.floor}-{data.dept}</span>}
+					itemTemplate={(data) => (<span> {data.street} {data.number} {data.floor}-{data.dept} </span>)}
+					className='h-[42px] items-center w-full sm:w-80 !border-gray-200 shadow'
+				/>
+			</Box>
+		)
 
+	}
 	if (isLoading) return <Loading />
 	if (isError) return <RequestError error={error} />
 
@@ -170,21 +198,26 @@ const Eventualities = () => {
 			<HeaderData action={openCreateOrEditModel} text='Eventualidades' />
 			{data.data.length > 0 ? (
 				<>
-					<CustomInput
-						onChange={(val) => onGlobalFilterChange(val)}
-						className=' w-auto mx-2 sm:mx-0 sm:w-96'
-						initialValue={globalFilterValue}
-						placeholder='Buscar eventualidad'
-						type='search'
-					/>
+					<Box className="filter-box border-none shadow-none !bg-transparent p-0  sm:!m-0 flex flex-col sm:flex-row items-center gap-6 justify-start">
+						<CustomInput
+							onChange={(val) => onGlobalFilterChange(val)}
+							className='mx-2 w-full !m-0 sm:mx-0 sm:w-96'
+							initialValue={globalFilterValue}
+							name='search'
+							placeholder='Buscar eventualidad por descripcion'
+							fieldsetClassName='w-full sm:w-fit'
+							type='search'
+						/>
+
+					</Box>
 					<Box className='!p-0 !overflow-hidden !border-none sm:mx-0  mb-4 '>
 						<DataTable
 							size='small'
-							emptyMessage='Aún no hay eventualidad'
+							emptyMessage='No hay eventualidad para ese filtro'
 							className='!overflow-hidden   !border-none'
 							value={data?.data}
 							filters={filters}
-							globalFilterFields={['Property.street', 'description']}
+							globalFilterFields={['Property.street', 'description', 'PropertyId']}
 							// paginator
 							// rows={10}
 							// paginatorTemplate='FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink'
@@ -194,13 +227,7 @@ const Eventualities = () => {
 							responsiveLayout='scroll'
 						>
 							<Column
-								field='Property.street'
-								// body={(data) => (
-								// 	<span>
-								// 		{data.Contract?.Property?.street} {data.Contract?.Property?.number} {data.Contract?.Property?.floor}{' '}
-								// 		{data.Contract?.Property?.dept}
-								// 	</span>
-								// )}
+								field='PropertyId'
 								body={(data) => (
 									<span>
 										{data.Property?.street} {data.Property?.number} {data.Property?.floor}{' '}
@@ -211,6 +238,12 @@ const Eventualities = () => {
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 								sortable
+								filter
+								filterMenuClassName='!bg-gray-100 dark:!bg-slate-700 dark:!text-slate-400 dark:!border-slate-600'
+								showClearButton={false}
+								showFilterMatchModes={false}
+								showApplyButton={false}
+								filterElement={propertiesFilterTemplate}
 							/>
 							<Column
 								field='clientAmount'
@@ -231,7 +264,7 @@ const Eventualities = () => {
 							<Column
 								field='description'
 								body={(data) => (
-									<span title={data.description}>
+									<span title={data.description} className=''>
 										{data.description.slice(0, 30)} {data.description.length > 30 ? '...' : ''}
 									</span>
 								)}
@@ -242,14 +275,14 @@ const Eventualities = () => {
 
 							<Column
 								field='clientPaid'
-								body={(data) => <span className={` ${data.clientPaid ? 'text-green-500' : 'text-red-400'} `}>{data.clientPaid ? 'Si' : 'No'}</span>}
+								body={(data) => <span className={` ${data.clientPaid || data.clientAmount === 0 ? 'text-green-500' : 'text-red-400'} `}>{data.clientAmount === 0 ? '--' : data.clientPaid ? 'Si' : 'No'}</span>}
 								header='Inquilino Pago'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 							/>
 							<Column
 								field='ownerPaid'
-								body={(data) => <span className={` ${data.ownerPaid ? 'text-green-500' : 'text-red-400'} `}>{data.ownerPaid ? 'Si' : 'No'}</span>}
+								body={(data) => <span className={` ${data.ownerPaid || data.ownerAmount === 0 ? 'text-green-500' : 'text-red-400'} `}>{data.ownerAmount === 0 ? '--' : data.ownerPaid ? 'Si' : 'No'}</span>}
 								header='Propietario Pago'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
@@ -273,9 +306,7 @@ const Eventualities = () => {
 						</DataTable>
 					</Box>
 				</>
-			) : (
-				<EmptyData text='Aún no hay eventualidad' />
-			)}
+			) : (<EmptyData text='Aún no hay eventualidad' />)}
 
 			{isFetching && (<Loading h={40} w={40} />)}
 
@@ -297,28 +328,6 @@ const Eventualities = () => {
 				<CloseOnClick action={closeCreateModal} />
 				<form onSubmit={handleSave}				>
 					<FieldsetGroup>
-						{/* <fieldset className=''>
-							<label htmlFor='ContractId'>Contrato </label>
-							<Dropdown
-								value={ContractId}
-								onChange={(e) => handleInputChange(e.value, 'ContractId')}
-								options={contractQuery.data?.data}
-								optionLabel='street'
-								showClear
-								// disabled={editMode}
-								valueTemplate={(data, props) => !data ? props.placeholder : (<span> {data.Client.fullName} | {data.Property.street} {data.Property.number} {data.Property.floor}-{data.Property.dept} </span>)}
-								itemTemplate={(data) => (<span> {data.Client.fullName} | {data.Property.street} {data.Property.number} {data.Property.floor}-{data.Property.dept} </span>)}
-								filterBy='Client.fullName,Property.street,Property.number,Property.floor,Property.dept'
-								optionValue='id'
-								placeholder='elije contrato'
-								filter
-								filterPlaceholder='Busca contrato'
-								className='h-[42px] items-center !border-gray-200 shadow '
-							/>
-							{errors?.ContractId && <FormError text='El contrato es obligatorio.' />}
-						</fieldset> */}
-
-
 						<fieldset className=''>
 							<label htmlFor='PropertyId'>Propiedad</label>
 							<Dropdown

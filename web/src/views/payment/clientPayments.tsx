@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
-import { DataTable } from 'primereact/datatable'
-import { Column } from 'primereact/column'
+import { DataTable, DataTableFilterMeta } from 'primereact/datatable'
+import { Column, ColumnFilterElementTemplateOptions } from 'primereact/column'
 import Box from '../../components/Box'
 import DeleteModal from '../../components/DeleteModal'
 import Loading from '../../components/Loading'
@@ -35,11 +35,13 @@ import { validateForm } from '../../helpers/form'
 import HeaderData from '../../components/HeaderData'
 import RefreshData from '../../components/RefreshData'
 import { EmptyData } from '../../components/EmptyData'
-import { FilterMatchMode } from 'primereact/api'
+import { FilterMatchMode, FilterOperator } from 'primereact/api'
 import FormActionBtns from '../../components/FormActionBtns'
 import { UUID } from '../../helpers/general'
 import CustomTextArea from '../../components/CustomTextArea'
 import { IHistorialPrice } from '../../interfaces/Icontracts'
+import { roundUp } from '../../helpers/numbers'
+import { RiErrorWarningFill } from 'react-icons/ri'
 const ClientPayments = () => {
 
 	const [showCreateModal, setShowCreateModal] = useState(false)
@@ -94,26 +96,37 @@ const ClientPayments = () => {
 	const [eventualityDetails, setEventualityDetails] = useState<IEventuality[]>([])
 	const [debts, setDebts] = useState<Idebt[]>([])
 	const [loadingPdf, setLoadingPdf] = useState(false)
-	const [globalFilterValue, setGlobalFilterValue] = useState('')
-	const [filters, setFilters] = useState({
+	const [filters, setFilters] = useState<DataTableFilterMeta>({
 		global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-		month: { value: null, matchMode: FilterMatchMode.CONTAINS },
-		year: { value: null, matchMode: FilterMatchMode.CONTAINS },
-		'Contract.Property.street': { value: null, matchMode: FilterMatchMode.CONTAINS }
-	})
+		month: { value: null, matchMode: FilterMatchMode.EQUALS },
+		year: { value: null, matchMode: FilterMatchMode.EQUALS },
+		'Contract.Client.fullName': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+		createdAt: { value: null, matchMode: FilterMatchMode.EQUALS },
+		'PaymentType.name': { value: null, matchMode: FilterMatchMode.EQUALS },
+
+	});
+
+
 	const [loadingExpenses, setLoadingExpenses] = useState(false)
 	const [lastPayment, setLastPayment] = useState<any[]>([])
-
 	const paymentTypeQuery = usePaymentTypes()
 	const { data, isError, isLoading, error, isFetching, refetch } = useClientPayments()
 	const contractQuery = useContracts()
-
 
 	const printPdf = async (data: IClienyPayment) => {
 		currentPayment.current = data
 		setDownloadPdf(true)
 	}
-
+	const resetFilters = () => {
+		setFilters({
+			global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+			month: { value: null, matchMode: FilterMatchMode.EQUALS },
+			year: { value: null, matchMode: FilterMatchMode.EQUALS },
+			'Contract.Client.fullName': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+			createdAt: { value: null, matchMode: FilterMatchMode.EQUALS },
+			'PaymentType.name': { value: null, matchMode: FilterMatchMode.EQUALS },
+		})
+	}
 	const closePrintPdfModal = () => {
 		setDownloadPdf(false)
 		currentPayment.current = null
@@ -166,7 +179,6 @@ const ClientPayments = () => {
 		const { error, ok } = validateForm({ ...values }, ['paidTotal', 'extraExpenses', 'qteDays', 'recharge', 'dailyPunitive', 'obs', 'PropertyId',])
 		setErrors(error)
 		if (!ok) return false
-		let testExp = GG.checked ? [...selectedExpensesClient, ...selectedDebts, GG] : [...selectedExpensesClient, ...selectedDebts]
 
 		try {
 			setSavingOrUpdating(true)
@@ -213,14 +225,6 @@ const ClientPayments = () => {
 
 	}
 
-	const onGlobalFilterChange = (val: any) => {
-		const value = val
-		let _filters = { ...filters }
-		_filters['global'].value = value
-		setFilters(_filters)
-		setGlobalFilterValue(value)
-	}
-
 	const actionBodyTemplate = (rowData: IClienyPayment) => {
 		return (
 			<div className='flex gap-x-3 items-center justify-center'>
@@ -258,11 +262,6 @@ const ClientPayments = () => {
 		debtsTotal.current = Number(_selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0).toFixed(2))
 		setSelectedDebts(_selectedExps)
 	}
-
-	// const updateTotal = () => {
-	// 	const total = GG.checked ? eventTotal.current + expsTotal.current + debtsTotal.current + recharge + GG.amount : eventTotal.current + expsTotal.current + debtsTotal.current + recharge
-	// 	handleInputChange(total, 'total')
-	// }
 
 	const onEventualityChange = (e: CheckboxChangeEvent) => {
 		let _selectedEvents = [...selectedEventualities]
@@ -311,8 +310,6 @@ const ClientPayments = () => {
 			}
 		}
 
-		// TODO validate if the contract has a payment for the current month TODO : CHANGES THAT
-		// &paidCurrentMonth=1
 		try {
 			setLoadingExpenses(true)
 			const res = await http.get(`/payment-clients?ContractId=${e.value.id}&month=${month}&year=${year}&include=true`)
@@ -336,7 +333,7 @@ const ClientPayments = () => {
 		try {
 			setLoadingExpenses(true)
 			const docsExpss = http.get<IClientExpensesResponseSimple>(`/client-expenses?amount=0:gt&ContractId=${e.value.id}&include=true`)
-			const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?clientPaid=0&PropertyId=${e.value.PropertyId}&include=true`)
+			const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?clientPaid=0&PropertyId=${e.value.PropertyId}&clientAmount=0:gt&include=true`)
 			// const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?clientPaid=0&ContractId=${e.value.id}&include=true`)
 			const dps = http.get<IConfigResponse>(`/config?key=punitorio_diario,gastos_bancarios:or`)
 			const docsDebtss = http.get<IdebtsResponse>(`/debt-clients?paid=0&ContractId=${e.value.id}`)
@@ -406,7 +403,6 @@ const ClientPayments = () => {
 						debtParentId: d.id!,
 						debt: false,
 						id: UUID(),
-						// id: 1,
 						recharge: true,
 					}
 					])
@@ -440,10 +436,81 @@ const ClientPayments = () => {
 		finally { setLoadingExpenses(false) }
 
 	}
+
 	const openCreateOrEditModel = () => {
 		setEditMode(false)
 		currentPayment.current = null
 		setShowCreateModal(true)
+	}
+
+	const monthFilterTemplate = (option: ColumnFilterElementTemplateOptions) => {
+		return (
+			<Box className='!m-0 !p-0' >
+
+				<Dropdown
+					value={option.value}
+					onChange={(e: DropdownChangeEvent) => option.filterApplyCallback(e.value)}
+					options={monthsInSpanish}
+					showClear
+					placeholder='elije mes'
+					className='h-[42px]   items-center w-full !border-gray-200 shadow '
+				/>
+			</Box>
+		)
+
+	}
+
+	const dateFilterTemplate = (option: ColumnFilterElementTemplateOptions) => {
+		return (
+			<Box className='!m-0 !p-0' >
+
+				<CustomInput
+					initialValue={option.value ?? ''}
+					onChange={(e: string) => option.filterApplyCallback(e)}
+					type='date'
+					placeholder='elije fecha'
+					fieldsetClassName='!mt-0'
+				/>
+			</Box>
+		)
+
+	}
+	const paymentTypeFilterTemplate = (option: ColumnFilterElementTemplateOptions) => {
+		return (
+			<Box className='!m-0 !p-0' >
+				<Dropdown
+					value={option.value ?? ''}
+					onChange={(e: DropdownChangeEvent) => option.filterApplyCallback(e.value)}
+					options={paymentTypeQuery?.data?.data}
+					optionLabel='name'
+					showClear
+					optionValue='name'
+					placeholder='elije format de pago'
+					className='h-[42px]   items-center w-full !border-gray-200 shadow '
+				/>
+			</Box>
+		)
+
+	}
+	const clientsFilterTemplate = (option: ColumnFilterElementTemplateOptions) => {
+		return (
+			<Box className='!m-0 !p-0' >
+				<Dropdown
+					value={option.value ?? ''}
+					onChange={(e: DropdownChangeEvent) => option.filterApplyCallback(e.value)}
+					options={contractQuery.data?.data}
+					optionLabel='Client.fullName'
+					showClear
+					filterBy='Client.fullName'
+					optionValue='Client.fullName'
+					placeholder='elije contrato'
+					filter
+					filterPlaceholder='Busca contrato'
+					className='h-[42px]   items-center w-60 !border-gray-200 shadow '
+				/>
+			</Box>
+		)
+
 	}
 
 	if (isLoading) return <Loading />
@@ -454,22 +521,19 @@ const ClientPayments = () => {
 
 			{data?.data.length > 0 ? (
 				<>
-					<CustomInput
-						onChange={(val) => onGlobalFilterChange(val)}
-						className=' w-auto mx-2 sm:mx-0 sm:w-96'
-						initialValue={globalFilterValue}
-						placeholder='Buscar cobro'
-						type='search'
-					/>
+					<button className='btn dark:bg-transparent dark:text-slate-400 dark:border hover:!text-slate-500 active:text-slate-500 border-slate-700 ' onClick={resetFilters}>
+						Borrar filtros
+					</button>
 					<Box className='!p-0 !overflow-hidden !border-none sm:mx-0    mb-4 '>
 						<DataTable
 							size='small'
-							emptyMessage='Aún no hay cobro'
+							emptyMessage='No hay cobro para ese filtro'
 							className='!overflow-hidden   !border-none'
 							value={data?.data}
 							dataKey='id'
 							filters={filters}
-							globalFilterFields={['month', 'year', 'Contract.Property.street']}
+							filterDisplay='menu'
+							globalFilterFields={['month', 'year', 'Contract.Property.street', 'Contract.Client.fullName', 'ContractId', 'PaymentType.name']}
 							responsiveLayout='scroll'
 						// paginator
 						// rows={10}
@@ -477,6 +541,20 @@ const ClientPayments = () => {
 						// currentPageReportTemplate='{first} al {last} de {totalRecords}'
 						// paginatorLeft={<RefreshData action={refetch} />}
 						>
+							<Column
+								field='Contract.Client.fullName'
+								body={(data) => (<span>{data.Contract?.Client.fullName}</span>)}
+								header='Inquilino'
+								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+								sortable
+								filter
+								filterMenuClassName='!bg-gray-100 dark:!bg-slate-700 dark:!text-slate-400 dark:!border-slate-600'
+								showClearButton={false}
+								showFilterMatchModes={false}
+								showApplyButton={false}
+								filterElement={clientsFilterTemplate}
+							/>
 							<Column
 								field='Contract.Property.street'
 								body={(data) => (
@@ -497,6 +575,12 @@ const ClientPayments = () => {
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 								sortable
+								filter
+								filterMenuClassName='!bg-gray-100 dark:!bg-slate-700 dark:!text-slate-400 dark:!border-slate-600'
+								showClearButton={false}
+								showFilterMatchModes={false}
+								showApplyButton={false}
+								filterElement={monthFilterTemplate}
 							/>
 							<Column
 								field='createdAt'
@@ -505,10 +589,16 @@ const ClientPayments = () => {
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 								sortable
+								filter
+								filterMenuClassName='!bg-gray-100 dark:!bg-slate-700 dark:!text-slate-400 dark:!border-slate-600'
+								showClearButton={false}
+								showFilterMatchModes={false}
+								showApplyButton={false}
+								filterElement={dateFilterTemplate}
 							/>
 							<Column
 								field='total'
-								body={(data) => <span>${data.paidTotal > 0 ? data.paidTotal : data.total}</span>}
+								body={(data) => <span>{(data.paidTotal > 0 ? (<span className='flex items-center'>   ${roundUp(data.paidTotal)} <RiErrorWarningFill title={`Pago parcial. Total :: ${data.total}`} size={15} className='dark:text-yellow-300  text-yellow-400 ml-1' /> </span>) : '$' + roundUp(data.total))}</span>}
 								header='Total Cobrado'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
@@ -516,11 +606,16 @@ const ClientPayments = () => {
 							/>
 							<Column
 								field='PaymentType.name'
-								// body={(data) => <span>${data.total}</span>}
 								header='Format de pago'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 								sortable
+								filter
+								filterMenuClassName='!bg-gray-100 dark:!bg-slate-700 dark:!text-slate-400 dark:!border-slate-600'
+								showClearButton={false}
+								showFilterMatchModes={false}
+								showApplyButton={false}
+								filterElement={paymentTypeFilterTemplate}
 							/>
 							<Column
 								body={actionBodyTemplate}
@@ -552,7 +647,6 @@ const ClientPayments = () => {
 				overlayClick={false}
 				className='shadow-none border-0   w-fit max-w-5xl !p-3'
 				titleText={`Recibo  ${currentPayment.current?.month}/${currentPayment.current?.year}`}
-			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
 				<CloseOnClick action={closePrintPdfModal} />
 
@@ -560,7 +654,7 @@ const ClientPayments = () => {
 					<div id='pdf-download' className="flex gap-x-2 ">
 						{
 							[1, 2].map((pdf, index) => (
-								<div key={index} className="flex justify-between flex-col border border-gray-200 dark:border-slate-600 p-1 text-xs  h-[95%] !w-[550px]">
+								<div key={index} className="flex justify-between flex-col border border-gray-200 dark:border-slate-600 p-1 text-xs  min-h-[750px] ] !w-[550px]">
 									<div className="header-pdf flex items-center justify-between border border-gray-200 dark:border-slate-600  p-2">
 										<div className="left w-[50%] flex items-center flex-col gap-y-2">
 											<div className='logo-app flex items-center'>
@@ -631,7 +725,6 @@ const ClientPayments = () => {
 										</div>
 									</div>
 
-
 									<div className='payment-pdf px-2 mb-3 flex-1 gap-y-1 flex flex-col font-normal '>
 
 										{currentPayment.current?.expenseDetails.map((evt, index) => (
@@ -682,7 +775,7 @@ const ClientPayments = () => {
 											className='align-items-center   text-xs  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
 										>
 											<span className=''>Total  </span>
-											<span className=''>${currentPayment.current?.total}</span>
+											<span className=''>${roundUp(currentPayment.current?.total!)}</span>
 
 										</div>
 										{
@@ -693,14 +786,14 @@ const ClientPayments = () => {
 														className='align-items-center   text-xs  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
 													>
 														<span className=''>Total cobrado  </span>
-														<span className=''>${currentPayment.current?.paidTotal}</span>
+														<span className=''>${roundUp(currentPayment.current?.paidTotal!)}</span>
 
 													</div>
 													<div
 														className='align-items-center   text-xs  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
 													>
 														<span className=''>Diferencia </span>
-														<span className=''>${Math.ceil(currentPayment.current?.total! - currentPayment.current?.paidTotal!)}</span>
+														<span className=''>${roundUp(currentPayment.current?.total!) - roundUp(currentPayment.current?.paidTotal!)}</span>
 
 													</div>
 												</>
@@ -739,15 +832,12 @@ const ClientPayments = () => {
 				show={showCreateModal}
 				closeModal={closeCreateModal}
 				overlayClick={false}
-				// className='shadow-none border-0 w-full sm:w-[640px] md:w-[768px] lg:w-[1024px] !p-3'
 				titleText={'Cobros'}
-			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
 				<CloseOnClick action={closeCreateModal} />
 				<div className='flex justify-between w-full flex-col md:flex-row gap-x-6 mt-3'>
 					<form
 						onSubmit={handleSave}
-						// bg-gray-100 p-2 rounded-md shadow-xl
 						className='w-full  sm:w-[600px] '
 					>
 						<FieldsetGroup >
@@ -867,7 +957,6 @@ const ClientPayments = () => {
 												<label
 													htmlFor={GG.id.toString() + GG.createdAt + GG.amount + GG.description}
 													className={` ml-2  ${lastPayment.filter((item: any) => item.description === GG.description && item.ContractId === GG.ContractId).length > 0 ? ' cursor-not-allowed opacity-60 line-through' : 'cursor-pointer'} `}
-												// disabled={lastPayment.filter((item: any) => item.description === GG.description && item.ContractId === GG.ContractId).length > 0}
 												>
 													${GG.amount} | {GG.description}
 												</label>
@@ -1101,15 +1190,6 @@ const ClientPayments = () => {
 								<div className="flex justify-between flex-col min-h-[300px] h-[95%]">
 
 									<div className='payment-pdf  pt-4 flex-1 gap-y-1 flex flex-col px-1'>
-										{
-											// (upToDate && ContractId) && (
-											// 	<div className="text-green-500 dark:text-green-400 text-center my-2">
-											// 		{/* @ts-ignore */}
-											// 		El contrato  {ContractId.Property.street!} {ContractId?.Property?.number} {ContractId?.Property?.floor}-{ContractId?.Property?.dept} ya pago el mes de {month} {year}
-											// 	</div>
-											// )
-										}
-
 
 										{selectedExpensesClient.map((evt, index) => (
 											<div
@@ -1179,9 +1259,9 @@ const ClientPayments = () => {
 												) : (
 
 													GG.checked ? (
-														<span>$   {(Number(GG.amount) + eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0)).toFixed(2)}</span>
+														<span>$   {roundUp((Number(GG.amount) + eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0)))}</span>
 
-													) : (<span>$ {(eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0)).toFixed(2)}</span>)
+													) : (<span>$ {roundUp((eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0)))}</span>)
 
 												)
 											}

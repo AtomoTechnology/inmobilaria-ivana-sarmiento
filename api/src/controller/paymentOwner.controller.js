@@ -31,7 +31,7 @@ exports.Post = catchAsync(async (req, res, next) => {
 	const transact = await sequelize.transaction();
 	try {
 
-		const payment = await PaymentOwner.create(req.body, { transaction: transact, });
+		const payment = await PaymentOwner.create(req.body, { transaction: transact });
 
 		if (req.body.expenseDetails.length > 0) {
 			for (let j = 0; j < req.body.expenseDetails.length; j++) {
