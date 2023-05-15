@@ -121,6 +121,7 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: true,
 			},
 			description: DataTypes.STRING,
+			motive: DataTypes.STRING,
 			// stamped: {
 			// 	allowNull: true,
 			// 	type: DataTypes.FLOAT,

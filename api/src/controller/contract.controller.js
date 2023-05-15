@@ -149,12 +149,25 @@ exports.Destroy = catchAsync(async (req, res, next) => {
     {
       where: {
         PropertyId: contract.PropertyId,
-        [Op.or]: { clientPaid: false, ownerPaid: false },
+        clientAmount: { [Op.ne]: 0 },
+        clientPaid: false,
       },
     },
   );
 
-  if (events.length > 0) return next(new AppError("No se puede eliminar el contrato, existen eventualidades sin pagar o cobrar", 400));
+  if (events.length > 0) return next(new AppError("No se puede eliminar el contrato, existen eventualidades sin  cobrar", 400));
+
+  const eventsOwners = await Eventuality.findAll(
+    {
+      where: {
+        PropertyId: contract.PropertyId,
+        ownerAmount: { [Op.ne]: 0 },
+        ownerPaid: false,
+      },
+    },
+  );
+
+  if (eventsOwners.length > 0) return next(new AppError("No se puede eliminar el contrato, existen eventualidades sin  pagar", 400));
 
 
   const result = await sequelize.transaction(async (t) => {
@@ -172,6 +185,62 @@ exports.Destroy = catchAsync(async (req, res, next) => {
       ok: true,
       status: "success",
       message: "El registro fue eliminado con exito",
+    });
+  });
+
+});
+
+
+exports.finish = catchAsync(async (req, res, next) => {
+  const id = req.params.id;
+  console.log(req.body)
+  const contract = await Contract.findOne({ where: { id } });
+  if (!contract) return next(new AppError("No se encontró el contrato", 400));
+  const debts = await DebtClient.findAll({ where: { ContractId: id, paid: false } });
+  if (debts.length > 0) return next(new AppError("No se puede eliminar el contrato, existen deudas pendientes", 400));
+
+  const payments = await DebtOwner.findAll({ where: { ContractId: id, paid: false } },);
+  if (payments.length > 0) return next(new AppError("No se puede eliminar el contrato, existen pagos pendientes", 400));
+
+  const events = await Eventuality.findAll(
+    {
+      where: {
+        PropertyId: contract.PropertyId,
+        clientAmount: { [Op.ne]: 0 },
+        clientPaid: false,
+      },
+    },
+  );
+
+  if (events.length > 0) return next(new AppError("No se puede eliminar el contrato, existen eventualidades sin  cobrar", 400));
+
+  const eventsOwners = await Eventuality.findAll(
+    {
+      where: {
+        PropertyId: contract.PropertyId,
+        ownerAmount: { [Op.ne]: 0 },
+        ownerPaid: false,
+      },
+    },
+  );
+
+  if (eventsOwners.length > 0) return next(new AppError("No se puede eliminar el contrato, existen eventualidades sin  pagar", 400));
+
+
+  const result = await sequelize.transaction(async (t) => {
+    await Property.update(
+      { state: "Libre" },
+      {
+        where: { id: contract.PropertyId },
+        transaction: t
+      },
+    );
+
+    await Contract.update({ state: 'Finalizado', motive: req.body.motive }, { where: { id }, transaction: t });
+    return res.json({
+      ok: true,
+      status: "success",
+      message: "El contrato se finalizó con éxito",
     });
   });
 

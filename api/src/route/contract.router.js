@@ -7,6 +7,7 @@ router.use(validador.protect)
 router.post('/', ctrl.Post)
 router.get('/', ctrl.GetAll)
 router.put('/:id', ctrl.Put)
+router.put('/:id/finish', ctrl.finish)
 router.delete('/:id', ctrl.Destroy)
 router.get('/:id', ctrl.GetById)
 
