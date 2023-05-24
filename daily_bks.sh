@@ -1,6 +1,6 @@
 #!/bin/sh
 user="root"
-password="I+rAQza6R&M6ZnX"
+password="I+rAQza6R&M6ZnX2"
 host="localhost"
 db_name="ivana_centro"
 
