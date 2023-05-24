@@ -349,6 +349,7 @@ const OwnerPayment = () => {
 					total: 0,
 				})
 				// return
+
 			}
 		} catch (error) {
 			showAndHideModal('Error', 'Error al intentar validar si el contrato ya tiene cobro para el mes y ano actual', 'red')
@@ -358,10 +359,10 @@ const OwnerPayment = () => {
 
 			const ownerContracts = await http.get(`contracts/owner/${e.value.id}/all`)
 			ownerContracts.data.data.map(async (contract: any) => {
-
-				const docsExpss = http.get<IClientExpensesResponseSimple>(`/owner-expenses?ContractId=${contract.id}&include=true`)
-				const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?ownerPaid=0&PropertyId=${contract.PropertyId}&include=true`)
+				const docsExpss = http.get<IClientExpensesResponseSimple>(`/owner-expenses?amount=0:gt&ContractId=${contract.id}&include=true`)
+				const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?ownerPaid=0&PropertyId=${contract.PropertyId}&ownerAmount=0:ne&include=true`)
 				const docsDebtss = http.get<IdebtsResponse>(`/debt-owners?paid=0&ContractId=${contract.id}`)
+
 
 				const [docsExps, docsEvents, docsDebts] = await Promise.all([docsExpss, docsEventss, docsDebtss])
 				setContractRows(prev => [...prev, {

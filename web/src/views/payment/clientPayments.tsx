@@ -333,7 +333,7 @@ const ClientPayments = () => {
 		try {
 			setLoadingExpenses(true)
 			const docsExpss = http.get<IClientExpensesResponseSimple>(`/client-expenses?amount=0:gt&ContractId=${e.value.id}&include=true`)
-			const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?clientPaid=0&PropertyId=${e.value.PropertyId}&clientAmount=0:gt&include=true`)
+			const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?clientPaid=0&PropertyId=${e.value.PropertyId}&clientAmount=0:ne&include=true`)
 			// const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?clientPaid=0&ContractId=${e.value.id}&include=true`)
 			const dps = http.get<IConfigResponse>(`/config?key=punitorio_diario,gastos_bancarios:or`)
 			const docsDebtss = http.get<IdebtsResponse>(`/debt-clients?paid=0&ContractId=${e.value.id}`)

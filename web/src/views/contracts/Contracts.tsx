@@ -31,7 +31,7 @@ import RefreshData from '../../components/RefreshData'
 import { EmptyData } from '../../components/EmptyData'
 import FormActionBtns from '../../components/FormActionBtns'
 import { validateForm } from '../../helpers/form'
-import { diferenceBetweentwoDatesInYears, formatDateDDMMYYYY } from '../../helpers/date'
+import { diferenceBetweentwoDatesInYears, diffenceBetweenDates, formatDateDDMMYYYY } from '../../helpers/date'
 import BoxContainerPage from '../../components/BoxContainerPage'
 
 export interface Iassurance {
@@ -64,6 +64,7 @@ const Contracts = () => {
 	const [addGaranteeBox, setAddGaranteeBox] = useState(false);
 	const { showAndHideModal } = useShowAndHideModal()
 	const [savingOrUpdating, setSavingOrUpdating] = useState(false)
+	const [showFinishContractModal, setShowFinishContractModal] = useState(false)
 	const { values, handleInputChange, reset, updateAll } = useForm({
 		ClientId: 0,
 		PropertyId: 0,
@@ -91,6 +92,7 @@ const Contracts = () => {
 		ContractId: 0,
 		id: 0,
 	})
+	const { values: FCvalues, motive, handleInputChange: FChandleInputChange, reset: FCreset, } = useForm({ motive: '', })
 
 	const { fullName, email, phone, cuit, address, obs } = Gvalues
 
@@ -144,7 +146,7 @@ const Contracts = () => {
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		const { error, ok } = validateForm({ ...values }, ['description', 'booking', 'deposit'])
+		const { error, ok } = validateForm({ ...values }, ['description', 'booking', 'deposit', 'motive'])
 		setErrors(error)
 		if (!ok) return false
 		if (editMode) {
@@ -280,14 +282,55 @@ const Contracts = () => {
 		EhandleInputChange(data.id, 'ContractId')
 		setShowAddEventualityModal(true)
 	}
+
+	const finishContract = async (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault()
+		try {
+			setSavingOrUpdating(true)
+			const res = await http.put(`/contracts/${currentContract.current?.id}/finish`, { motive: motive })
+			if (res.data.ok) {
+				refetch()
+				closeFinishContractModal()
+				showAndHideModal('Finalizado', res.data.message)
+			} else {
+				showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
+			}
+		} catch (error: any) {
+			if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+		} finally {
+			setSavingOrUpdating(false)
+		}
+	}
+
+	const openFinishContractModal = (data: Contract) => {
+		currentContract.current = data
+		setShowFinishContractModal(true)
+	}
+
+	const closeFinishContractModal = () => {
+		currentContract.current = null
+		setShowFinishContractModal(false)
+		FCreset()
+	}
+
 	const actionBodyTemplate = (rowData: Contract) => {
 		return (
 			<div className='flex gap-x-3 items-center justify-start'>
 				{/* <SeeIcon action={() => navigate(`/contracts/${rowData.id}/${rowData.uuid}`)} /> */}
-				{rowData.state !== 'Finalizado' && (<AddGuarantee q={rowData.Assurances.length} action={() => showAddGuarantee(rowData)} />)}
+				{rowData.state !== 'Finalizado' && (
+					<>
+						<AddGuarantee q={rowData.Assurances.length} action={() => showAddGuarantee(rowData)} />
+						<EditIcon action={() => edit(rowData)} />
+						<DeleteIcon action={() => ConfirmDestroy(rowData)} />
+					</>
+				)}
 				{/* <TbReportMoney size={25} title='Agregar Eventualidad' onClick={() => openModalAddEvent(rowData)} /> */}
-				<EditIcon action={() => edit(rowData)} />
-				<DeleteIcon action={() => ConfirmDestroy(rowData)} />
+
+				{
+					(diffenceBetweenDates(rowData.endDate, new Date().toISOString().slice(0, 10)) >= 0 && rowData.state !== 'Finalizado') && (
+						<button className='text-red-400 border border-red-500 px-2 rounded-full py-1' onClick={() => openFinishContractModal(rowData)}>  Finalizar </button>
+					)
+				}
 			</div>
 		)
 	}
@@ -365,7 +408,8 @@ const Contracts = () => {
 							<DataTable
 								size='small'
 								emptyMessage='Aún no hay contrato'
-								className='!overflow-hidden   !border-none'
+								className='!overflow-hidden   !border-none '
+								rowClassName={() => 'group-hover:!bg-gray-100 group  dark:group-hover:!bg-gray-800'}
 								value={data?.data}
 								filters={filters}
 								globalFilterFields={['Property.street', 'Client.fullName']}
@@ -1015,6 +1059,43 @@ const Contracts = () => {
 					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeAddEventualitiesModal} />
 				</form>
 			</CreateModal>
+
+			<CreateModal
+				show={showFinishContractModal}
+				closeModal={closeFinishContractModal}
+				overlayClick={false}
+				titleText='Finalizar contrato'
+				className='shadow-none border-0 max-w-[500px]'
+			>
+				<CloseOnClick action={closeFinishContractModal} />
+				<form onSubmit={finishContract}				>
+
+					<div className="flex flex-col mt-3">
+						<span className='font-bold'>Contrato</span>
+
+						<label htmlFor="contractInfo" className='border font-normal  p-2'>
+							{
+								currentContract.current?.Client.fullName + ' - ' + currentContract.current?.Client.cuit
+								+ '  | ' + currentContract.current?.Property.street + ' ' + currentContract.current?.Property.number + ' ' + currentContract.current?.Property.floor + ' ' + currentContract.current?.Property.dept
+							}
+						</label>
+					</div>
+					<FieldsetGroup>
+						<CustomTextArea
+							placeholder='Escribe una breve descripción ...'
+							initialValue={motive || ''}
+							onChange={(value) => FChandleInputChange(value, 'motive')}
+							maxLength={255}
+							label='Motivo de finalización'
+						/>
+					</FieldsetGroup>
+					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeFinishContractModal} />
+
+				</form>
+			</CreateModal>
+
+
+
 		</BoxContainerPage>
 	)
 }

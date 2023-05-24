@@ -355,21 +355,23 @@ const Eventualities = () => {
 					</FieldsetGroup>
 					<FieldsetGroup>
 						<CustomInput
-							placeholder='202.99'
+							placeholder='0.00'
 							type='number'
 							initialValue={clientAmount || ''}
 							onChange={(value) => handleInputChange(value, 'clientAmount')}
 							label='Monto Inquilino'
+							disabled={clientAmount === 0 && editMode}
 							required
 							hasError={errors?.clientAmount}
 							errorText='El monto del cliente es obligatorio.'
 						/>
 						<CustomInput
-							placeholder='120.99'
+							placeholder='0.00'
 							type='number'
 							initialValue={ownerAmount || ''}
 							onChange={(value) => handleInputChange(value, 'ownerAmount')}
 							label='Monto propietario'
+							disabled={ownerAmount === 0 && editMode}
 							required
 							hasError={errors?.ownerAmount}
 							errorText='El monto del propietario es obligatorio.'
