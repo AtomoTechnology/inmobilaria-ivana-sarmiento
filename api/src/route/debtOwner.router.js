@@ -1,6 +1,7 @@
 const router = require('express').Router()
 const ctrl = require('../controller/debtOwner.controller')
 const validador = require('../../helpers/validador')
+const jc = require('../controller/jobs.controller')
 
 router.use(validador.protect)
 router.get('/', ctrl.GetAll)
@@ -9,7 +10,7 @@ router.get('/:id', ctrl.GetById)
 
 //Create
 router.post('/', ctrl.Post)
-router.post('/job/monthly', ctrl.jobDebtsOwner)
+router.post('/job/monthly', jc.jobDebtsOwner)
 
 //Update
 router.put('/:id', ctrl.Put)

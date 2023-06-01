@@ -107,6 +107,8 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
         await JobLog.create({ type: 'debts', state: 'success', message: 'DEBTS CLIENT JOB DONE SUCCESSFULLY.' })
         await transact.commit()
 
+        return res.json({ ok: true, message: 'DEBTS CLIENT JOB DONE SUCCESSFULLY.' })
+
     } catch (error) {
         await JobLog.create({
             type: 'debts',
@@ -123,7 +125,7 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
     const mothYearText = monthsInSpanish[month - 1] + '/' + year
     const owners = await Owner.findAll(
         {
-            where: { id: 15 },
+            // where: { id: 15 },
             include: [{ model: Property }]
         }
     );
@@ -213,6 +215,8 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
         }
         await JobLog.create({ type: "debts", state: "success", message: "DEBTS OWNER JOB DONE SUCCESSFULLY.", }, { transaction: transact, });
         await transact.commit();
+
+        return res.json({ ok: true, message: "DEBTS OWNER JOB DONE SUCCESSFULLY.", });
 
     } catch (error) {
         await JobLog.create({ type: "debts", state: "fail", message: error.message || "Something went wrong.", });

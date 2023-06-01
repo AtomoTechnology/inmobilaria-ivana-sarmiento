@@ -12,8 +12,8 @@ exports.Put = update(DebtOwner, ['month', 'year', 'ContractId', 'amount', 'descr
 exports.Destroy = destroy(DebtOwner)
 
 exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
-	const month = req.query.month ? req.query.month : new Date().getMonth()
-	const year = req.query.year ? req.query.year : new Date().getFullYear()
+	const month = new Date().getMonth()
+	const year = new Date().getFullYear()
 	const mothYearText = monthsInSpanish[month - 1] + '/' + year
 	const owners = await Owner.findAll(
 		{

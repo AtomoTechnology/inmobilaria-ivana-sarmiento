@@ -13,8 +13,8 @@ exports.Destroy = destroy(DebtClient)
 
 exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 
-	const month = req.query.month ? req.query.month : new Date().getMonth()
-	const year = req.query.year ? req.query.year : new Date().getFullYear()
+	const month = new Date().getMonth()
+	const year = new Date().getFullYear()
 	const mothYearText = monthsInSpanish[month - 1] + '/' + year
 
 	const docs2 = await Contract.findAll({
