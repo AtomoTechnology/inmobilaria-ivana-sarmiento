@@ -21,7 +21,6 @@ exports.Paginate = paginate(Contract, {
 
 exports.GetOwnerContracts = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-
   const properties = await Property.findAll({
     where: {
       OwnerId: id,
@@ -35,7 +34,7 @@ exports.GetOwnerContracts = catchAsync(async (req, res, next) => {
       PropertyId: { [Op.in]: ids },
       state: "En curso",
       startDate: { [Op.lte]: new Date(), },
-      endDate: { [Op.gt]: new Date() },
+      // endDate: { [Op.gt]: new Date() }, 
     },
     include: [
       { model: PriceHistorial },
@@ -189,7 +188,6 @@ exports.Destroy = catchAsync(async (req, res, next) => {
   });
 
 });
-
 
 exports.finish = catchAsync(async (req, res, next) => {
   const id = req.params.id;

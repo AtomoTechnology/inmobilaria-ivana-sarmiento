@@ -16,13 +16,15 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 	const month = new Date().getMonth()
 	const year = new Date().getFullYear()
 	const mothYearText = monthsInSpanish[month - 1] + '/' + year
+	const d = new Date()
+	d.setDate(d.getDate() + 3)
 
 	const docs2 = await Contract.findAll({
 		where: {
 			// id: {			// 	[Op.in]: req.query.ids.split(','),			// },
 			state: 'En curso',
 			startDate: { [Op.lt]: new Date(year, month - 1, new Date(year, month, 0).getDate()) },
-			endDate: { [Op.gt]: new Date() },
+			endDate: { [Op.gt]: d },
 		},
 		include: [
 			{ model: ClientExpense },
@@ -32,7 +34,6 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 	})
 
 	// return res.json({ ok: true, results: docs2.length, data: docs2, })
-
 	const transact = await sequelize.transaction()
 
 	try {

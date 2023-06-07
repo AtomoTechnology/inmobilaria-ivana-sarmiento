@@ -30,13 +30,16 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
     const month = req.query.month ? req.query.month : new Date().getMonth()
     const year = req.query.year ? req.query.year : new Date().getFullYear()
     const mothYearText = monthsInSpanish[month - 1] + '/' + year
+    const d = new Date()
+    d.setDate(d.getDate() + 3)
 
     const docs2 = await Contract.findAll({
         where: {
             // id: {			// 	[Op.in]: req.query.ids.split(','),			// },
+            // id: 44,
             state: 'En curso',
-            startDate: { [Op.lt]: new Date(year, month - 1, new Date(year, month, 0).getDate()) },
-            endDate: { [Op.gt]: new Date() },
+            startDate: { [Op.lt]: new Date(year, month - 1, new Date(year, month, 0).getDate()) }, // 2023-08-31 para mes : 8
+            endDate: { [Op.gt]: d },
         },
         include: [
             { model: ClientExpense },
@@ -123,6 +126,8 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
     const month = req.query.month ? req.query.month : new Date().getMonth()
     const year = req.query.year ? req.query.year : new Date().getFullYear()
     const mothYearText = monthsInSpanish[month - 1] + '/' + year
+    const d = new Date()
+    d.setDate(d.getDate() + 3)
     const owners = await Owner.findAll(
         {
             // where: { id: 15 },
@@ -145,7 +150,7 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
                             PropertyId: { [Op.in]: propertyIds },
                             state: "En curso",
                             startDate: { [Op.lt]: new Date(year, month - 1, new Date(year, month, 0).getDate()), },
-                            endDate: { [Op.gt]: new Date() },
+                            endDate: { [Op.gt]: d },
                         },
                         include: [
                             { model: OwnerExpense },

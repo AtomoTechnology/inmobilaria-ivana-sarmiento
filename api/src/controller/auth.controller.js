@@ -4,6 +4,7 @@ const { catchAsync } = require('../../helpers/catchAsync');
 const { Auth } = require('../../models');
 const crypto = require('crypto');
 const { Op } = require('sequelize');
+const { promisify } = require('util');
 
 const { all, findOne } = require('../Generic/FactoryGeneric');
 
@@ -126,4 +127,33 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   await user.save();
 
   createSendToken(user, 200, res);
+});
+
+exports.checkToken = catchAsync(async (req, res, next) => {
+
+  const token = req.body.token
+  if (!token) return next(new AppError('No se ha proporcionado un token.', 401));
+
+  const decoded = await promisify(jwt.verify)(token, process.env.SECRET_TOKEN);
+
+  const currentUser = await Auth.findOne({ where: { id: decoded.id } });
+
+  if (!currentUser) return next(new AppError('El usuario ya no existe.', 401));
+
+  if (currentUser.changePasswordAfter(decoded.iat)) return next(new AppError('El usuario cambió la contraseña recientemente. Por favor, inicie sesión de nuevo.', 401));
+
+  const newtoken = createToken({
+    id: currentUser.id,
+    uuid: currentUser.uuid,
+    // role: currentUser.role, no existe role todavia
+    email: currentUser.email,
+    fullName: currentUser.fullName,
+    photo: currentUser.photo,
+  });
+  res.status(200).json({
+    status: 'success',
+    ok: true,
+    code: 200,
+    token: newtoken
+  });
 });

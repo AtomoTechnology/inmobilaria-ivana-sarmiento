@@ -103,17 +103,17 @@ exports.all = (Model, opts = null) =>
 			include,
 			attributes: req.query.fields
 				? req.query.fields
-						.toString()
-						.split(',')
-						.map((el) => (el.includes(':') ? el.split(':') : el))
+					.toString()
+					.split(',')
+					.map((el) => (el.includes(':') ? el.split(':') : el))
 				: '',
 			order:
 				req.query.sort !== undefined
 					? req.query.sort
-							.toString()
-							.split(',')
-							.map((el) => el.split(':'))
-					: [['createdAt', 'desc']],
+						.toString()
+						.split(',')
+						.map((el) => el.split(':'))
+					: [['id', 'desc']],
 		})
 		return res.json({
 			results: docs.length,
@@ -144,17 +144,17 @@ exports.paginate = (Model) =>
 			offset,
 			attributes: req.query.fields
 				? req.query.fields
-						.toString()
-						.split(',')
-						.map((el) => (el.includes(':') ? el.split(':') : el))
+					.toString()
+					.split(',')
+					.map((el) => (el.includes(':') ? el.split(':') : el))
 				: '',
 			order:
 				req.query.sort !== undefined
 					? req.query.sort
-							.toString()
-							.split(',')
-							.map((el) => el.split(':'))
-					: [['createdAt', 'desc']],
+						.toString()
+						.split(',')
+						.map((el) => el.split(':'))
+					: [['id', 'desc']],
 		})
 
 		return res.json({
@@ -180,9 +180,9 @@ exports.findOne = (Model, opts = null) =>
 			include,
 			attributes: req.query.fields
 				? req.query.fields
-						.toString()
-						.split(',')
-						.map((el) => (el.includes(':') ? el.split(':') : el))
+					.toString()
+					.split(',')
+					.map((el) => (el.includes(':') ? el.split(':') : el))
 				: '',
 		})
 		if (!doc) return next(new Error(`No hay registro para el ${req.params.id}`))
