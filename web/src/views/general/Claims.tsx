@@ -373,7 +373,7 @@ const Claims = () => {
 									value={state}
 									onChange={(e) => handleInputChange(e.value, 'state')}
 									options={['Abierto', 'Cerrado']}
-									placeholder='elije una estado'
+									placeholder='elije un estado'
 									className='h-[42px] items-center !border-gray-200 shadow'
 								/>
 								{errors?.state && <FormError text='El estado es obligatorio.' />}

@@ -123,7 +123,7 @@ const Contracts = () => {
 	const navigate = useNavigate()
 	const currentContract = useRef<Contract | null>()
 
-	const { data, isError, isLoading, error, isFetching, refetch } = useContracts()
+	const { data, isError, isLoading, error, isFetching, refetch } = useContracts('?state=Finalizado:ne')
 	const clientQuery = useClients()
 	const propertyQuery = useProperties('state=Libre')
 
@@ -325,12 +325,11 @@ const Contracts = () => {
 					</>
 				)}
 				{/* <TbReportMoney size={25} title='Agregar Eventualidad' onClick={() => openModalAddEvent(rowData)} /> */}
-
-				{
+				<button className='text-red-400 border border-red-500 px-2 rounded-full py-1' onClick={() => openFinishContractModal(rowData)}>  Finalizar </button>
+				{/* {
 					(diffenceBetweenDates(rowData.endDate, new Date().toISOString().slice(0, 10)) >= 0 && rowData.state !== 'Finalizado') && (
-						<button className='text-red-400 border border-red-500 px-2 rounded-full py-1' onClick={() => openFinishContractModal(rowData)}>  Finalizar </button>
 					)
-				}
+				} */}
 			</div>
 		)
 	}

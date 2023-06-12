@@ -7,7 +7,9 @@ type types =
   | { type: 'setfavouriteIcon'; payload: {} }
   | { type: 'showAlert'; payload: Ialert }
   | { type: 'signOut' }
-  | { type: 'toggleTheme'; payload: string };
+  | { type: 'toggleTheme'; payload: string }
+  | { type: 'setMessage'; payload: string }
+  | { type: 'removeMessage'; }
 
 export const authReducer = (state: AuthState, action: types): AuthState => {
   switch (action.type) {
@@ -39,6 +41,16 @@ export const authReducer = (state: AuthState, action: types): AuthState => {
       return {
         ...state,
         alert: null,
+      };
+    case 'setMessage':
+      return {
+        ...state,
+        message: action.payload,
+      };
+    case 'removeMessage':
+      return {
+        ...state,
+        message: null,
       };
     case 'toggleTheme':
       return {

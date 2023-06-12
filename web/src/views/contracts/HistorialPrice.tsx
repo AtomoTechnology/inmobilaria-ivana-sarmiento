@@ -60,7 +60,7 @@ const HistorialPrices = () => {
 	const currentPrice = useRef<IHistorialPrice | null>()
 	const [expandedRows, setExpandedRows] = useState<DataTableExpandedRows>()
 
-	const { data, isError, isLoading, error, isFetching, refetch } = useContracts()
+	const { data, isError, isLoading, error, isFetching, refetch } = useContracts('?state=Finalizado:ne')
 
 	const edit = (data: IHistorialPrice) => {
 		updateAll({ ...data })

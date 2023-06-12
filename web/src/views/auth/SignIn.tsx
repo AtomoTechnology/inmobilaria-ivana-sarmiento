@@ -16,7 +16,7 @@ const SignIn = () => {
   const [errors, setErrors] = useState<any>();
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  const { signIn } = useContext(AuthContext);
+  const { signIn, message } = useContext(AuthContext);
   const { values, handleInputChange, email, password, reset } = useForm({
     email: "",
     password: "",
@@ -58,10 +58,16 @@ const SignIn = () => {
           onSubmit={handleSubmitLogin}
           className="flex items-center justify-between flex-col "
         >
+
           <h3 className="title-form self-start mb-4 !text-xl sm:!text-3xl">Inicia sesión</h3>
-
+          {
+            message && (
+              <div className="bg-red-100 border my-2 border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <strong className="font-bold">{message}</strong>
+              </div>
+            )
+          }
           {loginError && <FormError text={loginError} />}
-
           <CustomInput
             type="email"
             placeholder="example@gmail.com"

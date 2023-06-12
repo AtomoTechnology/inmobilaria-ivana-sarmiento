@@ -24,7 +24,7 @@ exports.GetOwnerContracts = catchAsync(async (req, res, next) => {
   const properties = await Property.findAll({
     where: {
       OwnerId: id,
-      state: "Ocupado",
+      // state: "Ocupado",
     },
     attributes: ['id']
   });
@@ -32,7 +32,7 @@ exports.GetOwnerContracts = catchAsync(async (req, res, next) => {
   const contracts = await Contract.findAll({
     where: {
       PropertyId: { [Op.in]: ids },
-      state: "En curso",
+      // state: "En curso",
       startDate: { [Op.lte]: new Date(), },
       // endDate: { [Op.gt]: new Date() }, 
     },
@@ -191,7 +191,6 @@ exports.Destroy = catchAsync(async (req, res, next) => {
 
 exports.finish = catchAsync(async (req, res, next) => {
   const id = req.params.id;
-  console.log(req.body)
   const contract = await Contract.findOne({ where: { id } });
   if (!contract) return next(new AppError("No se encontró el contrato", 400));
   const debts = await DebtClient.findAll({ where: { ContractId: id, paid: false } });

@@ -27,43 +27,46 @@ module.exports = (sequelize, DataTypes) => {
 					},
 				},
 			},
-			state: {
+			type: {
 				allowNull: false,
-				type: DataTypes.STRING(10),
-				defaultValue: 'Abierto',
+				type: DataTypes.STRING(11),
 				validate: {
-					isIn: [['Abierto', 'Cerrado']],
+					notNull: {
+						msg: 'El tipo no puede ser nulo.',
+					},
+					notEmpty: {
+						msg: 'El tipo no puede ser nulo.',
+					},
+					isIn: {
+						args: [['Factura', 'Recibo', 'Presupuesto']],
+						msg: 'El tipo no es valido.',
+					}
 				},
+
 			},
-			details: {
-				type: DataTypes.TEXT('long'),
-				allowNull: true,
-				get: function () {
-					if (!this.getDataValue('details')) return []
-					return JSON.parse(this.getDataValue('details'))
-				},
-				set: function (value) {
-					return this.setDataValue('details', JSON.stringify(value))
-				},
-			},
-			description: {
+			description: DataTypes.TEXT('long'),
+			category: {
 				type: DataTypes.STRING,
 				allowNull: false,
 				validate: {
 					notNull: {
-						msg: 'La descripción no puede ser nulo.',
+						msg: 'La categoria no puede ser nula.',
 					},
 					notEmpty: {
-						msg: 'La descripción no puede ser nulo.',
+						msg: 'La categoria no puede ser nula.',
+					},
+					isIn: {
+						args: [['Plomeria', 'Gasista', 'Electricista', 'Pintura', 'Albañileria', 'Materiales']],
+						msg: 'La categoria no es valida.',
 					},
 				},
 			},
+			photo: DataTypes.STRING,
 		},
 		{
 			sequelize,
-			paranoid: true,
 			modelName: 'Budget',
-			tableName: 'Budgets',
+			tableName: 'budgets',
 		}
 	)
 	return Budget

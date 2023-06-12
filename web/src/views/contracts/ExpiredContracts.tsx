@@ -1,13 +1,10 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Dropdown } from 'primereact/dropdown'
 import Box from '../../components/Box'
 import Loading from '../../components/Loading'
 import RequestError from '../../components/RequestError'
 import { useContracts } from '../../hooks/useContracts'
-import { Page, Text, View, Document, StyleSheet, PDFViewer, PDFDownloadLink } from '@react-pdf/renderer'
-import Expired from '../../components/contract/Expired'
 import { addDate, diferenceBetweentwoDatesInYears, diffenceBetweenDates, formatDateDDMMYYYY } from '../../helpers/date'
-import { jsPDF } from "jspdf"
 // @ts-expect-error
 import html2pdf from 'html2pdf.js'
 import BoxContainerPage from '../../components/BoxContainerPage'
@@ -100,7 +97,8 @@ const ExpiredContracts = () => {
 		// })
 		// doc.save(`CONTRATOS_A_VENCER_EN_${days}_DIAS_${formatDateDDMMYYYY(new Date().toISOString())}.pdf`);
 	}
-
+	const getExpiredDate = (date: string) => addDate(date, diferenceBetweentwoDatesInYears(date, new Date().toISOString().slice(0, 10)), 'years')
+	const getDiffBetweenDate = (date: string) => diffenceBetweenDates(date, new Date().toISOString().slice(0, 10))
 	if (isLoading) return <Loading />
 	if (isError) return <RequestError error={error} />
 	return (
@@ -169,22 +167,22 @@ const ExpiredContracts = () => {
 								</div>
 							</div>
 							<div className=''>
-								{data?.data.map((c: any) => (
+								{data?.data.sort((a, b) => getExpiredDate(a.startDate).getTime() - getExpiredDate(b.startDate).getTime()).map((c: any) => (
 									<div key={c.id} className='flex px-1 border-b dark:border-slate-700'>
 										<p className='w-[80px]  my-1  truncate p-2 px-0'>
 											{/* {formatDateDDMMYYYY(c.endDate)} |
 											{formatDateDDMMYYYY(c.startDate)} | */}
-											{formatDateDDMMYYYY(addDate(c.startDate, diferenceBetweentwoDatesInYears(c.startDate, new Date().toISOString().slice(0, 10)), 'years').toISOString().slice(0, 10))}
+											{formatDateDDMMYYYY(getExpiredDate(c.startDate).toISOString().slice(0, 10))}
 										</p>
 										<p className='w-[40px]  my-1  truncate p-2 px-0'>
 											{
-												diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10)) <= 365 ?
-													(365 - diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10))) :
+												getDiffBetweenDate(c.startDate) <= 365 ?
+
+													(365 - getDiffBetweenDate(c.startDate)) :
 													(
-														(diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10)) > 365 && diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10)) <= 730) ? (
-															(730 - diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10)))
-														)
-															: (1095 - diffenceBetweenDates(c.startDate, new Date().toISOString().slice(0, 10)))
+														(getDiffBetweenDate(c.startDate) > 365 && getDiffBetweenDate(c.startDate) <= 730) ?
+															((730 - getDiffBetweenDate(c.startDate))) :
+															(1095 - getDiffBetweenDate(c.startDate))
 													)
 											}
 										</p>

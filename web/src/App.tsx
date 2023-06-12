@@ -52,7 +52,7 @@ export const ShowModal = ({ title, message, color = 'green' }: { title: string; 
 }
 
 const App = () => {
-	const { authState, signOut, toggleTheme } = useContext(AuthContext)
+	const { authState, signOut, toggleTheme, message } = useContext(AuthContext)
 	const [darkTheme, setDarkTheme] = useState(localStorage.theme === 'dark')
 
 	const handleToggleTheme = () => {
@@ -219,7 +219,6 @@ const App = () => {
 					</section>
 				</div>
 			</footer>
-
 			{authState.alert?.show && (
 				<ShowModal
 					title={authState.alert?.title!}

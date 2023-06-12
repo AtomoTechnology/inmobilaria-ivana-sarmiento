@@ -265,7 +265,7 @@ const ClientExpenses = () => {
 				<CloseOnClick action={closeCreateModal} />
 				<form onSubmit={handleSave}				>
 					<FieldsetGroup>
-						<fieldset className='w-full sm:w-[70%]'>
+						<fieldset className='w-full sm:!max-w-[400px] sm:w-[70%]'>
 							<label htmlFor='ContractId'>Contrato </label>
 							<Dropdown
 								value={ContractId}
@@ -280,7 +280,7 @@ const ClientExpenses = () => {
 								placeholder='elije contrato'
 								filter
 								filterPlaceholder='Busca contrato'
-								className='h-[42px] items-center !border-gray-200 shadow '
+								className='h-[42px] items-center !border-gray-200 shadow sm:!max-w-[400px] '
 							/>
 							{errors?.ContractId && <FormError text='El contrato es obligatorio.' />}
 						</fieldset>

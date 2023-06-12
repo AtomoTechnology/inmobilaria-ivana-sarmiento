@@ -175,7 +175,15 @@ const ClientPayments = () => {
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		values.total = GG.checked ? Number((Number(GG.amount) + eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0)).toFixed(2)) : Number((eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0)).toFixed(2))
+		values.total = GG.checked ? Number(Number(GG.amount) + eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0)) : (eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0))
+		values.total = roundUp(values.total)
+		if (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0) {
+			values.recharge = roundUp(values.qteDays * values.dailyPunitive)
+		}
+		else {
+			values.recharge = 0
+		}
+
 		const { error, ok } = validateForm({ ...values }, ['paidTotal', 'extraExpenses', 'qteDays', 'recharge', 'dailyPunitive', 'obs', 'PropertyId',])
 		setErrors(error)
 		if (!ok) return false
@@ -236,9 +244,12 @@ const ClientPayments = () => {
 
 	const onExpensesClienteChange = (e: CheckboxChangeEvent) => {
 		let _selectedExps = [...selectedExpensesClient]
+		if (e.value.paidCurrentMonth) {
+			handleInputChange(roundUp(Number(values.dailyPunitive) * Number(values.qteDays)), 'recharge')
+		}
 		if (e.checked) _selectedExps.push(e.value)
 		else _selectedExps = _selectedExps.filter((evt) => evt.id !== e.value.id)
-		expsTotal.current = Number(_selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0).toFixed(2))
+		expsTotal.current = roundUp(_selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0))
 		setSelectedExpensesClient(_selectedExps)
 	}
 
@@ -259,7 +270,7 @@ const ClientPayments = () => {
 				_selectedExps = _selectedExps.filter((evt) => evt?.debtParentId !== e.value.id)
 			}
 		}
-		debtsTotal.current = Number(_selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0).toFixed(2))
+		debtsTotal.current = roundUp(_selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0))
 		setSelectedDebts(_selectedExps)
 	}
 
@@ -267,7 +278,7 @@ const ClientPayments = () => {
 		let _selectedEvents = [...selectedEventualities]
 		if (e.checked) _selectedEvents.push(e.value)
 		else _selectedEvents = _selectedEvents.filter((evt) => evt.id !== e.value.id)
-		eventTotal.current = Number(_selectedEvents.reduce((acc: any, cur: any) => acc + cur.clientAmount, 0).toFixed(2))
+		eventTotal.current = roundUp(_selectedEvents.reduce((acc: any, cur: any) => acc + cur.clientAmount, 0))
 		setSelectedEventualities(_selectedEvents)
 	}
 
@@ -382,12 +393,11 @@ const ClientPayments = () => {
 				updatedAt: new Date().toISOString(),
 				deletedAt: null,
 				description: 'GASTOS DE GESTION ' + month + '/' + year,
-				amount: (gestionExpensePorc / 100) * e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount,
+				amount: roundUp((gestionExpensePorc / 100) * e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount),
 				createdAt: (new Date().getTime().toString()),
 				id: UUID(),
 				checked: false
 			},)
-
 			setDebts(docsDebts.data.data)
 
 			docsDebts.data.data.map((d) => {
@@ -397,7 +407,9 @@ const ClientPayments = () => {
 					{
 						...d,
 						description: 'PUNITORIOS ' + d.description,
-						amount: Number((qtyDay * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (dailyPunitive / 100)).toFixed(2)),
+						// tomar el monto de la deuda en lugar del monto actual d.amount 
+						// amount: roundUp((qtyDay * e.value.PriceHistorials[e.value.PriceHistorials.length - 1]?.amount * (dailyPunitive / 100))), // TODO :: tener en cuenta el cambio de ano 
+						amount: roundUp((qtyDay * d.amount * (dailyPunitive / 100))),
 						createdAt: (new Date().getTime().toString()),
 						rent: false,
 						debtParentId: d.id!,
@@ -414,15 +426,11 @@ const ClientPayments = () => {
 				updateAll({
 					...values,
 					PropertyId: e.value.PropertyId,
-					recharge: Number(
-						(qte * e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount * (dailyPunitive / 100)).toFixed(2)
-					),
+					recharge: roundUp((qte * e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount * (dailyPunitive / 100))),
 					qteDays: qte,
 					ContractId: e.value,
 					dailyPunitive: e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount * (dailyPunitive / 100),
-					total: Number(
-						(qte * e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount * (dailyPunitive / 100)).toFixed(2)
-					),
+					total: roundUp((qte * e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount * (dailyPunitive / 100))),
 				})
 			} else {
 				updateAll({
@@ -833,12 +841,14 @@ const ClientPayments = () => {
 				closeModal={closeCreateModal}
 				overlayClick={false}
 				titleText={'Cobros'}
+				custom
+
 			>
 				<CloseOnClick action={closeCreateModal} />
-				<div className='flex justify-between w-full flex-col md:flex-row gap-x-6 mt-3'>
+				<div className='flex w-full flex-col md:flex-row gap-x-4 mt-3 '>
 					<form
 						onSubmit={handleSave}
-						className='w-full  sm:w-[600px] '
+						className='w-full  sm:flex-grow-[50%] sm:min-w-[600px] border border-gray-100 dark:border-slate-600 p-2'
 					>
 						<FieldsetGroup >
 							<fieldset>
@@ -892,6 +902,7 @@ const ClientPayments = () => {
 								<div className="text-green-500 dark:text-green-400 text-center my-2">
 									{/* @ts-ignore */}
 									Ya cobraste {lastPayment.length} conceptos   para el mes de {month} {year}
+									Ya cobraste {lastPayment.length} concepto(s)   para el/los mes(es)  de  {Array.from(new Set(lastPayment.map(it => ((typeof it.month) === 'number' ? monthsInSpanish[it.month - 1] : it.month?.length ? it.month : month)))).join(',')}
 								</div>
 							)
 						}
@@ -916,7 +927,7 @@ const ClientPayments = () => {
 						{!loadingExpenses ? (
 							<div className='mt-4'>
 								{expenseDetails.length > 0 && (
-									<div className=''>
+									<div className=' border border-gray-300 dark:border-slate-700 dark:bg-slate-900 p-2'>
 										<h1 className='title-form mb-2'>Gastos inquilino</h1>
 										<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
 											{expenseDetails.map((evt, index) => (
@@ -967,7 +978,7 @@ const ClientPayments = () => {
 								)}
 
 								{eventualityDetails.length > 0 && (
-									<div className='my-4'>
+									<div className='my-4  border border-gray-300 dark:border-slate-700 dark:bg-slate-900 p-2'>
 										<h1 className='title-form mb-2'>Eventualidades</h1>
 										<div className='eventualities-section flex flex-wrap  items-center gap-y-2 gap-x-3'>
 											{eventualityDetails.map((evt, index) => (
@@ -995,7 +1006,7 @@ const ClientPayments = () => {
 								)}
 
 								{debts.length > 0 && (
-									<div className='my-4'>
+									<div className='my-4  border border-gray-300 dark:border-slate-700 dark:bg-slate-900 p-2'>
 										<h1 className='title-form mb-2'>Deudas anteriores</h1>
 										<div className='eventualities-section flex flex-wrap  items-center gap-y-2 gap-x-3'>
 											{debts.map((evt, index) => (
@@ -1081,24 +1092,24 @@ const ClientPayments = () => {
 							</FieldsetGroup>
 						</FieldsetGroup>
 						<FieldsetGroup>
-							<FieldsetGroup className='w-full sm:w-[50%]'>
+							<FieldsetGroup className='w-full sm:w-[70%]'>
 								<fieldset className=''>
 									<label htmlFor=''>Total Event. </label>
 									<input
 										placeholder='1234.90'
 										type='number'
 										disabled={true}
-										value={eventTotal.current.toFixed(2)}
+										value={eventTotal.current}
 										onChange={(value) => { }}
 									/>
 								</fieldset>
 								<fieldset className=''>
-									<label htmlFor=''>Total Imp. </label>
+									<label htmlFor=''>Total imp. y deudas </label>
 									<input
 										placeholder='1234.90'
 										type='number'
 										disabled={true}
-										value={(expsTotal.current + debtsTotal.current).toFixed(2)}
+										value={expsTotal.current + debtsTotal.current}
 										onChange={(value) => { }}
 									/>
 								</fieldset>
@@ -1119,7 +1130,7 @@ const ClientPayments = () => {
 													updateAll({
 														...values,
 														qteDays: Number(e.target.value),
-														recharge: Number((Number(e.target.value) * dailyPunitive).toFixed(2)),
+														recharge: roundUp((Number(e.target.value) * dailyPunitive)),
 														// total: GG.checked ? eventTotal.current + expsTotal.current + debtsTotal.current + Number((Number(e.target.value) * dailyPunitive).toFixed(2)) + GG.amount : eventTotal.current + expsTotal.current + debtsTotal.current + Number((Number(e.target.value) * dailyPunitive).toFixed(2))
 													})
 
@@ -1129,11 +1140,11 @@ const ClientPayments = () => {
 										<fieldset className=''>
 											<label htmlFor='recharge'>Tot. recargo</label>
 											<input
-												placeholder='1234.90'
+												placeholder='1234'
 												disabled={true}
 												name='total'
 												type='number'
-												value={Number((qteDays * dailyPunitive).toFixed(2))}
+												value={roundUp((qteDays * dailyPunitive))}
 												onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value, 'recharge')}
 											/>
 										</fieldset>
@@ -1148,11 +1159,11 @@ const ClientPayments = () => {
 							<fieldset className=''>
 								<label htmlFor='total'>Total a cobrar</label>
 								<input
-									placeholder='1234.90'
+									placeholder='1234'
 									disabled={true}
 									name='total'
 									type='number'
-									value={GG.checked ? (eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0) + Number(GG.amount)).toFixed(2) : (eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0)).toFixed(2)}
+									value={GG.checked ? (eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0) + roundUp(Number(GG.amount))) : roundUp(eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0))}
 									onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value, 'total')}
 								/>
 							</fieldset>
@@ -1160,14 +1171,14 @@ const ClientPayments = () => {
 								initialValue={paidTotal || ''}
 								type='number'
 								placeholder={'0.00'}
-								onChange={(v) => { handleInputChange(Number(v), 'paidTotal') }}
+								onChange={(v) => { handleInputChange(roundUp(Number(v)), 'paidTotal') }}
 								label='Total cobrado'
 							/>
 						</FieldsetGroup>
 						{
 							paidTotal > 0 && (<div className='text-green-500 dark:text-green-300 p-1 mt-2'>Se agregará una eventualidad con un monto de : {'$'}
 								{
-									GG.checked ? (eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0) + Number(GG.amount) - paidTotal).toFixed(2) : (eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0) - paidTotal).toFixed(2)
+									GG.checked ? (eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0) + Number(GG.amount) - paidTotal).toFixed(2) : roundUp(eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0) - paidTotal)
 								}</div>)
 						}
 
@@ -1182,19 +1193,18 @@ const ClientPayments = () => {
 
 						<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
 					</form>
-
 					{
 						ContractId && (
-							<Box className="shadow-md rounded-lg border mx-0  border-gray-200 dark:!from-gray-700 dark:!to-gray-800 dark:!bg-gradient-to-tr p-2">
+							<Box className="shadow-none rounded-none border-none mx-0   p-2">
 								<h3 className='font-bold mb-2 text-lg '>Lista de conceptos a cobrar</h3>
 								<div className="flex justify-between flex-col min-h-[300px] h-[95%]">
 
-									<div className='payment-pdf  pt-4 flex-1 gap-y-1 flex flex-col px-1'>
+									<div className='payment-pdf  pt-4 flex-1 gap-y-1 flex flex-col px-1 '>
 
 										{selectedExpensesClient.map((evt, index) => (
 											<div
 												key={index}
-												className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+												className='align-items-center uppercase text-sm border-b dark:border-slate-700 flex gap-x-3 items-center  justify-between    border-gray-300'
 											>
 												<span className=''>{evt.description}</span>
 												<span>${evt.amount}</span>
@@ -1205,7 +1215,7 @@ const ClientPayments = () => {
 											GG.checked && (
 												<div
 													key={GG.id}
-													className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+													className='align-items-center uppercase text-sm border-b dark:border-slate-700 flex gap-x-3 items-center  justify-between    border-gray-300'
 												>
 													<span className=''>{GG.description}</span>
 													<span>${GG.amount}</span>
@@ -1218,7 +1228,7 @@ const ClientPayments = () => {
 										{selectedEventualities.map((evt, index) => (
 											<div
 												key={index}
-												className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+												className='align-items-center uppercase text-sm border-b dark:border-slate-700 flex gap-x-3 items-center  justify-between    border-gray-300'
 											>
 												<span className=''>{evt.description}</span>
 												<span>${evt.clientAmount}</span>
@@ -1226,9 +1236,9 @@ const ClientPayments = () => {
 											</div>
 										))}
 										{
-											(values.recharge > 0 && selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0) && (
+											(selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0) && (
 												<div
-													className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+													className='align-items-center uppercase text-sm border-b dark:border-slate-700 flex gap-x-3 items-center  justify-between    border-gray-300'
 												>
 													<span className=''>PUNITORIOS  {month}   {year.toString()}</span>
 													<span>${recharge}</span>
@@ -1239,7 +1249,7 @@ const ClientPayments = () => {
 										{selectedDebts.map((evt, index) => (
 											<div
 												key={index}
-												className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+												className='align-items-center uppercase text-sm border-b dark:border-slate-700 flex gap-x-3 items-center  justify-between    border-gray-300'
 											>
 												<span className=''>{evt.description}</span>
 												<span>${evt.amount}</span>
@@ -1271,7 +1281,6 @@ const ClientPayments = () => {
 							</Box>
 						)
 					}
-
 				</div>
 			</CreateModal>
 		</div >

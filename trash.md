@@ -130,3 +130,6 @@ GRANT ALL PRIVILEGES ON . TO 'dev'@'%' WITH GRANT OPTION;
     "host": "localhost",
 
 PASSWORD SERVER ::: DtwpvC2auN6y	
+
+Tipo Factura / Presupuesto / 
+Categoria 

@@ -2,6 +2,7 @@ const { PaymentOwner, Eventuality, Owner, Property, Contract, PaymentType, DebtO
 
 const { all, paginate, findOne, update, } = require('../Generic/FactoryGeneric')
 const { catchAsync } = require('../../helpers/catchAsync')
+const { monthsInSpanish } = require('../../helpers/variablesAndConstantes')
 
 exports.GetAll = all(PaymentOwner, {
 	include: [
@@ -122,6 +123,18 @@ exports.Destroy = catchAsync(async (req, res, next) => {
 							transaction: transact
 						},
 					);
+				} else {
+					const mon = monthsInSpanish.findIndex(a => a == payment.month) + 1
+					if (mon == new Date().getMonth() + 1 && payment.year == new Date().getFullYear()) { }
+					else {
+						await DebtOwner.create({
+							ContractId: payment.expenseDetails[j].ContractId,
+							amount: payment.expenseDetails[j].amount,
+							description: payment.expenseDetails[j].description,
+							month: monthsInSpanish.findIndex(a => a == payment.month) + 1,
+							year: payment.year
+						}, { transaction: transact })
+					}
 				}
 			}
 		}

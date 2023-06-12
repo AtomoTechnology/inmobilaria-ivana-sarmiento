@@ -27,6 +27,7 @@ import AllZones from '../views/zones/allZones'
 import PrivateRoute from './PrivateRoute'
 import PublicRoute from './PublicRoute'
 import Guarantors from '../views/contracts/Guarantors'
+import Budgets from '../views/general/budgets'
 
 export const router = createBrowserRouter([
 	{
@@ -220,6 +221,14 @@ export const router = createBrowserRouter([
 				element: (
 					<PrivateRoute>
 						<Claims />
+					</PrivateRoute>
+				),
+			},
+			{
+				path: '/budgets',
+				element: (
+					<PrivateRoute>
+						<Budgets />
 					</PrivateRoute>
 				),
 			},

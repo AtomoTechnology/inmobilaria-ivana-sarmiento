@@ -11,6 +11,7 @@ interface Props {
 	closeModal: any
 	overlayClick?: boolean
 	titleText: string
+	custom?: boolean
 }
 
 const CreateModal = ({
@@ -21,6 +22,7 @@ const CreateModal = ({
 	overlayClick = false,
 	overlayBackground,
 	titleText,
+	custom = false
 }: Props) => {
 	return (
 		<Modal
@@ -34,15 +36,15 @@ const CreateModal = ({
 					background: overlayBackground
 						? overlayBackground
 						: localStorage.theme === 'light'
-						? 'rgba(0,0,0,0.5)white'
-						: 'rgba(0,0,0,0.1)',
+							? 'rgba(0,0,0,0.5)white'
+							: 'rgba(0,0,0,0.1)',
 				},
 				modal: {
 					background: 'transparent',
 					boxShadow: 'none',
 					padding: 0,
-					maxWidth: '100wv !important',
-					width: '100vw !important',
+					maxWidth: custom ? '95%' : '100wv !important',
+					width: custom ? '95%' : '100vw !important',
 					// maxWidth: '100wv',
 					// width: '100vw',
 				},

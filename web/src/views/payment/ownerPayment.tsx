@@ -38,6 +38,7 @@ import FormActionBtns from '../../components/FormActionBtns'
 import CustomTextArea from '../../components/CustomTextArea'
 import { IHistorialPrice } from '../../interfaces/Icontracts'
 import { roundUp } from '../../helpers/numbers'
+import { useContracts } from '../../hooks/useContracts'
 const OwnerPayment = () => {
 	const [showCreateModal, setShowCreateModal] = useState(false)
 	const [show, setShow] = useState(false)
@@ -94,7 +95,7 @@ const OwnerPayment = () => {
 	const ownerPaymentQuery = useOwnerPayments()
 	const { data, isError, isLoading, error, isFetching } = useOwners()
 	const [loadingExpenses, setLoadingExpenses] = useState(false)
-	// const contractQuery = useContracts()
+	const contractQuery = useContracts('?state=Finalizado:ne')
 	const paymentTypeQuery = usePaymentTypes()
 
 
@@ -219,7 +220,7 @@ const OwnerPayment = () => {
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		values.total = eventTotal.current + expsTotal.current + debtsTotal.current
+		values.total = roundUp(eventTotal.current + expsTotal.current + debtsTotal.current)
 		const { error, ok } = validateForm({ ...values }, ['obs'])
 		setErrors(error)
 		if (!ok) return false
@@ -287,15 +288,9 @@ const OwnerPayment = () => {
 		let _selectedExps = [...selectedExpensesClient]
 		if (e.checked) {
 			_selectedExps.push(e.value)
-			// if (e.value.rent) {
-			// 		let p = debts.find((d) => d.debtParentId === e.value.id)!
-			// 		_selectedExps.push(p)
-
-			// }
-
 		}
 		else _selectedExps = _selectedExps.filter((evt) => evt.id !== e.value.id)
-		expsTotal.current = _selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0)
+		expsTotal.current = roundUp(_selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0))
 		setSelectedExpensesClient(_selectedExps)
 	}
 
@@ -303,14 +298,14 @@ const OwnerPayment = () => {
 		let _selectedEvents = [...selectedEventualities]
 		if (e.checked) _selectedEvents.push(e.value)
 		else _selectedEvents = _selectedEvents.filter((evt) => evt.id !== e.value.id)
-		eventTotal.current = _selectedEvents.reduce((acc: any, cur: any) => acc + cur.ownerAmount, 0)
+		eventTotal.current = roundUp(_selectedEvents.reduce((acc: any, cur: any) => acc + cur.ownerAmount, 0))
 		setSelectedEventualities(_selectedEvents)
 	}
 	const onDebtsChanges = (e: CheckboxChangeEvent) => {
 		let _selectedExps = [...selectedDebts]
 		if (e.checked) _selectedExps.push(e.value)
 		else _selectedExps = _selectedExps.filter((evt) => evt.id !== e.value.id)
-		debtsTotal.current = _selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0)
+		debtsTotal.current = roundUp(_selectedExps.reduce((acc: any, cur: any) => acc + cur.amount, 0))
 		setSelectedDebts(_selectedExps)
 	}
 
@@ -341,7 +336,7 @@ const OwnerPayment = () => {
 		try {
 			const res = await http.get(`/payment-owners?OwnerId=${e.value.id}&month=${month}&year=${year}&include=true`)
 			if (res.data.results > 0) {
-				res.data.data.map((p: any) => setLastPayment((prev: any) => ([...prev, ...p.expenseDetails])))
+				res.data.data.map((p: any) => setLastPayment((prev: any) => ([...prev, ...p.expenseDetails.concat(p.eventualityDetails)])))
 				setUpToDate(true)
 				updateAll({
 					...values,
@@ -357,6 +352,7 @@ const OwnerPayment = () => {
 
 		try {
 
+
 			const ownerContracts = await http.get(`contracts/owner/${e.value.id}/all`)
 			ownerContracts.data.data.map(async (contract: any) => {
 				const docsExpss = http.get<IClientExpensesResponseSimple>(`/owner-expenses?amount=0:gt&ContractId=${contract.id}&include=true`)
@@ -365,43 +361,45 @@ const OwnerPayment = () => {
 
 
 				const [docsExps, docsEvents, docsDebts] = await Promise.all([docsExpss, docsEventss, docsDebtss])
-				setContractRows(prev => [...prev, {
 
-					expenseDetails: [
-						{
-							amount: contract.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[contract.PriceHistorials?.length - 1]?.amount,
-							description: 'ALQUILER ' + contract?.Property?.street + ' ' + contract?.Property?.number + ' ' + contract?.Property?.floor + ' ' + contract?.Property?.dept + ' ' + month + '/' + year,
-							id: Number(Math.floor(Math.random() * 100000).toFixed(0) + contract.id.toFixed(0) + new Date().getTime().toFixed(0)),
-							ContractId: contract.id,
-							paidCurrentMonth: true,
-							rent: true,
-							createdAt: new Date().toISOString(),
-							updatedAt: new Date().toISOString(),
-						},
-						{
-							amount: - (contract.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[contract.PriceHistorials?.length - 1]?.amount * e.value.commision / 100),
-							description: 'HONORARIOS ' + contract?.Property?.street + ' ' + contract?.Property?.number + ' ' + contract?.Property?.floor + ' ' + contract?.Property?.dept + ' ' + month + '/' + year,
-							id: Number(Math.floor(Math.random() * 10000).toFixed(0) + contract.id.toFixed(0) + new Date().getTime().toFixed(0)),
-							ContractId: contract.id,
-							// rentId :contract.id,
-							createdAt: new Date().toISOString(),
-							updatedAt: new Date().toISOString(),
-						},
-						// ...docsExps.data.data.map((d) => ({ ...d, description: d.description + ' ' + month + '/' + year })),
-						...docsExps.data.data.filter((d) => {
-							if (d.description !== 'AGUAS' && d.description !== 'API') {
+				let expensess = contract.state === 'Finalizado' ? [] : [
+					{
+						amount: roundUp(contract.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[contract.PriceHistorials?.length - 1]?.amount),
+						description: 'ALQUILER ' + contract?.Property?.street + ' ' + contract?.Property?.number + ' ' + contract?.Property?.floor + ' ' + contract?.Property?.dept + ' ' + month + '/' + year,
+						id: Number(Math.floor(Math.random() * 100000).toFixed(0) + contract.id.toFixed(0) + new Date().getTime().toFixed(0)),
+						ContractId: contract.id,
+						paidCurrentMonth: true,
+						rent: true,
+						createdAt: new Date().toISOString(),
+						updatedAt: new Date().toISOString(),
+					},
+					{
+						amount: - roundUp(contract.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[contract.PriceHistorials?.length - 1]?.amount * e.value.commision / 100),
+						description: 'HONORARIOS ' + contract?.Property?.street + ' ' + contract?.Property?.number + ' ' + contract?.Property?.floor + ' ' + contract?.Property?.dept + ' ' + month + '/' + year,
+						id: Number(Math.floor(Math.random() * 10000).toFixed(0) + contract.id.toFixed(0) + new Date().getTime().toFixed(0)),
+						ContractId: contract.id,
+						// rentId :contract.id,
+						createdAt: new Date().toISOString(),
+						updatedAt: new Date().toISOString(),
+					},
+					// ...docsExps.data.data.map((d) => ({ ...d, description: d.description + ' ' + month + '/' + year })),
+					...docsExps.data.data.filter((d) => {
+						if (d.description !== 'AGUAS' && d.description !== 'API') {
+							return { ...d }
+						} else {
+							if (d.description === 'AGUAS' && ((new Date().getMonth() + 1) % 2) === 0) {
 								return { ...d }
-							} else {
-								if (d.description === 'AGUAS' && ((new Date().getMonth() + 1) % 2) === 0) {
-									return { ...d }
-								}
-								if (d.description === 'API' && ((new Date().getMonth() + 1) % 2) !== 0) {
-									return { ...d }
-								}
 							}
-						}).map((d) => ({ ...d, description: d.description + ' ' + month + '/' + year })),
-					],
-					eventualityDetails: docsEvents.data.data.map((d) => ({ ...d, ContractId: contract.id, description: d.description + ' | ' + contract?.Property?.street + ' ' + contract?.Property?.number + ' ' + contract?.Property?.floor + '-' + contract?.Property?.dept + ' ' + month + '/' + year })),
+							if (d.description === 'API' && ((new Date().getMonth() + 1) % 2) !== 0) {
+								return { ...d }
+							}
+						}
+					}).map((d) => ({ ...d, description: d.description + ' ' + month + '/' + year })),
+				]
+
+				setContractRows(prev => [...prev, {
+					expenseDetails: expensess,
+					eventualityDetails: docsEvents.data.data.map((d) => ({ ...d, ContractId: contract.id, description: d.description + ' | ' + contract?.Property?.street + ' ' + contract?.Property?.number + ' ' + contract?.Property?.floor + '-' + contract?.Property?.dept })),
 					// order them by date 
 					debts: docsDebts.data.data.sort((a: Idebt, b: Idebt) => a.year - b.year).sort((a: Idebt, b: Idebt) => a.month - b.month),
 					contract: contract,
@@ -419,7 +417,6 @@ const OwnerPayment = () => {
 				pd[d.ContractId] = [...pd[d.ContractId], d]
 			} else {
 				pd[d.ContractId] = [d]
-
 			}
 		})
 		data.expenseDetails.map((d) => {
@@ -429,8 +426,12 @@ const OwnerPayment = () => {
 				pd[d.ContractId] = [d]
 			}
 		})
-		currentPayment.current!.printData = Object.values(pd)
 
+		currentPayment.current!.printData = Object.values(pd)
+		currentPayment.current!.printData.map((item: any) => {
+			item[0].contract = contractQuery?.data?.data.find(c => c.id === item[0].ContractId)
+			return item
+		})
 		setDownloadPdf(true)
 	}
 	const closePrintPdfModal = () => {
@@ -439,6 +440,7 @@ const OwnerPayment = () => {
 	}
 	const handleDownloadPdf = async () => {
 		setLoadingPdf(true)
+
 		var element = document.getElementById('pdf-download');
 
 		var opt = {
@@ -598,16 +600,17 @@ const OwnerPayment = () => {
 				show={showCreateModal}
 				closeModal={closeCreateModal}
 				overlayClick={false}
-				// className='shadow-none border-0 w-full sm:w-[640px] md:w-[768px] lg:w-[1024px] !p-3'
+				className='shadow-none border-0  overflow-hidden'
 				titleText={'Pagos'}
-			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
+				// overlayBackground={'red'}
+				custom
 			>
 				<CloseOnClick action={closeCreateModal} />
-				<div className='flex justify-between w-full flex-col md:flex-row gap-x-6 mt-3'>
+				<div className='flex w-full flex-col md:flex-row gap-x-4 mt-3 '>
 					<form
 						onSubmit={handleSave}
 						// bg-gray-100 p-2 rounded-md shadow-xl
-						className='w-full sm:w-[600px] '
+						className='w-full  sm:flex-grow-[50%] sm:min-w-[600px] border border-gray-100 dark:border-slate-600 p-2'
 					>
 						<FieldsetGroup>
 							<fieldset>
@@ -633,10 +636,11 @@ const OwnerPayment = () => {
 							(upToDate && OwnerId) && (
 								<div className="text-green-500 dark:text-green-400 text-center my-2">
 									{/* @ts-ignore */}
-									Ya cobraste {lastPayment.length} conceptos   para el mes de {month} {year}
+									Ya cobraste {lastPayment.length} concepto(s)   para el/los mes(es)  de  {Array.from(new Set(lastPayment.map(it => typeof it.month === 'number' ? monthsInSpanish[it.month - 1] : it.month ? it.month : month))).join(',')}
 								</div>
 							)
 						}
+
 						{!loadingExpenses ? (
 
 							<div className='flex flex-col gap-y-4 mt-4'>
@@ -650,7 +654,8 @@ const OwnerPayment = () => {
 											{(upToDate && OwnerId && lastPayment.filter(lp => lp.ContractId === contract.contract.id).length > 0) && (
 												<div className="text-green-500 dark:text-green-400 text-center my-2">
 													{/* @ts-ignore */}
-													Ya cobraste {lastPayment.filter(lp => lp.ContractId === contract.contract.id).length} conceptos   para el mes de {month} {year}
+													Ya cobraste {lastPayment.filter(lp => lp.ContractId === contract.contract.id).length} concepto(s)   para el/los mes(es)  de {' '}
+													{Array.from(new Set(lastPayment.filter(lp => lp.ContractId === contract.contract.id).map(it => typeof it.month === 'number' ? monthsInSpanish[it.month - 1] : it.month ? it.month : month))).join(',')}
 												</div>
 											)}
 											{contract.expenseDetails?.length > 0 && (
@@ -674,7 +679,7 @@ const OwnerPayment = () => {
 																	htmlFor={evt.id.toString() + evt.createdAt + index + evt.amount + evt.description}
 																	className={` ml-2  ${lastPayment.filter((item: any) => item.description === evt.description && item.ContractId === evt.ContractId).length > 0 ? ' cursor-not-allowed opacity-60 line-through' : 'cursor-pointer'} `}
 																>
-																	${evt.amount} - {evt.description}
+																	${roundUp(evt.amount)} - {evt.description}
 																</label>
 															</div>
 														))}
@@ -702,7 +707,7 @@ const OwnerPayment = () => {
 																	htmlFor={evt.updatedAt + evt.description + index + evt.ownerAmount + evt.description}
 																	className='ml-2 cursor-pointer'
 																>
-																	${evt.ownerAmount} - {evt.description}
+																	${roundUp(evt.ownerAmount)} - {evt.description}
 																</label>
 															</div>
 														))}
@@ -731,7 +736,7 @@ const OwnerPayment = () => {
 																	className='ml-2 cursor-pointer'
 																>
 																	<span className=''>
-																		${evt.amount} {evt.description}
+																		${roundUp(evt.amount)} {evt.description}
 																	</span>
 																</label>
 															</div>
@@ -795,7 +800,7 @@ const OwnerPayment = () => {
 								<fieldset className=''>
 									<label htmlFor=''>Total event.</label>
 									<input
-										placeholder='1234.90'
+										placeholder='1234'
 										type='number'
 										disabled={true}
 										value={eventTotal.current}
@@ -805,7 +810,7 @@ const OwnerPayment = () => {
 								<fieldset className=''>
 									<label htmlFor=''>Total impuestos</label>
 									<input
-										placeholder='1234.90'
+										placeholder='1234'
 										type='number'
 										disabled={true}
 										value={expsTotal.current + debtsTotal.current}
@@ -817,7 +822,7 @@ const OwnerPayment = () => {
 								<fieldset className=''>
 									<label htmlFor='total'>Total a cobrar</label>
 									<input
-										placeholder='1234.90'
+										placeholder='1234'
 										disabled={true}
 										min={1}
 										name='total'
@@ -840,7 +845,7 @@ const OwnerPayment = () => {
 					</form>
 					{
 						OwnerId && (
-							<Box className="shadow-md rounded-lg border mx-0  border-gray-200 dark:!from-gray-700 dark:!to-gray-800 dark:!bg-gradient-to-tr p-2">
+							<Box className="shadow-none rounded-none  mx-0  border-none  p-2">
 								<h3 className='font-bold mb-2 text-lg '>Lista de conceptos a pagar</h3>
 								<div className="flex justify-between flex-col min-h-[300px] h-[95%]">
 
@@ -848,30 +853,30 @@ const OwnerPayment = () => {
 										{selectedExpensesClient.map((evt, index) => (
 											<div
 												key={index}
-												className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+												className='align-items-center uppercase text-sm border-b dark:border-slate-700 flex gap-x-3 items-center  justify-between    border-gray-300'
 											>
 												<span className=''>{evt.description}</span>
-												<span>${evt.amount}</span>
+												<span>${roundUp(evt.amount)}</span>
 
 											</div>
 										))}
 										{selectedEventualities.map((evt, index) => (
 											<div
 												key={index}
-												className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+												className='align-items-center uppercase text-sm border-b dark:border-slate-700   flex gap-x-3 items-center  justify-between    border-gray-300'
 											>
 												<span className=''>{evt.description}</span>
-												<span>${evt.ownerAmount}</span>
+												<span>${roundUp(evt.ownerAmount)}</span>
 
 											</div>
 										))}
 										{selectedDebts.map((evt, index) => (
 											<div
 												key={index}
-												className='align-items-center uppercase text-sm  flex gap-x-3 items-center  justify-between    border-gray-300'
+												className='align-items-center uppercase text-sm border-b  dark:border-slate-700  flex gap-x-3 items-center  justify-between    border-gray-300'
 											>
 												<span className=''>{evt.description}</span>
-												<span>${evt.amount}</span>
+												<span>${roundUp(evt.amount)}</span>
 
 											</div>
 										))}
@@ -966,9 +971,8 @@ const OwnerPayment = () => {
 									</div>
 
 									<div className='payment-pdf mb-2   flex-1 gap-y-2 flex flex-col '>
-
 										{currentPayment.current?.printData?.map((con: any, index: any) => (
-											<div key={index} className=" border border-gray-200 p-2">
+											<div key={index} className=" border border-gray-200 dark:border-slate-600 p-2">
 												{
 													con.map((evt: any, k: any) => (
 														<div
@@ -976,9 +980,20 @@ const OwnerPayment = () => {
 															className='align-items-center uppercase text-xs  flex gap-x-3 items-center  justify-between dark:border-slate-600     border-gray-300'
 														>
 															<span className=''>{evt.description}</span>
-															<span>${evt.amount ? evt.amount : evt.ownerAmount}</span>
+															<span>${evt.amount ? roundUp(evt.amount) : roundUp(evt.ownerAmount)}</span>
 														</div>
 													))
+												}
+												{
+													con[0].contract && (
+														<span className="vencimiento-contrato text-xs text-yellow-500">
+															Vigencia  contrato :  {formatDateDDMMYYYY(con[0].contract?.startDate)} | {formatDateDDMMYYYY(con[0].contract?.endDate)} {' - '}
+															Nro carpeta  :  {con[0].contract?.Property?.folderNumber}
+															{/* {
+														con[0].contract?.Property.street + ' ' + con[0].contract?.Property.number + ' ' + con[0].contract?.Property?.floor + ' ' + con[0].contract?.Property?.dept
+													} se vence el {formatDateDDMMYYYY(con[0].contract.endDate)} */}
+														</span>
+													)
 												}
 
 											</div>
