@@ -12,6 +12,7 @@ const {
     Owner,
     OwnerExpense,
     JobLog,
+    Assurance
 } = require('../../models')
 
 
@@ -24,6 +25,7 @@ const {
 const {
     monthsInSpanish
 } = require('../../helpers/variablesAndConstantes')
+const Email = require('../../helpers/email')
 
 exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 
@@ -227,4 +229,133 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
         await JobLog.create({ type: "debts", state: "fail", message: error.message || "Something went wrong.", });
         await transact.rollback();
     }
+});
+
+
+
+exports.noticeExpiringContracts = catchAsync(async (req, res, next) => {
+
+    const from = new Date()
+    const to = new Date(new Date().setDate(new Date().getDate() + 60))
+    console.log({ from, to })
+    // return
+    const contracts = await Contract.findAll({
+        where: {
+            endDate: {
+                [Op.between]: [new Date(), new Date(new Date().setDate(new Date().getDate() + 60))]
+            }
+        },
+        include: 'Client',
+        attributes: ['id', 'startDate', 'endDate', 'state'],
+    })
+
+    contracts.forEach(async (contract) => {
+        await new Email({ email: contract.Client.email, fullName: contract.Client.fullName, endDate: contract.endDate }).sendExpireContract()
+    })
+
+    return res.json({ ok: true, results: contracts.length, data: contracts, })
+
+});
+exports.noticeDebts = catchAsync(async (req, res, next) => {
+
+    const from = new Date()
+    const to = new Date(new Date().setDate(new Date().getDate() + 60))
+    console.log({ from, to })
+    // return
+    const contracts = await Contract.findAll({
+        where: { state: 'En curso', endDate: { [Op.gt]: new Date() } },
+        include: [
+            { model: DebtClient, where: { paid: false }, attributes: ['id', 'amount', 'description', 'month', 'year'] },
+            { model: Client, attributes: ['id', 'email', 'fullName'] },
+            { model: Property, attributes: ['id', 'street', 'number', 'floor', 'dept'] },
+        ],
+        attributes: ['id', 'startDate', 'endDate', 'state'],
+    })
+    // 44 avec debts
+
+    contracts.slice(2, 4).forEach(async (con) => {
+        const monthsDebts = con.DebtClients.map((d) => d.month)
+        // convert to a set to remove duplicates
+        const monthsDebtsSet = new Set(monthsDebts)
+        // convert back to array
+        const monthsDebtsUnique = [...monthsDebtsSet]
+        const assurances = await Assurance.findAll({ where: { ContractId: con.id } })
+
+        console.log('ContractId: ', con.id, 'Months: ', monthsDebts, 'MonthCleanSET ::', monthsDebtsSet, 'MonthCleanUnique ::', monthsDebtsUnique, 'Tiene : ', assurances.length, ' assurance(s)')
+
+
+        if (monthsDebtsUnique.length === 1) {
+            // send mail for one month
+            await new Email({
+                email: con.Client.email,
+                fullName: con.Client.fullName,
+                month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', '),
+                property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + '-' + con.Property.dept,
+            }).sendNoticeDebtForOneMonth()
+
+        } else if (monthsDebtsUnique.length === 2) {
+            // send mail for two months
+            await new Email({
+                email: con.Client.email,
+                fullName: con.Client.fullName,
+                month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', '),
+                property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + '-' + con.Property.dept,
+            }).sendNoticeDebtForTwoMonth()
+        } else if (monthsDebtsUnique.length === 3) {
+
+            // send mail for three months
+            await new Email({
+                email: con.Client.email,
+                fullName: con.Client.fullName,
+                month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', '),
+                property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + ' ' + con.Property.dept,
+            }).sendNoticeDebtForThreeMonth()
+
+            // get assurance for each contract
+            const assurances = await Assurance.findAll({ where: { ContractId: con.id } })
+            // validate if the contract has assurance
+            if (assurances.length > 0) {
+                assurances.forEach(async (as) => {
+                    await new Email({
+                        email: as.email,
+                        fullName: con.Client.fullName,
+                        month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', '),
+                        property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + ' ' + con.Property.dept,
+                        assuranceName: as.fullName
+                    }).sendNoticeDebtForAssurance()
+                })
+            }
+
+        } else if (monthsDebtsUnique.length > 3) {
+            // send mail for more than three months
+            await new Email({
+                email: con.Client.email,
+                fullName: con.Client.fullName,
+                month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', ') + ' ' + [...new Set(con.DebtClients.map((d) => d.year))].join('/ '),
+                property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + ' ' + con.Property.dept,
+                total: con.DebtClients.reduce((a, b) => a + b.amount, 0)
+            }).sendNoticeDebtForFourMonth()
+            // get assurance for each contract
+            const assurances = await Assurance.findAll({ where: { ContractId: con.id } })
+            // validate if the contract has assurance
+            if (assurances.length > 0) {
+                assurances.forEach(async (as) => {
+                    await new Email({
+                        email: as.email,
+                        fullName: as.fullName,
+                        month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', ') + ' ' + [...new Set(con.DebtClients.map((d) => d.year))].join('/ '),
+                        property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + ' ' + con.Property.dept,
+                        assuranceName: as.fullName,
+                        total: con.DebtClients.reduce((a, b) => a + b.amount, 0)
+                    }).sendNoticeDebtForFourMonth()
+                })
+            }
+        }
+        // console.log('ContractId: ', con.id, 'Months: ', monthsDebts, 'MonthCleanSET ::', monthsDebtsSet, 'MonthCleanUnique ::', monthsDebtsUnique)
+    })
+
+
+    return res.json({ ok: true, results: contracts.length, data: contracts, })
+
+
 });
