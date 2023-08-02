@@ -901,7 +901,6 @@ const ClientPayments = () => {
 							(upToDate && ContractId) && (
 								<div className="text-green-500 dark:text-green-400 text-center my-2">
 									{/* @ts-ignore */}
-									Ya cobraste {lastPayment.length} conceptos   para el mes de {month} {year}
 									Ya cobraste {lastPayment.length} concepto(s)   para el/los mes(es)  de  {Array.from(new Set(lastPayment.map(it => ((typeof it.month) === 'number' ? monthsInSpanish[it.month - 1] : it.month?.length ? it.month : month)))).join(',')}
 								</div>
 							)

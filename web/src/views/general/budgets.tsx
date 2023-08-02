@@ -314,18 +314,18 @@ const Budgets = () => {
 					</FieldsetGroup>
 					<FieldsetGroup>
 						<fieldset className='w-full'>
-							<label htmlFor="state">Tipo</label>
+							<label htmlFor="type">Tipo</label>
 							<Dropdown
 								value={type}
 								onChange={(e) => handleInputChange(e.value, 'type')}
-								options={['Factura', 'Recibo', 'Presupuesto']}
+								options={['Factura', 'Recibo', 'Presupuesto', 'Expensas extraordinarias']}
 								placeholder='elije un tipo'
 								className='h-[42px] items-center !border-gray-200 shadow'
 							/>
 							{errors?.type && <FormError text='El tipo es obligatorio.' />}
 						</fieldset>
 						<fieldset className='w-full'>
-							<label htmlFor="state">Categoría</label>
+							<label htmlFor="category">Categoría</label>
 							<Dropdown
 								value={category}
 								onChange={(e) => handleInputChange(e.value, 'category')}
