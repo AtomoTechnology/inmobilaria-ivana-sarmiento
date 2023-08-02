@@ -38,7 +38,7 @@ module.exports = (sequelize, DataTypes) => {
 						msg: 'El tipo no puede ser nulo.',
 					},
 					isIn: {
-						args: [['Factura', 'Recibo', 'Presupuesto']],
+						args: [['Factura', 'Recibo', 'Presupuesto', 'Expensas extraordinarias']],
 						msg: 'El tipo no es valido.',
 					}
 				},
