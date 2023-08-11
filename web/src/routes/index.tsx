@@ -28,6 +28,7 @@ import PrivateRoute from './PrivateRoute'
 import PublicRoute from './PublicRoute'
 import Guarantors from '../views/contracts/Guarantors'
 import Budgets from '../views/general/budgets'
+import ResetPassword from '../views/auth/ResetPassword'
 
 export const router = createBrowserRouter([
 	{
@@ -251,6 +252,14 @@ export const router = createBrowserRouter([
 		element: (
 			<PublicRoute>
 				<SignIn />
+			</PublicRoute>
+		),
+	},
+	{
+		path: '/resetPassword/:token',
+		element: (
+			<PublicRoute>
+				<ResetPassword />
 			</PublicRoute>
 		),
 	},

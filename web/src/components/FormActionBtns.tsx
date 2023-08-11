@@ -1,7 +1,7 @@
 import React from 'react'
 import InlineDots from './loadings/Inlinedots'
 
-const FormActionBtns = ({ onClose, savingOrUpdating }: { onClose: any, savingOrUpdating: boolean }) => {
+const FormActionBtns = ({ onClose, savingOrUpdating, btnSendText }: { onClose: () => void, savingOrUpdating: boolean, btnSendText?: string }) => {
     return (
         <section className='btns-form-actions action flex items-center gap-x-3 mt-8'>
             <button
@@ -19,10 +19,10 @@ const FormActionBtns = ({ onClose, savingOrUpdating }: { onClose: any, savingOrU
             >
                 {savingOrUpdating ? (
                     <span className='flex items-center gap-x-2'>
-                        <span>Guardando</span>
+                        <span>{btnSendText ? 'Espere' : 'Guardando'}</span>
                         <InlineDots />
                     </span>
-                ) : 'Guardar'}
+                ) : btnSendText ? btnSendText : 'Guardar'}
             </button>
         </section>
     )

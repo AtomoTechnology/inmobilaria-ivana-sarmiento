@@ -42,6 +42,21 @@ import CustomTextArea from '../../components/CustomTextArea'
 import { IHistorialPrice } from '../../interfaces/Icontracts'
 import { roundUp } from '../../helpers/numbers'
 import { RiErrorWarningFill } from 'react-icons/ri'
+
+const initStateUseForm = {
+	extraExpenses: 0,
+	ContractId: null,
+	PaymentTypeId: null,
+	month: monthsInSpanish[new Date().getMonth()],
+	year: new Date().getFullYear(),
+	total: 0,
+	recharge: 0,
+	qteDays: 0,
+	dailyPunitive: 0,
+	PropertyId: null,
+	paidTotal: 0,
+	obs: ''
+}
 const ClientPayments = () => {
 
 	const [showCreateModal, setShowCreateModal] = useState(false)
@@ -62,20 +77,7 @@ const ClientPayments = () => {
 		reset,
 		dailyPunitive,
 		obs
-	} = useForm({
-		extraExpenses: 0,
-		ContractId: null,
-		PaymentTypeId: null,
-		month: monthsInSpanish[new Date().getMonth()],
-		year: new Date().getFullYear(),
-		total: 0,
-		recharge: 0,
-		qteDays: 0,
-		dailyPunitive: 0,
-		PropertyId: null,
-		paidTotal: 0,
-		obs: ''
-	})
+	} = useForm(initStateUseForm)
 	const { showAndHideModal } = useShowAndHideModal()
 	const [savingOrUpdating, setSavingOrUpdating] = useState(false)
 	const [errors, setErrors] = useState<any>()
@@ -87,6 +89,8 @@ const ClientPayments = () => {
 	const [twoYearsWithoutPrice, setTwoYearsWithoutPrice] = useState(false)
 	const [threeYearsWithoutPrice, setThreeYearsWithoutPrice] = useState(false)
 	const [gestionExpensePorc, setGestionExpensePorc] = useState(2)
+	const [bankExpenses, setBankExpenses] = useState(0)
+	const bankExpensesValue = useRef(0)
 	const [GG, setGG] = useState<any>({})
 	const eventTotal = useRef(0)
 	const expsTotal = useRef(0)
@@ -175,7 +179,7 @@ const ClientPayments = () => {
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		values.total = GG.checked ? Number(Number(GG.amount) + eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0)) : (eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0))
+		values.total = GG.checked ? Number(Number(GG.amount) + bankExpenses + eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0)) : (eventTotal.current + bankExpenses + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0))
 		values.total = roundUp(values.total)
 		if (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0) {
 			values.recharge = roundUp(values.qteDays * values.dailyPunitive)
@@ -191,6 +195,9 @@ const ClientPayments = () => {
 		try {
 			setSavingOrUpdating(true)
 			let cleanExps = GG.checked ? [...selectedExpensesClient, ...selectedDebts, GG] : [...selectedExpensesClient, ...selectedDebts]
+			if (bankExpenses > 0) {
+				cleanExps.push({ id: new Date().getTime(), name: 'Gastos Bancarios', amount: bankExpenses, isBankExpense: true, createdAt: new Date().toISOString() })
+			}
 			const res = await http.post('/payment-clients', {
 				...values,
 				// @ts-expect-error
@@ -218,7 +225,8 @@ const ClientPayments = () => {
 		setUpToDate(false)
 		setTwoYearsWithoutPrice(false)
 		setThreeYearsWithoutPrice(false)
-		reset()
+		// reset()
+		updateAll(initStateUseForm)
 		setSelectedEventualities([])
 		setSelectedExpensesClient([])
 		setEventualityDetails([])
@@ -284,6 +292,12 @@ const ClientPayments = () => {
 
 	const handleChangeContract = async (e: DropdownChangeEvent) => {
 
+		// reset()
+		// updateAll(initStateUseForm)
+		// handleInputChange('', 'paidTotal')
+		// values.paidTotal = 0
+		// values.PaymentTypeId = null
+		// handleInputChange(0, 'PaymentTypeId')
 		setUpToDate(false)
 		setTwoYearsWithoutPrice(false)
 		setThreeYearsWithoutPrice(false)
@@ -295,13 +309,13 @@ const ClientPayments = () => {
 		setGestionExpensePorc(2)
 		setSelectedDebts([])
 		setLastPayment([])
-		reset()
 		eventTotal.current = 0
 		expsTotal.current = 0
 		debtsTotal.current = 0
-
+		setBankExpenses(0)
+		// return
 		if (e.value == undefined) {
-			updateAll({ ...values, ContractId: null, })
+			updateAll({ ...values, ContractId: null, paidTotal: 0, PaymentTypeId: null })
 			return
 		}
 
@@ -334,6 +348,8 @@ const ClientPayments = () => {
 					total: 0,
 					recharge: 0,
 					qteDays: 0,
+					PaymentTypeId: null,
+					paidTotal: 0
 				})
 				// return
 			}
@@ -350,7 +366,9 @@ const ClientPayments = () => {
 			const docsDebtss = http.get<IdebtsResponse>(`/debt-clients?paid=0&ContractId=${e.value.id}`)
 			const [docsExps, docsEvents, dp, docsDebts] = await Promise.all([docsExpss, docsEventss, dps, docsDebtss])
 			let dailyPunitive = Number(dp.data.data.find((d) => d.key === 'punitorio_diario')?.value)
-			let bankExpenses = Number(dp.data.data.find((d) => d.key === 'gastos_bancarios')?.value)
+			bankExpensesValue.current = Number(dp.data.data.find((d) => d.key === 'gastos_bancarios')?.value)
+			// bankExpensesValue.current = bankExpenses
+
 			setEventualityDetails(docsEvents.data.data)
 			setExpenseDetails([
 				{
@@ -364,16 +382,16 @@ const ClientPayments = () => {
 					paidCurrentMonth: true,
 					id: UUID()
 				},
-				{
-					ContractId: e.value.id,
-					date: new Date().toISOString().slice(0, 10),
-					updatedAt: new Date().toISOString(),
-					deletedAt: null,
-					description: 'GASTOS BANCARIOS' + ' ' + month + '/' + year,
-					amount: bankExpenses,
-					createdAt: (new Date().getTime().toString()),
-					id: UUID()
-				},
+				// {
+				// 	ContractId: e.value.id,
+				// 	date: new Date().toISOString().slice(0, 10),
+				// 	updatedAt: new Date().toISOString(),
+				// 	deletedAt: null,
+				// 	description: 'GASTOS BANCARIOS' + ' ' + month + '/' + year,
+				// 	amount: bankExpenses,
+				// 	createdAt: (new Date().getTime().toString()),
+				// 	id: UUID()
+				// },
 				...docsExps.data.data.filter((d) => {
 					if (d.description !== 'AGUAS' && d.description !== 'API') {
 						return d
@@ -429,6 +447,8 @@ const ClientPayments = () => {
 					recharge: roundUp((qte * e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount * (dailyPunitive / 100))),
 					qteDays: qte,
 					ContractId: e.value,
+					PaymentTypeId: null,
+					paidTotal: 0,
 					dailyPunitive: e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount * (dailyPunitive / 100),
 					total: roundUp((qte * e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount * (dailyPunitive / 100))),
 				})
@@ -437,6 +457,8 @@ const ClientPayments = () => {
 					...values,
 					ContractId: e.value,
 					PropertyId: e.value.PropertyId,
+					PaymentTypeId: null,
+					paidTotal: 0
 				})
 			}
 
@@ -841,6 +863,7 @@ const ClientPayments = () => {
 				closeModal={closeCreateModal}
 				overlayClick={false}
 				titleText={'Cobros'}
+				className=' max-w-7xl mx-auto'
 				custom
 
 			>
@@ -870,10 +893,16 @@ const ClientPayments = () => {
 								/>
 								{/* @ts-expect-error */}
 								{ContractId?.id > 0 && (
-									<span className='text-blue-600 dark:text-blue-400 text-sm ' >
-										{/* @ts-expect-error */}
-										Propietario : {ContractId?.Property?.Owner?.fullName}
-									</span>
+									<div className='flex items-center gap-4'>
+										<span className='text-blue-600 dark:text-blue-400 text-sm ' >
+											{/* @ts-expect-error */}
+											Propietario : {ContractId?.Property?.Owner?.fullName}
+										</span>
+										<span className='text-blue-600 dark:text-blue-400 text-sm ' >
+											{/* @ts-expect-error */}
+											Fec. Venc. : {ContractId?.endDate}
+										</span>
+									</div>
 								)}
 								{errors?.ContractId && <FormError text='El contrato es obligatorio.' />}
 							</fieldset>
@@ -922,10 +951,21 @@ const ClientPayments = () => {
 								</Box>
 							)
 						}
+						{
+							// @ts-ignore
+							(ContractId !== null && diffenceBetweenDates(ContractId.endDate!, new Date().toLocaleString().slice(0, 10)) >= 0) && (
+								<Box className="dark:!text-red-500 dark:!bg-red-100 text-center !p-2 !bg-red-200 mx-0 border-0 my-2 flex items-center gap-4 ">
+									<FiAlertTriangle size={25} />
+									{/* @ts-ignore */}
+									Este contrato esta vencido . Vencio el {ContractId.endDate} !
+								</Box>
+							)
+						}
 
 						{!loadingExpenses ? (
 							<div className='mt-4'>
-								{expenseDetails.length > 0 && (
+								{/* @ts-ignore */}
+								{(expenseDetails.length > 0 && diffenceBetweenDates(ContractId?.endDate!, new Date().toLocaleString().slice(0, 10)) < 0) && (
 									<div className=' border border-gray-300 dark:border-slate-700 dark:bg-slate-900 p-2'>
 										<h1 className='title-form mb-2'>Gastos inquilino</h1>
 										<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
@@ -1007,8 +1047,9 @@ const ClientPayments = () => {
 								{debts.length > 0 && (
 									<div className='my-4  border border-gray-300 dark:border-slate-700 dark:bg-slate-900 p-2'>
 										<h1 className='title-form mb-2'>Deudas anteriores</h1>
+
 										<div className='eventualities-section flex flex-wrap  items-center gap-y-2 gap-x-3'>
-											{debts.map((evt, index) => (
+											{debts.sort((a, b) => a.year.toString().concat(a.month.toString()).localeCompare(b.year.toString().concat(b.month.toString()))).map((evt, index) => (
 												<div
 													key={evt.updatedAt + evt.id + evt.description + evt.amount + index}
 													className={`align-items-center flex items-center  flex-wrap border border-gray-300 dark:border-slate-500 p-1 ${diffenceBetweenDates(evt.year + '-' + padTo2Digits(evt.month) + '-10', new Date().toString()) > 70 ? ' !border-red-500' : ''}`}
@@ -1077,7 +1118,12 @@ const ClientPayments = () => {
 									<label htmlFor='PaymentTypeId'>Forma de pago </label>
 									<Dropdown
 										value={PaymentTypeId}
-										onChange={(e) => handleInputChange(e.value, 'PaymentTypeId')}
+										onChange={(e) => {
+											handleInputChange(e.value, 'PaymentTypeId')
+											if (e.value === paymentTypeQuery.data?.data.find((item) => item.name === 'Transferencia Bancaria')?.id) {
+												setBankExpenses(bankExpensesValue.current)
+											} else { setBankExpenses(0) }
+										}}
 										options={paymentTypeQuery.data?.data}
 										optionLabel='name'
 										filterPlaceholder='Busca  forma de pago'
@@ -1166,13 +1212,26 @@ const ClientPayments = () => {
 									onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value, 'total')}
 								/>
 							</fieldset>
-							<CustomInput
-								initialValue={paidTotal || ''}
+							<fieldset className=''>
+								<label htmlFor='total'>Total cobrado</label>
+								<input
+									placeholder='1234'
+									// disabled={true}
+									className={`dark:!bg-gray-900 dark:text-slate-400 border  focus:!border-blue-500 dark:focus:!border-blue-500  !border-gray-300 dark:!border-slate-700 !shadow placeholder:text-slate-300 dark:placeholder:text-slate-700`}
+									name='total'
+									type='number'
+									value={paidTotal}
+									onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value, 'paidTotal')}
+								/>
+							</fieldset>
+
+							{/* <input
+								value={paidTotal}
 								type='number'
 								placeholder={'0.00'}
 								onChange={(v) => { handleInputChange(roundUp(Number(v)), 'paidTotal') }}
 								label='Total cobrado'
-							/>
+							/> */}
 						</FieldsetGroup>
 						{
 							paidTotal > 0 && (<div className='text-green-500 dark:text-green-300 p-1 mt-2'>Se agregará una eventualidad con un monto de : {'$'}
@@ -1254,8 +1313,16 @@ const ClientPayments = () => {
 												<span>${evt.amount}</span>
 											</div>
 										))}
-
-
+										{
+											bankExpenses > 0 && (
+												<div
+													className='align-items-center uppercase text-sm border-b dark:border-slate-700 flex gap-x-3 items-center  justify-between    border-gray-300'
+												>
+													<span className=''>GASTOS BANCARIOS</span>
+													<span>${bankExpenses}</span>
+												</div>
+											)
+										}
 									</div>
 									<div className="mt-auto">
 										<div
@@ -1268,9 +1335,9 @@ const ClientPayments = () => {
 												) : (
 
 													GG.checked ? (
-														<span>$   {roundUp((Number(GG.amount) + eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0)))}</span>
+														<span>$   {roundUp((Number(GG.amount) + bankExpenses + eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0)))}</span>
 
-													) : (<span>$ {roundUp((eventTotal.current + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0)))}</span>)
+													) : (<span>$ {roundUp((eventTotal.current + bankExpenses + expsTotal.current + debtsTotal.current + (selectedExpensesClient.filter(se => se.paidCurrentMonth).length > 0 ? recharge : 0)))}</span>)
 
 												)
 											}

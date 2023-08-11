@@ -49,7 +49,7 @@ const CustomInput = ({
 					setValue(e.target.value)
 					onChange(e.target.value)
 				}}
-				className={`dark:!bg-gray-900 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow ${className}`}
+				className={`dark:!bg-gray-900 dark:text-slate-400 border  focus:!border-blue-500 dark:focus:!border-blue-500  !border-gray-300 dark:!border-slate-700 !shadow placeholder:text-slate-300 dark:placeholder:text-slate-700 ${className}`}
 				value={value}
 				placeholder={placeholder}
 				maxLength={maxLength}
@@ -57,6 +57,7 @@ const CustomInput = ({
 				max={max}
 				name={!!name ? name : label?.replaceAll(' ', '_')}
 				required={required}
+				autoComplete='off'
 				min={min}
 				type={type}
 				disabled={disabled}

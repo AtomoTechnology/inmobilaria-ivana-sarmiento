@@ -1,55 +1,95 @@
-import { useContext } from "react";
-import { Link } from "react-router-dom";
-import { useState } from "react";
-import http from "./../../api/axios";
-import { useForm } from "../../hooks/useForm";
-import { AuthContext } from "../../context/authContext";
-import Box from "../../components/Box";
-import CustomInput from "../../components/CustomInput";
-import FormError from "../../components/FormError";
-import InlineDots from "../../components/loadings/Inlinedots";
-import { validateForm } from "../../helpers/form";
+import { useContext } from "react"
+import { useState } from "react"
+import http from "./../../api/axios"
+import { useForm } from "../../hooks/useForm"
+import { AuthContext } from "../../context/authContext"
+import Box from "../../components/Box"
+import CustomInput from "../../components/CustomInput"
+import FormError from "../../components/FormError"
+import InlineDots from "../../components/loadings/Inlinedots"
+import { validateForm } from "../../helpers/form"
+import CreateModal from "../../components/CreateModal"
+import FormActionBtns from "../../components/FormActionBtns"
+import { validateMail } from "../../helpers/general"
+import axios from "axios"
 
 const SignIn = () => {
 
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<any>();
-  const [loginError, setLoginError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<any>()
+  const [loginError, setLoginError] = useState<string | null>(null)
+  const [isOpen, setIsOpen] = useState(false)
+  const [loadingPassword, setLoadingPassword] = useState(false)
+  const [sendMailError, setsendMailError] = useState('')
+  const { signIn, message } = useContext(AuthContext)
+  const { values, handleInputChange, reset } = useForm({ email: "", password: "", })
+  const [emailForgotPassword, setEmailForgotPassword] = useState('')
+  const [successSendMail, setSuccessSendMail] = useState('')
 
-  const { signIn, message } = useContext(AuthContext);
-  const { values, handleInputChange, email, password, reset } = useForm({
-    email: "",
-    password: "",
-  });
 
-
-  const handleSubmitLogin = async (e: any) => {
-    e.preventDefault();
+  const handleSubmitLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
     const { error, ok } = validateForm({ ...values })
     setErrors(error)
     if (!ok) return false
-    setLoading(true);
+    setLoading(true)
     try {
-      const r = await http.post("/auth/signin", values);
+      const r = await http.post("/auth/signin", values)
       if (r.data.ok) {
-        signIn(r.data);
-        reset();
-        setLoading(false);
+        signIn(r.data)
+        reset()
+        setLoading(false)
       } else {
-        setLoginError(r.data.message);
+        setLoginError(r.data.message)
       }
     } catch (error: any) {
       if (error.response) {
-        setLoginError(error.response.data.message);
+        setLoginError(error.response.data.message)
         setTimeout(() => {
-          setLoginError(null);
-        }, 8000);
+          setLoginError(null)
+        }, 8000)
       }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
 
-  };
+  }
+
+  const openForgotPasswordModal = () => {
+    setIsOpen(true)
+  }
+  const closeForgetPasswordModal = () => {
+    setIsOpen(false)
+  }
+
+  const handleSubmitPassword = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!emailForgotPassword) return setErrors({ emailForgotPassword: true })
+    if (!validateMail(emailForgotPassword)) return setErrors({ emailForgotPassword: true })
+    setLoadingPassword(true)
+    setsendMailError('')
+    setSuccessSendMail('')
+    try {
+      const res = await http.post('/auth/forgot-password', { email: emailForgotPassword })
+      if (res.data.ok) {
+        setEmailForgotPassword('')
+        setSuccessSendMail(res.data.message)
+        setTimeout(() => {
+          setSuccessSendMail('')
+          closeForgetPasswordModal()
+        }, 3000)
+      }
+    } catch (error) {
+      console.log(error);
+      if (axios.isAxiosError(error) && error.response) {
+        setsendMailError(error.response.data.message || 'Error el mandar el mail')
+      }
+    } finally {
+      setLoadingPassword(false)
+    }
+
+
+  }
 
   return (
     <div className="flex h-screen w-screen dark:bg-gray-900 items-center justify-center">
@@ -88,6 +128,7 @@ const SignIn = () => {
             errorText="Contraseña obligatoria ."
           />
 
+
           <fieldset>
             <button disabled={loading} className="btn gradient" type="submit">
               {loading ? (
@@ -100,22 +141,52 @@ const SignIn = () => {
               )}
             </button>
           </fieldset>
-
-          {/* <div className="register-section text-sx my-2">
-            <span className="text-sm">
-              <Link
-                to="/forget-password"
-                className="text-pink-700 dark:text-slate-500 ml-1 hover:underline  p-1"
-              >
-                ¿Olvidaste tu contraseña ?
-              </Link>
-            </span>
-          </div> */}
-
         </form>
+        <div className="register-section text-sx mt-4 text-center">
+          <span className="text-sm">
+            <button
+              type="button"
+              onClick={() => { openForgotPasswordModal() }}
+              className="text-pink-700 dark:text-slate-500 ml-1 hover:underline dark:hover:text-brand2  p-1"
+            >
+              ¿Olvidaste tu contraseña ?
+            </button>
+          </span>
+        </div>
       </Box>
-    </div>
-  );
-};
 
-export default SignIn;
+      <CreateModal
+        show={isOpen}
+        closeModal={closeForgetPasswordModal}
+        overlayClick={false}
+        className='max-w-[400px] sm:w-[370px] w-[fit]'
+        titleText={`Recuperar contraseña`}
+      >
+        <form
+          onSubmit={handleSubmitPassword}
+        >
+          {sendMailError && (<FormError className="border border-dashed border-red-400 p-1.5 text-center text-sm mt-3" text={sendMailError} />)}
+          {successSendMail && (<div className="border border-dashed border-green-400 p-1.5 text-center text-sm mt-3">
+            <div>{successSendMail}</div>
+            <span className="text-xs">Se ha enviado un correo con las instrucciones para cambiar la contraseña</span>
+          </div>)}
+          < CustomInput
+            placeholder='example@gmail.test'
+            initialValue={emailForgotPassword}
+            disabled={loadingPassword}
+            onChange={(value) => setEmailForgotPassword(value)}
+            maxLength={100}
+            type="email"
+            label='Email'
+            required
+            hasError={errors?.emailForgotPassword}
+            errorText='El mail es obligatorio y debe ser valido.'
+          />
+          <FormActionBtns savingOrUpdating={loadingPassword} onClose={closeForgetPasswordModal} btnSendText="Enviar" />
+        </form>
+      </CreateModal>
+    </div>
+  )
+}
+
+export default SignIn
