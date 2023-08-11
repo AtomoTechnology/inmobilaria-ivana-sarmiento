@@ -17,6 +17,12 @@ import DeleteIcon from '../../components/icons/DeleteIcon'
 import useShowAndHideModal from '../../hooks/useShowAndHideModal'
 import http from '../../api/axios'
 import DeleteModal from '../../components/DeleteModal'
+import { useForm } from '../../hooks/useForm'
+import { validateForm } from '../../helpers/form'
+import CreateModal from '../../components/CreateModal'
+import CloseOnClick from '../../components/CloseOnClick'
+import FormActionBtns from '../../components/FormActionBtns'
+import EditIcon from '../../components/icons/EditIcon'
 
 const DebtsOwners = () => {
 
@@ -34,6 +40,13 @@ const DebtsOwners = () => {
 	const { showAndHideModal } = useShowAndHideModal()
 	const currentDebt = useRef<any | null>()
 	const [savingOrUpdating, setSavingOrUpdating] = useState(false)
+	const [showCreateModal, setShowCreateModal] = useState(false)
+	const [errors, setErrors] = useState<any>()
+	const { values, amount, id, reset, handleInputChange, updateAll } = useForm({
+		id: 0,
+		amount: 0,
+		ContractId: 0
+	})
 	const onGlobalFilterChange = (val: any) => {
 		const value = val
 		let _filters = { ...filters }
@@ -44,6 +57,48 @@ const DebtsOwners = () => {
 	const ConfirmDestroy = (data: any) => {
 		setShow(!show)
 		currentDebt.current = data
+	}
+
+	const edit = (data: any) => {
+		updateAll({ amount: data.amount, id: data.id, ContractId: data.ContractId })
+		setShowCreateModal(true)
+		currentDebt.current = data
+	}
+	const closeCreateModal = () => {
+		reset()
+		setShowCreateModal(false)
+		setErrors({})
+		currentDebt.current = null
+	}
+
+	const handleUpdateDebts = async (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault()
+		const { error, ok } = validateForm({ ...values })
+		setErrors(error)
+		if (!ok) return false
+		try {
+			const res = await http.put('/debt-owners/' + id, { amount })
+			if (res.data.ok) {
+				// refetch()
+				data?.data?.filter((item: any) => item.id === values.ContractId)[0].DebtOwners.map(db => {
+					if (db.id === id && db.ContractId === values.ContractId) {
+						db.amount = amount
+					}
+					return db
+				})
+				closeCreateModal()
+				showAndHideModal('Actualizado', res.data.message)
+			} else {
+				showAndHideModal('Error', res.data.message || 'Algo malo ocurrío.', 'red')
+			}
+
+		} catch (error) {
+			// @ts-ignore
+			if (error.response) showAndHideModal('Error', error.response.data?.message || 'Algo malo ocurrío.', 'red')
+		} finally {
+			setSavingOrUpdating(false)
+		}
+
 	}
 
 	const destroy = async (id: number) => {
@@ -66,7 +121,7 @@ const DebtsOwners = () => {
 	const actionBodyTemplate2 = (rowData: any) => {
 		return (
 			<div className='flex gap-x-3 items-center justify-center'>
-				{/* <EditIcon action={() => edit(rowData)} /> */}
+				<EditIcon action={() => edit(rowData)} />
 				<DeleteIcon action={() => ConfirmDestroy(rowData)} />
 			</div>
 		)
@@ -264,6 +319,7 @@ const DebtsOwners = () => {
 				)
 
 			}
+			{isFetching && (<Loading h={40} w={40} />)}
 
 			<DeleteModal
 				show={show}
@@ -272,7 +328,30 @@ const DebtsOwners = () => {
 				destroy={() => destroy(currentDebt.current?.id!)}
 				text={`La deuda del periodo ${currentDebt.current?.month}/${currentDebt.current?.year} de  monto   $ ${currentDebt.current?.amount}`}
 			/>
-			{isFetching && (<Loading h={40} w={40} />)}
+
+			<CreateModal
+				show={showCreateModal}
+				closeModal={closeCreateModal}
+				overlayClick={false}
+				className='max-w-[1000px] sm:w-[600px]'
+				titleText={`Editar deuda inquilino`}
+			>
+				<CloseOnClick action={closeCreateModal} />
+				<form onSubmit={handleUpdateDebts}				>
+					<CustomInput
+						placeholder='1234.90'
+						type='number'
+						initialValue={amount}
+						onChange={(value) => handleInputChange(value, 'amount')}
+						label='Monto'
+						required
+						hasError={errors?.amount}
+						errorText='El monto es requerido'
+					/>
+
+					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
+				</form>
+			</CreateModal>
 		</div>
 	)
 }

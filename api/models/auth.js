@@ -1,6 +1,7 @@
 'use strict'
 const { Model } = require('sequelize')
 const bcrypt = require('bcryptjs')
+const crypto = require('crypto')
 module.exports = (sequelize, DataTypes) => {
 	class Auth extends Model {
 		static associate(models) { }
@@ -89,9 +90,9 @@ module.exports = (sequelize, DataTypes) => {
 	Auth.prototype.checkPassword = async function (userPassword, hash) {
 		return await bcrypt.compare(userPassword, hash)
 	}
-	// Auth.prototype.hashPassword = async function (password) {
-	//   return await bcrypt.hash(password, 12);
-	// };
+	Auth.prototype.hashPassword = async function (password) {
+		return await bcrypt.hash(password, 12);
+	};
 
 	Auth.prototype.createPasswordResetToken = function () {
 		//create token

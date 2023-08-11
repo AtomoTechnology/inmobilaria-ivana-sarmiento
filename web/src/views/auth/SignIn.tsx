@@ -80,7 +80,6 @@ const SignIn = () => {
         }, 3000)
       }
     } catch (error) {
-      console.log(error);
       if (axios.isAxiosError(error) && error.response) {
         setsendMailError(error.response.data.message || 'Error el mandar el mail')
       }

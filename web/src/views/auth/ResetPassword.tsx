@@ -20,7 +20,6 @@ const ResetPassword = () => {
     const { values, handleInputChange, reset } = useForm({ passwordConfirm: "", password: "", })
     const params = useParams<{ token: string }>()
     const navigate = useNavigate()
-    console.log(params);
 
     const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()

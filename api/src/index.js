@@ -14,6 +14,7 @@ const { globalError } = require("./Generic/errorGeneric");
 const routeconfig = require("./routeconfig/config");
 const ctrlDebtsClient = require("./controller/debtClient.controller");
 const ctrlDebtsOwner = require("./controller/debtOwner.controller");
+const jobs = require("./controller/jobs.controller");
 // const { catchAsync } = require("../helpers/catchAsync");
 // const {
 //   Zone,
@@ -137,10 +138,19 @@ schedule.scheduleJob("0 0 1 * *", function () {
   ctrlDebtsOwner.jobDebtsOwner();
 });
 
+schedule.scheduleJob("0 0 2 * *", function () {
+  jobs.noticeExpiringContracts()
+  jobs.noticeDebts()
+});
+
 // schedule.scheduleJob("* * * * *", function () {
-//   // return ctrl.jobDebtsClients();
-//   ctrlDebtsClient.jobDebtsClients();
-//   ctrlDebtsOwner.jobDebtsOwner();
+// return ctrl.jobDebtsClients();
+// ctrlDebtsClient.jobDebtsClients();
+// ctrlDebtsOwner.jobDebtsOwner();
+// jobs.noticeExpiringContracts()
+// jobs.noticeDebts()
+// console.log('yes!!!');
+
 // });
 
 //Starting

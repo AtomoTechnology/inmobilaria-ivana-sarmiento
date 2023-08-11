@@ -7,6 +7,7 @@ const { Op } = require('sequelize');
 const { promisify } = require('util');
 
 const { all, findOne } = require('../Generic/FactoryGeneric');
+const Email = require('../../helpers/email');
 
 const createToken = (user) => {
   return jwt.sign(user, process.env.SECRET_TOKEN, {
@@ -73,17 +74,19 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   if (!req.body.email) return next(new AppError('El correo es requerido.', 404));
 
   const user = await Auth.findOne({ where: { email: req.body.email } });
-  if (!user) return next(new AppError('Este no es un usuario con este correo electrónico.', 404));
+  if (!user) return next(new AppError('No existe un usuario con este correo electrónico.', 404));
 
   const resetToken = user.createPasswordResetToken();
   await user.save();
 
   try {
-    const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
-    await new Email(user, resetURL).sendPasswordReset();
+    const resetURL = `${process.env.FRONT_URL}/resetPassword/${resetToken}`;
+    await new Email({ ...user.dataValues, url: resetURL }).sendPasswordReset();
     res.status(200).json({
+      ok: true,
+      code: 200,
       status: 'success',
-      message: 'Token sent successfully!',
+      message: 'Email enviado con éxito.',
     });
   } catch (err) {
     user.passwordResetToken = null;
@@ -96,12 +99,16 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 exports.resetPassword = catchAsync(async (req, res, next) => {
   //Get Uer based on the token
   if (!req.params.token) return next(new AppError('Token inválido o caducado.', 404));
+  if (!req.body.password || !req.body.passwordConfirm) return next(new AppError('Proporcione una contraseña y su confirmación', 400));
   const hashToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
   const user = await Auth.findOne({
     where: { passwordResetToken: hashToken, passwordResetExpires: { [Op.gt]: Date.now() } },
   });
 
-  if (!user) return next(new AppError('Este no es un usuario para este token. Token no válido o caducado.', 404));
+  if (!user) return next(new AppError('No existe un usuario para este token o el token no es válido o esta caducado.', 404));
+
+  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/.test(req.body.password))
+    return next(new AppError('La contraseña debe contener al menos 8 y máximo 20 caracteres, incluidos al menos 1 mayúscula, 1 minúscula, un número y un carácter especial.', 400))
 
   //validate user and token
   user.password = await user.hashPassword(req.body.password);

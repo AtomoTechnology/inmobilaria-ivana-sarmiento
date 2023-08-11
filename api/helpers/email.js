@@ -67,21 +67,21 @@ module.exports = class Email {
     await this.send('passwordReset', 'Recuperacion de contraseña válida por 10 minutos')
   }
   async sendExpireContract() {
-    await this.send('expireContract', 'Contrato por vencer')
+    await this.send('expireContract', 'Vencimiento de contrato')
   }
   async sendNoticeDebtForOneMonth() {
-    await this.send('debtOneMonth', '1 debt notice')
+    await this.send('debtOneMonth', 'Aviso deudas')
   }
   async sendNoticeDebtForTwoMonth() {
-    await this.send('debtTwoMonth', '2 debt notice')
+    await this.send('debtTwoMonth', 'Aviso deudas')
   }
   async sendNoticeDebtForThreeMonth() {
-    await this.send('debtThreeMonth', '3 debt notice')
+    await this.send('debtThreeMonth', 'Aviso deudas')
   }
   async sendNoticeDebtForFourMonth() {
-    await this.send('debtFourMonth', '4 debt notice')
+    await this.send('debtFourMonth', 'Aviso deudas')
   }
   async sendNoticeDebtForAssurance() {
-    await this.send('noticeForAssurance', 'ASSURANCE NOTICE')
+    await this.send('noticeForAssurance', 'Notificación a garantías por deuda de alquileres')
   }
 }

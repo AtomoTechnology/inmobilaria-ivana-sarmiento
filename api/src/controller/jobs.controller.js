@@ -234,36 +234,30 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
 
 
 exports.noticeExpiringContracts = catchAsync(async (req, res, next) => {
-
-    const from = new Date()
-    const to = new Date(new Date().setDate(new Date().getDate() + 60))
-    console.log({ from, to })
-    // return
     const contracts = await Contract.findAll({
         where: {
             endDate: {
                 [Op.between]: [new Date(), new Date(new Date().setDate(new Date().getDate() + 60))]
-            }
+            },
+            state: 'En curso'
         },
         include: 'Client',
         attributes: ['id', 'startDate', 'endDate', 'state'],
     })
 
+    if (!contracts || contracts.length <= 0) return res.json({ ok: true, message: 'No hay contratos por vencerse en los proximos 60 dias' })
+
     contracts.forEach(async (contract) => {
         await new Email({ email: contract.Client.email, fullName: contract.Client.fullName, endDate: contract.endDate }).sendExpireContract()
     })
 
-    return res.json({ ok: true, results: contracts.length, data: contracts, })
+    // return res.json({ ok: true, results: contracts.length, data: contracts, })
 
 });
 exports.noticeDebts = catchAsync(async (req, res, next) => {
 
-    const from = new Date()
-    const to = new Date(new Date().setDate(new Date().getDate() + 60))
-    console.log({ from, to })
-    // return
     const contracts = await Contract.findAll({
-        where: { state: 'En curso', endDate: { [Op.gt]: new Date() } },
+        where: { state: 'En curso' },
         include: [
             { model: DebtClient, where: { paid: false }, attributes: ['id', 'amount', 'description', 'month', 'year'] },
             { model: Client, attributes: ['id', 'email', 'fullName'] },
@@ -272,16 +266,16 @@ exports.noticeDebts = catchAsync(async (req, res, next) => {
         attributes: ['id', 'startDate', 'endDate', 'state'],
     })
     // 44 avec debts
-
-    contracts.slice(2, 4).forEach(async (con) => {
+    // slice(2, 4).
+    if (!contracts || contracts.length <= 0) return res.json({ ok: true, message: 'No hay contratos con deudas' })
+    contracts.forEach(async (con) => {
         const monthsDebts = con.DebtClients.map((d) => d.month)
         // convert to a set to remove duplicates
         const monthsDebtsSet = new Set(monthsDebts)
         // convert back to array
         const monthsDebtsUnique = [...monthsDebtsSet]
-        const assurances = await Assurance.findAll({ where: { ContractId: con.id } })
-
-        console.log('ContractId: ', con.id, 'Months: ', monthsDebts, 'MonthCleanSET ::', monthsDebtsSet, 'MonthCleanUnique ::', monthsDebtsUnique, 'Tiene : ', assurances.length, ' assurance(s)')
+        // const assurances = await Assurance.findAll({ where: { ContractId: con.id } })
+        // console.log('ContractId: ', con.id, 'Months: ', monthsDebts, 'MonthCleanSET ::', monthsDebtsSet, 'MonthCleanUnique ::', monthsDebtsUnique, 'Tiene : ', assurances.length, ' assurance(s)')
 
 
         if (monthsDebtsUnique.length === 1) {
@@ -355,7 +349,7 @@ exports.noticeDebts = catchAsync(async (req, res, next) => {
     })
 
 
-    return res.json({ ok: true, results: contracts.length, data: contracts, })
-
+    // return res.json({ ok: true, results: contracts.length })
+    // return res.json({ ok: true, results: contracts.length, data: contracts, })
 
 });
