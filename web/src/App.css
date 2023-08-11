@@ -226,6 +226,10 @@ form.disabled-all {
 	transform: translate(-50%, -50%);
 }
 
+html.dark .app-loading::after {
+	background-color: #111827;
+	/* background-image: linear-gradient(83deg, #1f2937, #1f2937); */
+}
 
 /* loading btns  */
 

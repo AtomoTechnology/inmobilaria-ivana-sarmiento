@@ -97,9 +97,11 @@ export const AuthProvider = ({ children }: any) => {
 
   if (state.checking)
     return (
-      <div className='flex gap-y-3 flex-col items-center justify-center mt-8 sm:mt-12 '>
-        <Loading />
-        <h3>Bienvenido de vuelta </h3>
+      <div className='flex gap-y-3 flex-col items-center justify-center min-h-screen bg-[rgb(227 227 227)] dark:bg-gray-900 '>
+        <div className="">
+          <Loading />
+          <h3 className='text-slate-400 mt-4'>Bienvenido de vuelta </h3>
+        </div>
       </div>
     );
 
