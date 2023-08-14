@@ -23,7 +23,7 @@ import { useClientPayments } from '../../hooks/useClientPayments'
 import { Idebt, IdebtsResponse } from '../../interfaces/IDebtsResponse'
 import { IClienyPayment } from '../../interfaces/IclientPayments'
 import { IConfigResponse } from '../../interfaces/Iconfig'
-import { diffenceBetweenDates, formatDateDDMMYYYY, padTo2Digits, padToNDigit } from '../../helpers/date'
+import { dateOneIsBiggerThanDateTwo, diffenceBetweenDates, formatDateDDMMYYYY, padTo2Digits, padToNDigit } from '../../helpers/date'
 import { BsPrinter } from 'react-icons/bs'
 import { TfiBackLeft } from 'react-icons/tfi'
 import { FiAlertTriangle } from 'react-icons/fi'
@@ -225,8 +225,6 @@ const ClientPayments = () => {
 		setUpToDate(false)
 		setTwoYearsWithoutPrice(false)
 		setThreeYearsWithoutPrice(false)
-		// reset()
-		updateAll(initStateUseForm)
 		setSelectedEventualities([])
 		setSelectedExpensesClient([])
 		setEventualityDetails([])
@@ -238,6 +236,7 @@ const ClientPayments = () => {
 		debtsTotal.current = 0
 		setShowCreateModal(false)
 		setErrors({})
+		updateAll({ ...initStateUseForm, ContractId: null })
 
 	}
 
@@ -953,7 +952,7 @@ const ClientPayments = () => {
 						}
 						{
 							// @ts-ignore
-							(ContractId !== null && diffenceBetweenDates(ContractId.endDate!, new Date().toLocaleString().slice(0, 10)) >= 0) && (
+							(ContractId !== null && dateOneIsBiggerThanDateTwo(new Date().toLocaleString().slice(0, 10), ContractId.endDate!)) && (
 								<Box className="dark:!text-red-500 dark:!bg-red-100 text-center !p-2 !bg-red-200 mx-0 border-0 my-2 flex items-center gap-4 ">
 									<FiAlertTriangle size={25} />
 									{/* @ts-ignore */}
@@ -965,7 +964,7 @@ const ClientPayments = () => {
 						{!loadingExpenses ? (
 							<div className='mt-4'>
 								{/* @ts-ignore */}
-								{(expenseDetails.length > 0 && diffenceBetweenDates(ContractId?.endDate!, new Date().toLocaleString().slice(0, 10)) < 0) && (
+								{(expenseDetails.length > 0 && ContractId !== null && dateOneIsBiggerThanDateTwo(ContractId.endDate!, new Date().toLocaleString().slice(0, 10))) && (
 									<div className=' border border-gray-300 dark:border-slate-700 dark:bg-slate-900 p-2'>
 										<h1 className='title-form mb-2'>Gastos inquilino</h1>
 										<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>

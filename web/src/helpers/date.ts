@@ -55,6 +55,11 @@ export const diffenceBetweenDates = (date1: string, date2: string): number => {
 	let diffDays = Math.ceil(diff / (1000 * 3600 * 24))
 	return diffDays
 }
+export const dateOneIsBiggerThanDateTwo = (date1: string, date2: string): boolean => {
+	let now = new Date(date1)
+	let now2 = new Date(date2)
+	return now.getTime() > now2.getTime()
+}
 
 
 export const diferenceBetweentwoDatesInYears = (date1: string, date2: string): number => {
