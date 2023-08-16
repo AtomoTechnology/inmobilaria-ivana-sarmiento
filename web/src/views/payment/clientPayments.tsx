@@ -338,7 +338,7 @@ const ClientPayments = () => {
 			setLoadingExpenses(true)
 			const res = await http.get(`/payment-clients?ContractId=${e.value.id}&month=${month}&year=${year}&include=true`)
 			if (res.data.results > 0) {
-				res.data.data.map((p: any) => setLastPayment((prev: any) => ([...prev, ...p.expenseDetails])))
+				// res.data.data.map((p: any) => setLastPayment((prev: any) => ([...prev, ...p.expenseDetails])))
 				setUpToDate(true)
 				updateAll({
 					...values,
@@ -542,8 +542,37 @@ const ClientPayments = () => {
 
 	}
 
+	const periodTemplate = (data: any) => {
+		const monthSet = new Set()
+		const yearSet = new Set()
+		// console.log(data.id, ':::: ', data)
+		// validate if the payment has some debt
+		const prevDebts = data.expenseDetails.filter((item: any) => item.hasOwnProperty('debt')).map((item: any) => ({ month: item.month, year: item.year }))
+		// validate if the payment was for the actual month
+		const curMonthPaid = data.expenseDetails.filter((item: any) => item.hasOwnProperty('paidCurrentMonth'))
+		console.log('prevDebts :: ', prevDebts)
+		console.log('curMonthPaid :: ', curMonthPaid)
+		if (prevDebts.length > 0) {
+			prevDebts.forEach((item: any) => {
+				monthSet.add(item.month)
+				yearSet.add(item.year)
+			})
+		}
+		if (curMonthPaid.length > 0 || (prevDebts.length === 0 && curMonthPaid.length === 0)) {
+			monthSet.add(monthsInSpanish.findIndex(item => item === data.month) + 1)
+			yearSet.add(data.year)
+		}
+		// if (prevDebts.length === 0 && curMonthPaid.length === 0) {
+		// 	monthSet.add(monthsInSpanish.findIndex(item => item === data.month) + 1)
+		// 	yearSet.add(data.year)
+		// }
+		// console.log(data.expenseDetails.map((item: any) => ({ mes: item.month, ano: item.year })));
+		return (<span>{Array.from(monthSet).map((item: any) => monthsInSpanish[item - 1]).join('-')}/{Array.from(yearSet).join('-')}</span>)
+	}
+
 	if (isLoading) return <Loading />
 	if (isError) return <RequestError error={error} />
+
 	return (
 		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
 			<HeaderData action={openCreateOrEditModel} text='Cobro a Inquilino' />
@@ -599,7 +628,7 @@ const ClientPayments = () => {
 							/>
 							<Column
 								field='month'
-								body={(data) => (<span>{data.month}/{data.year}</span>)}
+								body={periodTemplate}
 								header='Periodo'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
@@ -952,19 +981,20 @@ const ClientPayments = () => {
 						}
 						{
 							// @ts-ignore
-							(ContractId !== null && dateOneIsBiggerThanDateTwo(new Date().toLocaleString().slice(0, 10), ContractId.endDate!)) && (
-								<Box className="dark:!text-red-500 dark:!bg-red-100 text-center !p-2 !bg-red-200 mx-0 border-0 my-2 flex items-center gap-4 ">
-									<FiAlertTriangle size={25} />
-									{/* @ts-ignore */}
-									Este contrato esta vencido . Vencio el {ContractId.endDate} !
-								</Box>
-							)
+							// (ContractId !== null && dateOneIsBiggerThanDateTwo(new Date().toLocaleString().slice(0, 10), ContractId.endDate!)) && (
+							// 	<Box className="dark:!text-red-500 dark:!bg-red-100 text-center !p-2 !bg-red-200 mx-0 border-0 my-2 flex items-center gap-4 ">
+							// 		<FiAlertTriangle size={25} />
+							// 		{/* @ts-ignore */}
+							// 		Este contrato esta vencido . Vencio el {ContractId.endDate} !
+							// 	</Box>
+							// )
 						}
 
 						{!loadingExpenses ? (
 							<div className='mt-4'>
 								{/* @ts-ignore */}
-								{(expenseDetails.length > 0 && ContractId !== null && dateOneIsBiggerThanDateTwo(ContractId.endDate!, new Date().toLocaleString().slice(0, 10))) && (
+								{/* && ContractId !== null && dateOneIsBiggerThanDateTwo(ContractId.endDate!, new Date().toLocaleString().slice(0, 10)) */}
+								{(expenseDetails.length > 0) && (
 									<div className=' border border-gray-300 dark:border-slate-700 dark:bg-slate-900 p-2'>
 										<h1 className='title-form mb-2'>Gastos inquilino</h1>
 										<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
