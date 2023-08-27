@@ -50,7 +50,7 @@ exports.Paginate = paginate(PaymentClient, {
 exports.Post = catchAsync(async (req, res, next) => {
   const transact = await sequelize.transaction();
   try {
-
+    let paidCurMonth = false
     if (req.body.expenseDetails.length > 0) {
       for (let j = 0; j < req.body.expenseDetails.length; j++) {
         if (req.body.expenseDetails[j]?.debt) {
@@ -68,8 +68,13 @@ exports.Post = catchAsync(async (req, res, next) => {
           );
         }
 
+        if (req.body.expenseDetails[j].hasOwnProperty('paidCurrentMonth')) {
+          paidCurMonth = true
+        }
+
       }
     }
+    req.body.paidCurrentMonth = paidCurMonth
 
     const payment = await PaymentClient.create(req.body, { transaction: transact });
 

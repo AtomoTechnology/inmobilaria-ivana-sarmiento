@@ -39,6 +39,7 @@ import CustomTextArea from '../../components/CustomTextArea'
 import { IHistorialPrice } from '../../interfaces/Icontracts'
 import { roundUp } from '../../helpers/numbers'
 import { useContracts } from '../../hooks/useContracts'
+import { Link } from 'react-router-dom'
 const OwnerPayment = () => {
 	const [showCreateModal, setShowCreateModal] = useState(false)
 	const [show, setShow] = useState(false)
@@ -98,25 +99,10 @@ const OwnerPayment = () => {
 	const contractQuery = useContracts('?state=Finalizado:ne')
 	const paymentTypeQuery = usePaymentTypes()
 
-
-	const edit = (data: IClienyPayment) => {
-		// handleInputChange(data.name, 'name')
-		setShowCreateModal(true)
-		setEditMode(true)
-		currentPayment.current = data
-	}
-
 	const ConfirmDestroy = (data: IClienyPayment) => {
 		setShow(!show)
 		currentPayment.current = data
 	}
-	// const onGlobalFilterChange = (val: any) => {
-	// 	const value = val
-	// 	let _filters = { ...filters }
-	// 	_filters['global'].value = value
-	// 	setFilters(_filters)
-	// 	setGlobalFilterValue(value)
-	// }
 
 	const resetFilters = () => {
 		setFilters({
@@ -351,16 +337,16 @@ const OwnerPayment = () => {
 		} finally { setLoadingExpenses(false) }
 
 		try {
-
-
 			const ownerContracts = await http.get(`contracts/owner/${e.value.id}/all`)
 			ownerContracts.data.data.map(async (contract: any) => {
 				const docsExpss = http.get<IClientExpensesResponseSimple>(`/owner-expenses?amount=0:gt&ContractId=${contract.id}&include=true`)
 				const docsEventss = http.get<IEventualitiesResponse>(`/eventualities?ownerPaid=0&PropertyId=${contract.PropertyId}&ownerAmount=0:ne&include=true`)
 				const docsDebtss = http.get<IdebtsResponse>(`/debt-owners?paid=0&ContractId=${contract.id}`)
+				const paidCurrentMonth = http.get(`/payment-clients?ContractId=${contract.id}&month=${month}&year=${year}&paidCurrentMonth=${1}&include=true`)
+				const hasDebts = http.get(`/debt-clients?ContractId=${contract.id}&paid=${0}&include=true`)
 
 
-				const [docsExps, docsEvents, docsDebts] = await Promise.all([docsExpss, docsEventss, docsDebtss])
+				const [docsExps, docsEvents, docsDebts, padiCurMonth, hasDebtsResponse] = await Promise.all([docsExpss, docsEventss, docsDebtss, paidCurrentMonth, hasDebts])
 
 				let expensess = contract.state === 'Finalizado' ? [] : [
 					{
@@ -403,6 +389,8 @@ const OwnerPayment = () => {
 					// order them by date 
 					debts: docsDebts.data.data.sort((a: Idebt, b: Idebt) => a.year - b.year).sort((a: Idebt, b: Idebt) => a.month - b.month),
 					contract: contract,
+					paidCurrentMonth: padiCurMonth.data.results > 0 ? true : false,
+					hasDebts: hasDebtsResponse.data.results > 0 ? true : false,
 				}]);
 			})
 		} catch (error) { }
@@ -465,8 +453,29 @@ const OwnerPayment = () => {
 		currentPayment.current = null
 		setShowCreateModal(true)
 	}
+	const periodTemplate = (data: any) => {
+		const monthSet = new Set()
+		const yearSet = new Set()
+		const prevDebts = data.expenseDetails.filter((item: any) => item.hasOwnProperty('debt')).map((item: any) => ({ month: item.month, year: item.year }))
+		// validate if the payment was for the actual month
+		const curMonthPaid = data.expenseDetails.filter((item: any) => item.hasOwnProperty('paidCurrentMonth'))
+		if (prevDebts.length > 0) {
+			prevDebts.forEach((item: any) => {
+				monthSet.add(item.month)
+				yearSet.add(item.year)
+			})
+		}
+		if (curMonthPaid.length > 0 || (prevDebts.length === 0 && curMonthPaid.length === 0)) {
+			monthSet.add(monthsInSpanish.findIndex(item => item === data.month) + 1)
+			yearSet.add(data.year)
+		}
+
+		return (<span>{Array.from(monthSet).map((item: any) => monthsInSpanish[item - 1]).join('-')}/{Array.from(yearSet).join('-')}</span>)
+	}
+
 	if (ownerPaymentQuery.isLoading) return <Loading />
 	if (ownerPaymentQuery.isError) return <RequestError error={ownerPaymentQuery.error} />
+
 	return (
 		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
 			<HeaderData action={openCreateOrEditModel} text='Pago a propietario' />
@@ -523,7 +532,8 @@ const OwnerPayment = () => {
 							/>
 							<Column
 								field='month'
-								body={(data) => (<span>{data.month}/{data.year}</span>)}
+								// body={(data) => (<span>{data.month}/{data.year}</span>)}
+								body={periodTemplate}
 								header='Periodo'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
@@ -584,9 +594,7 @@ const OwnerPayment = () => {
 			) : (
 				<EmptyData text='Aún no hay pago' />
 			)}
-
 			{ownerPaymentQuery.isFetching && (<Loading h={40} w={40} />)}
-
 			<DeleteModal
 				savingOrUpdating={savingOrUpdating}
 				show={show}
@@ -602,7 +610,6 @@ const OwnerPayment = () => {
 				overlayClick={false}
 				className='shadow-none border-0  overflow-hidden'
 				titleText={'Pagos'}
-				// overlayBackground={'red'}
 				custom
 			>
 				<CloseOnClick action={closeCreateModal} />
@@ -640,9 +647,7 @@ const OwnerPayment = () => {
 								</div>
 							)
 						}
-
 						{!loadingExpenses ? (
-
 							<div className='flex flex-col gap-y-4 mt-4'>
 								{
 									contractRows.map((contract, l) => (
@@ -658,10 +663,32 @@ const OwnerPayment = () => {
 													{Array.from(new Set(lastPayment.filter(lp => lp.ContractId === contract.contract.id).map(it => typeof it.month === 'number' ? monthsInSpanish[it.month - 1] : it.month ? it.month : month))).join(',')}
 												</div>
 											)}
+
+											<div className={`paid-current-month border border-dashed p-2  ${contract.paidCurrentMonth ? 'text-green-500 border-green-400 dark:text-green-400' : 'text-red-500 border-red-400 dark:text-red-400'} text-center my-2`}>
+
+												{
+													contract.paidCurrentMonth ? 'El inquilino ya pagó el mes actual.' : 'El inquilino  no pagó el mes actual todavía.'
+												}
+
+											</div>
+											{
+												contract.hasDebts && (
+													<div className={`has-debts border border-dashed p-2  border-red-400 dark:text-red-400 text-center my-2`}>
+														<span className='text-red-500'>
+															El inquilino   tiene deudas impagas.
+														</span>
+														<Link target='_blank' to='/contract-debts-clients' className='text-slate-700 ml-2 underline dark:text-slate-400'>
+															Ver deudas
+														</Link>
+													</div>
+												)
+											}
+
+
 											{contract.expenseDetails?.length > 0 && (
 												<div className=''>
 													<h1 className='title-form mb-2'>Alquiler y Gastos propietarios</h1>
-													<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
+													<div className='eventualities-section flex flex-col gap-y-2 gap-x-3'>
 														{contract.expenseDetails.map((evt: any, index: any) => (
 															<div
 																key={evt.id.toString() + evt.createdAt + index + evt.amount + evt.description}
@@ -690,7 +717,7 @@ const OwnerPayment = () => {
 											{contract.eventualityDetails?.length > 0 && (
 												<div className='my-4'>
 													<h1 className='title-form mb-2'>Eventualidades</h1>
-													<div className="eventualities-section  flex flex-wrap   items-center gap-y-2  gap-x-3">
+													<div className="eventualities-section  flex flex-col gap-y-2  gap-x-3">
 														{contract.eventualityDetails.map((evt: any, index: any) => (
 															<div
 																key={evt.updatedAt + evt.description + index + evt.ownerAmount + evt.description}
@@ -718,7 +745,7 @@ const OwnerPayment = () => {
 											{contract.debts?.length > 0 && (
 												<div className='my-4'>
 													<h1 className='title-form mb-2'>Deudas anteriores</h1>
-													<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
+													<div className='eventualities-section flex flex-col gap-y-2 gap-x-3'>
 														{contract.debts.map((evt: any, index: any) => (
 															<div
 																key={evt.updatedAt + evt.id + index + evt.amount + evt.description}
@@ -744,8 +771,6 @@ const OwnerPayment = () => {
 													</div>
 												</div>
 											)}
-
-
 										</div>
 									))
 								}
@@ -848,7 +873,6 @@ const OwnerPayment = () => {
 							<Box className="shadow-none rounded-none  mx-0  border-none  p-2">
 								<h3 className='font-bold mb-2 text-lg '>Lista de conceptos a pagar</h3>
 								<div className="flex justify-between flex-col min-h-[300px] h-[95%]">
-
 									<div className='payment-pdf  pt-4 flex-1 gap-y-1 flex flex-col px-1'>
 										{selectedExpensesClient.map((evt, index) => (
 											<div
@@ -857,7 +881,6 @@ const OwnerPayment = () => {
 											>
 												<span className=''>{evt.description}</span>
 												<span>${roundUp(evt.amount)}</span>
-
 											</div>
 										))}
 										{selectedEventualities.map((evt, index) => (
@@ -880,8 +903,6 @@ const OwnerPayment = () => {
 
 											</div>
 										))}
-
-
 									</div>
 									<div className="mt-auto">
 										<div
@@ -892,7 +913,6 @@ const OwnerPayment = () => {
 										</div>
 									</div>
 								</div>
-
 							</Box>
 						)
 					}

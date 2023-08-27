@@ -7,6 +7,8 @@ import CloseIcon from './components/icons/CloseIcon'
 import logoApp from './assets/images/logo.png'
 import DownAngle from './components/icons/DownAngle'
 import { menuItems } from './helpers/general'
+import { BsSun, BsFillMoonFill } from 'react-icons/bs'
+import { DobleChevronAngle } from './components/icons/DobleChevronAngle'
 
 
 export const ShowModal = ({ title, message, color = 'green' }: { title: string; message: string; color?: string }) => {
@@ -100,7 +102,9 @@ const App = () => {
 									key={index}
 									className={`relative dark:text-slate-400  items-center  justify-center flex  h-[70px]  dark:hover:text-brand  text-brand2 hover:text-brand group p-1`}
 								>
-									{item.title} <DownAngle />
+									{item.title}
+									<DobleChevronAngle />
+
 									<ul
 										style={{ zIndex: 900000 }}
 										className='absolute top-[70px]  p-3 w-[250px] hidden transition-colors duration-1000 group-hover:flex bg-white border dark:bg-slate-800 dark:border-slate-700  border-gray-100  flex-col gap-y-2 rounded-b-md shadow '
@@ -136,12 +140,12 @@ const App = () => {
 				<Outlet />
 			</main>
 			{/* from-brand2 to-brand */}
-			<footer className='mt-auto bg-gray-100  bg-gradient-to-r from-white to-brand dark:from-slate-600 dark:to-slate-700  dark:bg-[#061122]  p-2 '>
+			<footer className='mt-auto bg-gray-100  bg-gradient-to-r from-slate-900 to-brand dark:from1-slate-600 dark:to1-slate-700  dark:bg-[#061122]  p-2 '>
 				<div className='container m-auto'>
 					<section className='py-6'>
 						<div className='px-4 mx-auto sm:px-6 lg:px-8 max-w-7xl'>
 							<div className=''>
-								<div className='flex flex-col sm:flex-row  items-center justify-center sm:justify-between '>
+								<div className='flex flex-col gap-6 sm:gap-0 sm:flex-row  items-center justify-center sm:justify-between '>
 									<img
 										className='w-24'
 										width={50}
@@ -149,6 +153,13 @@ const App = () => {
 										alt='LOGO CENTRO'
 									/>
 									{/* <span className='dark:text-white text-slate-800 font-bold text-2xl sm:3xl'>TEST MODE!</span> */}
+									<button
+										className='btn-toggle-theme1 btn gradient !p-0 !rounded-full !w-[35px] !h-[35px] !mr-4'
+										onClick={handleToggleTheme}
+										title='Claro/Oscuro'
+									>
+										{darkTheme ? (<BsFillMoonFill color='white' size={25} />) : (<BsSun size={25} color='white' />)}
+									</button>
 									<p className='mt-5 text-base sm:text-lg text-white  sm:mt-0'>© Copyright 2021 Centro-Administracion</p>
 								</div>
 

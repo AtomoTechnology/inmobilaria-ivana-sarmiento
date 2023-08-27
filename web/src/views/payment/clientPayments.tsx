@@ -338,7 +338,7 @@ const ClientPayments = () => {
 			setLoadingExpenses(true)
 			const res = await http.get(`/payment-clients?ContractId=${e.value.id}&month=${month}&year=${year}&include=true`)
 			if (res.data.results > 0) {
-				// res.data.data.map((p: any) => setLastPayment((prev: any) => ([...prev, ...p.expenseDetails])))
+				res.data.data.map((p: any) => setLastPayment((prev: any) => ([...prev, ...p.expenseDetails])))
 				setUpToDate(true)
 				updateAll({
 					...values,
@@ -550,8 +550,8 @@ const ClientPayments = () => {
 		const prevDebts = data.expenseDetails.filter((item: any) => item.hasOwnProperty('debt')).map((item: any) => ({ month: item.month, year: item.year }))
 		// validate if the payment was for the actual month
 		const curMonthPaid = data.expenseDetails.filter((item: any) => item.hasOwnProperty('paidCurrentMonth'))
-		console.log('prevDebts :: ', prevDebts)
-		console.log('curMonthPaid :: ', curMonthPaid)
+		// console.log('prevDebts :: ', prevDebts)
+		// console.log('curMonthPaid :: ', curMonthPaid)
 		if (prevDebts.length > 0) {
 			prevDebts.forEach((item: any) => {
 				monthSet.add(item.month)
@@ -997,7 +997,7 @@ const ClientPayments = () => {
 								{(expenseDetails.length > 0) && (
 									<div className=' border border-gray-300 dark:border-slate-700 dark:bg-slate-900 p-2'>
 										<h1 className='title-form mb-2'>Gastos inquilino</h1>
-										<div className='eventualities-section flex flex-wrap items-center gap-y-2 gap-x-3'>
+										<div className='eventualities-section flex flex-col   gap-y-2 gap-x-3'>
 											{expenseDetails.map((evt, index) => (
 												<div
 													key={evt.id.toString() + evt.createdAt + index + evt.amount + evt.description}
@@ -1048,7 +1048,7 @@ const ClientPayments = () => {
 								{eventualityDetails.length > 0 && (
 									<div className='my-4  border border-gray-300 dark:border-slate-700 dark:bg-slate-900 p-2'>
 										<h1 className='title-form mb-2'>Eventualidades</h1>
-										<div className='eventualities-section flex flex-wrap  items-center gap-y-2 gap-x-3'>
+										<div className='eventualities-section flex flex-col gap-y-2 gap-x-3'>
 											{eventualityDetails.map((evt, index) => (
 												<div
 													key={evt.updatedAt + evt.description + index + evt.id + evt.clientAmount}
@@ -1076,8 +1076,7 @@ const ClientPayments = () => {
 								{debts.length > 0 && (
 									<div className='my-4  border border-gray-300 dark:border-slate-700 dark:bg-slate-900 p-2'>
 										<h1 className='title-form mb-2'>Deudas anteriores</h1>
-
-										<div className='eventualities-section flex flex-wrap  items-center gap-y-2 gap-x-3'>
+										<div className='eventualities-section flex flex-col gap-y-2 gap-x-3'>
 											{debts.sort((a, b) => a.year.toString().concat(a.month.toString()).localeCompare(b.year.toString().concat(b.month.toString()))).map((evt, index) => (
 												<div
 													key={evt.updatedAt + evt.id + evt.description + evt.amount + index}

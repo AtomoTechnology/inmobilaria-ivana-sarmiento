@@ -4,9 +4,10 @@ import { FaAngleDown } from 'react-icons/fa'
 import { NavLink } from 'react-router-dom'
 import { AuthState } from '../context/authContext'
 import DefaultAvatar from './DefaultAvatar'
-import { BsSun, BsFillMoonFill } from 'react-icons/bs'
 import { menuItems } from '../helpers/general'
 import DownAngle from './icons/DownAngle'
+import { DobleChevronAngle } from './icons/DobleChevronAngle'
+import { Image } from 'primereact/image'
 
 type Props = {
 	authState: AuthState
@@ -15,20 +16,13 @@ type Props = {
 	darkTheme: boolean
 }
 
-const LoggedUser = ({ authState, signOut, handleToggleTheme, darkTheme }: Props) => {
+const LoggedUser = ({ authState, signOut }: Props) => {
 	const { user } = authState
 	const [showMobileMenu, setShowMobileMenu] = useState(false)
 
 	return (
 		<>
 			<div className='flex items-center justify-center text-left'>
-				<button
-					className='btn-toggle-theme btn gradient !p-0 !rounded-full !w-[35px] !h-[35px] !mr-4'
-					onClick={handleToggleTheme}
-					title='Tema negro/Blanco'
-				>
-					{darkTheme ? (<BsFillMoonFill color='white' size={25} />) : (<BsSun size={25} color='white' />)}
-				</button>
 				<div
 					onClick={() => {
 						// document.querySelector('.dropdown-user-logged-box')!.classList.toggle('hidden')
@@ -37,29 +31,28 @@ const LoggedUser = ({ authState, signOut, handleToggleTheme, darkTheme }: Props)
 				>
 					<button
 						type='button'
-						className='flex justify-center items-center w-full gap-[1px] border border-gray-200 dark:border-slate-700  px-2  py-1 text-sm font-medium text-slate-700 dark:text-slate-400 rounded-xl transition-all  focus:outline-none'
+						className='flex justify-center bg-slate-200 dark:bg-slate-800 items-center w-full gap-[1px]  border-gray-200 dark:border-slate-700  px-2  py-1 text-sm font-medium text-slate-700 dark:text-slate-400 rounded-full transition-all  focus:outline-none'
 						id='menu-button'
 						aria-expanded='true'
 						aria-haspopup='true'
 					>
 						{user?.photo ? (
-							<img
+							<Image
 								src={user.photo}
-								className='!w-9 !h-9 rounded-full overflow-hidden object-cover'
+								className='!w-8 !h-8 rounded-full overflow-hidden object-cover'
 								alt={user?.fullName}
 							/>
-						) : (
-							<DefaultAvatar />
-						)}
+						) : <DefaultAvatar />}
 						<span className='ml-1 username-logged'>{user?.fullName?.split(' ')[0]}</span>
-						<FaAngleDown size={20} />
+						{/* <DownAngle /> */}
+						<DobleChevronAngle />
 					</button>
 				</div>
 				{
 					showMobileMenu && (
 						<div
 							style={{ zIndex: 900000 }}
-							className='dropdown-user-logged-box overflow-auto    transition-fade rounded-md shadow p-1 origin-top-right absolute right-0 mt-2 !w-full sm:!w-56   top-[60px]   bg-white dark:bg-slate-800'
+							className='dropdown-user-logged-box overflow-auto    transition-fade  shadow p-1 origin-top-right absolute right-0 mt-2 !w-full sm:!w-56   top-[60px]   bg-white dark:bg-slate-800'
 							role='menu'
 							aria-orientation='vertical'
 							aria-labelledby='menu-button'
@@ -90,10 +83,9 @@ const LoggedUser = ({ authState, signOut, handleToggleTheme, darkTheme }: Props)
 												className={`relative dark:text-slate-400  group  flex flex-col   dark:hover:text-brand  text-brand2 hover:text-brand group p-1`}
 											>
 												<span className='flex items-center'>
-													<span>
-														{item.title}
-													</span>
-													<DownAngle />
+													<span>{item.title}</span>
+													{/* <DownAngle /> */}
+													<DobleChevronAngle />
 												</span>
 												<ul
 													style={{ zIndex: 900000 }}
@@ -119,11 +111,11 @@ const LoggedUser = ({ authState, signOut, handleToggleTheme, darkTheme }: Props)
 									)}
 								</ul>
 
-								<div className='border-b border-gray-200 dark:border-slate-700 rounded-full my-1 w-full'></div>
+								{/* <div className='border-b border-gray-200 dark:border-slate-700 rounded-full my-1 w-full'></div> */}
 								<button
 									onClick={signOut}
 									type='button'
-									className='text-red-700  hover:rounded-xl flex items-center gap-1 w-full text-left px-2 py-2 text-sm hover:text-pink-600 dark:text-red-500'
+									className='text-red-700 rounded-none flex items-center gap-1 w-full text-left px-2 py-2 text-sm hover:text-pink-600 dark:text-red-500'
 									role='menuitem'
 									tabIndex={-1}
 									id='menu-item-3'
