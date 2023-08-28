@@ -280,70 +280,102 @@ exports.noticeDebts = catchAsync(async (req, res, next) => {
 
         if (monthsDebtsUnique.length === 1) {
             // send mail for one month
-            await new Email({
-                email: con.Client.email,
-                fullName: con.Client.fullName,
-                month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', '),
-                property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + '-' + con.Property.dept,
-            }).sendNoticeDebtForOneMonth()
+            try {
+                await new Email({
+                    email: con.Client.email,
+                    fullName: con.Client.fullName,
+                    month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', '),
+                    property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + '-' + con.Property.dept,
+                }).sendNoticeDebtForOneMonth()
+            } catch (error) {
+                console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error);
+            }
+
 
         } else if (monthsDebtsUnique.length === 2) {
             // send mail for two months
-            await new Email({
-                email: con.Client.email,
-                fullName: con.Client.fullName,
-                month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', '),
-                property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + '-' + con.Property.dept,
-            }).sendNoticeDebtForTwoMonth()
+            try {
+                await new Email({
+                    email: con.Client.email,
+                    fullName: con.Client.fullName,
+                    month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', '),
+                    property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + '-' + con.Property.dept,
+                }).sendNoticeDebtForTwoMonth()
+            } catch (error) {
+                console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error);
+            }
+
         } else if (monthsDebtsUnique.length === 3) {
 
             // send mail for three months
-            await new Email({
-                email: con.Client.email,
-                fullName: con.Client.fullName,
-                month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', '),
-                property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + ' ' + con.Property.dept,
-            }).sendNoticeDebtForThreeMonth()
+            try {
+                await new Email({
+                    email: con.Client.email,
+                    fullName: con.Client.fullName,
+                    month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', '),
+                    property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + ' ' + con.Property.dept,
+                }).sendNoticeDebtForThreeMonth()
+            } catch (error) {
+                console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error);
+
+            }
+
 
             // get assurance for each contract
             const assurances = await Assurance.findAll({ where: { ContractId: con.id } })
             // validate if the contract has assurance
-            if (assurances.length > 0) {
-                assurances.forEach(async (as) => {
-                    await new Email({
-                        email: as.email,
-                        fullName: con.Client.fullName,
-                        month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', '),
-                        property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + ' ' + con.Property.dept,
-                        assuranceName: as.fullName
-                    }).sendNoticeDebtForAssurance()
-                })
+            try {
+                if (assurances.length > 0) {
+                    assurances.forEach(async (as) => {
+                        await new Email({
+                            email: as.email,
+                            fullName: con.Client.fullName,
+                            month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', '),
+                            property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + ' ' + con.Property.dept,
+                            assuranceName: as.fullName
+                        }).sendNoticeDebtForAssurance()
+                    })
+                }
+            } catch (error) {
+                console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error);
+
             }
+
 
         } else if (monthsDebtsUnique.length > 3) {
             // send mail for more than three months
-            await new Email({
-                email: con.Client.email,
-                fullName: con.Client.fullName,
-                month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', ') + ' ' + [...new Set(con.DebtClients.map((d) => d.year))].join('/ '),
-                property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + ' ' + con.Property.dept,
-                total: con.DebtClients.reduce((a, b) => a + b.amount, 0)
-            }).sendNoticeDebtForFourMonth()
+            try {
+                await new Email({
+                    email: con.Client.email,
+                    fullName: con.Client.fullName,
+                    month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', ') + ' ' + [...new Set(con.DebtClients.map((d) => d.year))].join('/ '),
+                    property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + ' ' + con.Property.dept,
+                    total: con.DebtClients.reduce((a, b) => a + b.amount, 0)
+                }).sendNoticeDebtForFourMonth()
+            } catch (error) {
+                console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error)
+            }
+
             // get assurance for each contract
             const assurances = await Assurance.findAll({ where: { ContractId: con.id } })
             // validate if the contract has assurance
-            if (assurances.length > 0) {
-                assurances.forEach(async (as) => {
-                    await new Email({
-                        email: as.email,
-                        fullName: as.fullName,
-                        month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', ') + ' ' + [...new Set(con.DebtClients.map((d) => d.year))].join('/ '),
-                        property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + ' ' + con.Property.dept,
-                        assuranceName: as.fullName,
-                        total: con.DebtClients.reduce((a, b) => a + b.amount, 0)
-                    }).sendNoticeDebtForFourMonth()
-                })
+            try {
+                if (assurances.length > 0) {
+                    assurances.forEach(async (as) => {
+                        await new Email({
+                            email: as.email,
+                            fullName: as.fullName,
+                            month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', ') + ' ' + [...new Set(con.DebtClients.map((d) => d.year))].join('/ '),
+                            property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + ' ' + con.Property.dept,
+                            assuranceName: as.fullName,
+                            total: con.DebtClients.reduce((a, b) => a + b.amount, 0)
+                        }).sendNoticeDebtForFourMonth()
+                    })
+                }
+            } catch (error) {
+                console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error);
             }
+
         }
         // console.log('ContractId: ', con.id, 'Months: ', monthsDebts, 'MonthCleanSET ::', monthsDebtsSet, 'MonthCleanUnique ::', monthsDebtsUnique)
     })
