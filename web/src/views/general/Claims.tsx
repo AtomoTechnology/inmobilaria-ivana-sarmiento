@@ -26,6 +26,7 @@ import RefreshData from '../../components/RefreshData'
 import { EmptyData } from '../../components/EmptyData'
 import FormActionBtns from '../../components/FormActionBtns'
 import FieldsetGroup from '../../components/FieldsetGroup'
+import DropDownIcon from '../../components/DropDownIcon'
 
 const Claims = () => {
 	const [showCreateModal, setShowCreateModal] = useState(false)
@@ -340,6 +341,7 @@ const Claims = () => {
 								onChange={(e) => handleInputChange(e.value, 'PropertyId')}
 								options={propertyQuery.data?.data}
 								optionLabel='street'
+								dropdownIcon={() => <DropDownIcon />}
 								disabled={editMode}
 								showClear
 								filterPlaceholder='Busca propiedad'
@@ -440,8 +442,8 @@ const Claims = () => {
 								{
 									currentClaim.current?.details?.map((comment) => (
 										<div className="comment bg-gray-200 p-2 pb-5 relative group hover:bg-gray-100 cursor-pointer dark:bg-slate-700" key={comment.date}>
-											<span>{comment.comment}</span>
-											<span className='absolute bottom-[2px] right-1 text-xs'> {formatDate(comment.date)} </span>
+											<div dangerouslySetInnerHTML={{ __html: comment.comment!.replaceAll('\n', '<br />')! }} />
+											<div className='absolute bottom-[2px] right-1 text-xs'> {formatDate(comment.date)} </div>
 											<button
 												disabled={savingOrUpdating}
 												title='Doble click para eliminar'
@@ -450,7 +452,7 @@ const Claims = () => {
 														item.classList.toggle('hidden')
 														// item.addEventListener('click', () => {
 														// })
-													});
+													})
 												}}
 												onDoubleClick={() => { deleteClaimComment(comment.date) }}
 												className='absolute top-[2px] right-1 text-xs hidden bg-red-100   dark:bg-gray-800 p-2 rounded-full shadow-lg group-hover:flex'>

@@ -26,15 +26,22 @@ import FieldsetGroup from '../../components/FieldsetGroup'
 import { IBudget } from '../../interfaces/Ibudget'
 import { useBudgets } from '../../hooks/useBudgets'
 import { BsCamera } from 'react-icons/bs'
-import { Image } from 'primereact/image';
+import { Image } from 'primereact/image'
+import DropDownIcon from '../../components/DropDownIcon'
+
+type IBelongToBudget = 'Propietario' | 'Inquilino' | ''
 
 const Budgets = () => {
 	const [showCreateModal, setShowCreateModal] = useState(false)
 	const [show, setShow] = useState(false)
-	const { description, PropertyId, category, type, photo, values, handleInputChange, reset, updateAll } = useForm({
+	const { description, PropertyId, category, type, photo, values, belongsTo, state, approved, charged, handleInputChange, reset, updateAll } = useForm({
 		description: '',
 		category: '',
 		type: '',
+		state: 'En curso',
+		approved: false,
+		charged: false,
+		belongsTo: '' as IBelongToBudget,
 		photo: '',
 		PropertyId: null,
 	})
@@ -79,7 +86,7 @@ const Budgets = () => {
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		const { error, ok } = validateForm({ ...values }, ['photo'])
+		const { error, ok } = validateForm({ ...values }, ['photo', 'charged', 'approved'])
 		setErrors(error)
 		if (!ok) return false
 		if (editMode) {
@@ -172,7 +179,7 @@ const Budgets = () => {
 	if (isError) return <RequestError error={error} />
 
 	return (
-		<div className='container m-auto  flexsm:mx-0  flex-col justify-center sm:justify-center'>
+		<div className='container m-auto  flex sm:mx-0  flex-col justify-center sm:justify-center'>
 			<HeaderData action={openCreateOrEditModel} text='Presupuestos' />
 			{data.data.length > 0 ? (
 				<>
@@ -212,6 +219,36 @@ const Budgets = () => {
 							<Column
 								field='category'
 								header='Categoria'
+								sortable
+								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+							/>
+							<Column
+								field='state'
+								header='Estado'
+								sortable
+								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+							/>
+							<Column
+								field='belongsTo'
+								header='Pertenece a'
+								sortable
+								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+							/>
+							<Column
+								field='approved'
+								header='Aprobado'
+								body={(data) => <span>{data.approved ? 'Si' : 'No'}</span>}
+								sortable
+								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+							/>
+							<Column
+								field='charged'
+								header='Cobrado'
+								body={(data) => <span>{data.charged ? 'Si' : 'No'}</span>}
 								sortable
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
@@ -284,6 +321,7 @@ const Budgets = () => {
 								onChange={(e) => handleInputChange(e.value, 'PropertyId')}
 								options={propertyQuery.data?.data}
 								optionLabel='street'
+								dropdownIcon={() => <DropDownIcon />}
 								disabled={editMode}
 								showClear
 								filterPlaceholder='Busca propiedad'
@@ -318,6 +356,7 @@ const Budgets = () => {
 							<Dropdown
 								value={type}
 								onChange={(e) => handleInputChange(e.value, 'type')}
+								dropdownIcon={() => <DropDownIcon />}
 								options={['Factura', 'Recibo', 'Presupuesto', 'Expensas extraordinarias']}
 								placeholder='elije un tipo'
 								className='h-[42px] items-center !border-gray-200 shadow'
@@ -329,6 +368,7 @@ const Budgets = () => {
 							<Dropdown
 								value={category}
 								onChange={(e) => handleInputChange(e.value, 'category')}
+								dropdownIcon={() => <DropDownIcon />}
 								options={['Plomeria', 'Gasista', 'Electricista', 'Pintura', 'Albañileria', 'Materiales']}
 								placeholder='elije una categoría'
 								className='h-[42px] items-center !border-gray-200 shadow'
@@ -337,6 +377,75 @@ const Budgets = () => {
 						</fieldset>
 
 					</FieldsetGroup>
+					<FieldsetGroup>
+						<fieldset className='w-full'>
+							<label htmlFor="type">Estado</label>
+							<Dropdown
+								value={state}
+								onChange={(e) => handleInputChange(e.value, 'state')}
+								dropdownIcon={() => <DropDownIcon />}
+								options={['En curso', 'Visto', 'Aprobado', 'Rechazado']}
+								placeholder='elije un tipo'
+								className='h-[42px] items-center !border-gray-200 shadow'
+							/>
+							{errors?.state && <FormError text='El estado es obligatorio.' />}
+						</fieldset>
+						<fieldset className='w-full'>
+							<label htmlFor="category">Pertenece a</label>
+							<Dropdown
+								value={belongsTo}
+								onChange={(e) => handleInputChange(e.value, 'belongsTo')}
+								dropdownIcon={() => <DropDownIcon />}
+								options={['Propietario', 'Inquilino']}
+								placeholder='elije una categoría'
+								className='h-[42px] items-center !border-gray-200 shadow'
+							/>
+							{errors?.belongsTo && <FormError text='Este campo es obligatorio.' />}
+						</fieldset>
+					</FieldsetGroup>
+
+
+					<FieldsetGroup>
+						<fieldset className='w-full'>
+							<label htmlFor="approved">Aprobado</label>
+							<Dropdown
+								value={approved}
+								optionLabel='label'
+								optionValue='value'
+								onChange={(e) => handleInputChange(e.value, 'approved')}
+								dropdownIcon={() => <DropDownIcon />}
+								options={[{ label: 'Si', value: true }, { label: 'No', value: false }]}
+								className='h-[42px] items-center !border-gray-200 shadow'
+							/>
+						</fieldset>
+						<fieldset className='w-full'>
+							<label htmlFor="approved"> Cobrado </label>
+							<Dropdown
+								value={charged}
+								optionLabel='label'
+								optionValue='value'
+								onChange={(e) => handleInputChange(e.value, 'charged')}
+								dropdownIcon={() => <DropDownIcon />}
+								options={[{ label: 'Si', value: true }, { label: 'No', value: false }]}
+								className='h-[42px] items-center !border-gray-200 shadow'
+							/>
+						</fieldset>
+					</FieldsetGroup>
+					<div className="flex flex-col">
+						<CustmTextArea
+							placeholder='Escribe una descripción...'
+							initialValue={description}
+							onChange={(value) => handleInputChange(value, 'description')}
+							minLength={5}
+							maxLength={255}
+							className='h-24'
+							label='Descripción'
+							required
+							hasError={errors?.description}
+							errorText='La descripción es obligatoria.'
+						/>
+						<div className='self-end'>{description.length}/255</div>
+					</div>
 					<input
 						type='file'
 						accept="image/*"
@@ -358,17 +467,7 @@ const Budgets = () => {
 						<img src={photo} alt="" id='img_preview' className='my-4' />
 						{(photo && !editMode) && (<CloseOnClick action={() => { handleInputChange('', 'photo') }} />)}
 					</div>
-					<CustmTextArea
-						placeholder='Escribe una descripción...'
-						initialValue={description}
-						onChange={(value) => handleInputChange(value, 'description')}
-						maxLength={255}
-						className='h-24'
-						label='Descripción'
-						required
-						hasError={errors?.description}
-						errorText='La descripción es obligatoria.'
-					/>
+
 					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
 
 				</form>

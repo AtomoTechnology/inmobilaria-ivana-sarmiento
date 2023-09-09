@@ -23,7 +23,7 @@ import { useClientPayments } from '../../hooks/useClientPayments'
 import { Idebt, IdebtsResponse } from '../../interfaces/IDebtsResponse'
 import { IClienyPayment } from '../../interfaces/IclientPayments'
 import { IConfigResponse } from '../../interfaces/Iconfig'
-import { dateOneIsBiggerThanDateTwo, diffenceBetweenDates, formatDateDDMMYYYY, padTo2Digits, padToNDigit } from '../../helpers/date'
+import { dateOneIsBiggerThanDateTwo, diffenceBetweenDates, formatDate, formatDateDDMMYYYY, padTo2Digits, padToNDigit } from '../../helpers/date'
 import { BsPrinter } from 'react-icons/bs'
 import { TfiBackLeft } from 'react-icons/tfi'
 import { FiAlertTriangle } from 'react-icons/fi'
@@ -42,6 +42,7 @@ import CustomTextArea from '../../components/CustomTextArea'
 import { IHistorialPrice } from '../../interfaces/Icontracts'
 import { roundUp } from '../../helpers/numbers'
 import { RiErrorWarningFill } from 'react-icons/ri'
+import DropDownIcon from '../../components/DropDownIcon'
 
 const initStateUseForm = {
 	extraExpenses: 0,
@@ -82,13 +83,14 @@ const ClientPayments = () => {
 	const [savingOrUpdating, setSavingOrUpdating] = useState(false)
 	const [errors, setErrors] = useState<any>()
 	const [editMode, setEditMode] = useState(false)
+	const [isExpired, setIsExpired] = useState(false)
 	const [selectedEventualities, setSelectedEventualities] = useState<IEventuality[]>([])
 	const [selectedExpensesClient, setSelectedExpensesClient] = useState<IClientExpItem[]>([])
 	const [selectedDebts, setSelectedDebts] = useState<Idebt[]>([])
 	const [upToDate, setUpToDate] = useState(false)
 	const [twoYearsWithoutPrice, setTwoYearsWithoutPrice] = useState(false)
 	const [threeYearsWithoutPrice, setThreeYearsWithoutPrice] = useState(false)
-	const [gestionExpensePorc, setGestionExpensePorc] = useState(2)
+	const [gestionExpensePorc, setGestionExpensePorc] = useState(0)
 	const [bankExpenses, setBankExpenses] = useState(0)
 	const bankExpensesValue = useRef(0)
 	const [GG, setGG] = useState<any>({})
@@ -108,14 +110,14 @@ const ClientPayments = () => {
 		createdAt: { value: null, matchMode: FilterMatchMode.EQUALS },
 		'PaymentType.name': { value: null, matchMode: FilterMatchMode.EQUALS },
 
-	});
+	})
 
 
 	const [loadingExpenses, setLoadingExpenses] = useState(false)
 	const [lastPayment, setLastPayment] = useState<any[]>([])
 	const paymentTypeQuery = usePaymentTypes()
 	const { data, isError, isLoading, error, isFetching, refetch } = useClientPayments()
-	const contractQuery = useContracts()
+	const contractQuery = useContracts('?state=Finalizado:ne')
 
 	const printPdf = async (data: IClienyPayment) => {
 		currentPayment.current = data
@@ -138,16 +140,16 @@ const ClientPayments = () => {
 
 	const handleDownloadPdf = async () => {
 		setLoadingPdf(true)
-		var element = document.getElementById('pdf-download');
+		var element = document.getElementById('pdf-download')
 		var opt = {
 			margin: [.1, .1],
 			filename: `${currentPayment.current?.Contract.Client.fullName}_${currentPayment.current?.month}_${currentPayment.current?.year}_${formatDateDDMMYYYY(new Date().toISOString())}.pdf`,
 			image: { type: 'png', quality: 0.98 },
 			html2canvas: { scale: 2 },
 			jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
-		};
+		}
 		try {
-			await html2pdf().from(element).set(opt).save();
+			await html2pdf().from(element).set(opt).save()
 		} catch (error) {
 			console.log(error)
 		} finally {
@@ -196,7 +198,7 @@ const ClientPayments = () => {
 			setSavingOrUpdating(true)
 			let cleanExps = GG.checked ? [...selectedExpensesClient, ...selectedDebts, GG] : [...selectedExpensesClient, ...selectedDebts]
 			if (bankExpenses > 0) {
-				cleanExps.push({ id: new Date().getTime(), name: 'Gastos Bancarios', amount: bankExpenses, isBankExpense: true, createdAt: new Date().toISOString() })
+				cleanExps.push({ id: new Date().getTime(), description: 'Gastos Bancarios', amount: bankExpenses, isBankExpense: true, createdAt: new Date().toISOString() })
 			}
 			const res = await http.post('/payment-clients', {
 				...values,
@@ -222,6 +224,7 @@ const ClientPayments = () => {
 	}
 
 	const closeCreateModal = () => {
+		updateAll({ ...initStateUseForm, ContractId: null })
 		setUpToDate(false)
 		setTwoYearsWithoutPrice(false)
 		setThreeYearsWithoutPrice(false)
@@ -236,7 +239,6 @@ const ClientPayments = () => {
 		debtsTotal.current = 0
 		setShowCreateModal(false)
 		setErrors({})
-		updateAll({ ...initStateUseForm, ContractId: null })
 
 	}
 
@@ -290,13 +292,15 @@ const ClientPayments = () => {
 	}
 
 	const handleChangeContract = async (e: DropdownChangeEvent) => {
-
+		// TODO save currentprice in a variable to use it in the future
+		// console.log(e.value)
 		// reset()
 		// updateAll(initStateUseForm)
 		// handleInputChange('', 'paidTotal')
 		// values.paidTotal = 0
 		// values.PaymentTypeId = null
 		// handleInputChange(0, 'PaymentTypeId')
+		setLoadingExpenses(true)
 		setUpToDate(false)
 		setTwoYearsWithoutPrice(false)
 		setThreeYearsWithoutPrice(false)
@@ -312,22 +316,24 @@ const ClientPayments = () => {
 		expsTotal.current = 0
 		debtsTotal.current = 0
 		setBankExpenses(0)
+		setIsExpired(false)
 		// return
 		if (e.value == undefined) {
 			updateAll({ ...values, ContractId: null, paidTotal: 0, PaymentTypeId: null })
 			return
 		}
 
+		setGestionExpensePorc(e.value.admFeesPorc)
 
 		// validate if the contract has a  price for his current year
 		values.ContractId = e.value
 		let daysFrom = diffenceBetweenDates(e.value.startDate, new Date().toISOString().slice(0, 10))
-		if (daysFrom > 365 && daysFrom < 730) {
+		if (daysFrom >= 365 && daysFrom < 730) {
 			if (e.value.PriceHistorials.length < 2) {
 				setTwoYearsWithoutPrice(true)
 				// return
 			}
-		} else if (daysFrom > 730) {
+		} else if (daysFrom >= 730) {
 			if (e.value.PriceHistorials.length < 3) {
 				setThreeYearsWithoutPrice(true)
 				// return
@@ -335,7 +341,6 @@ const ClientPayments = () => {
 		}
 
 		try {
-			setLoadingExpenses(true)
 			const res = await http.get(`/payment-clients?ContractId=${e.value.id}&month=${month}&year=${year}&include=true`)
 			if (res.data.results > 0) {
 				res.data.data.map((p: any) => setLastPayment((prev: any) => ([...prev, ...p.expenseDetails])))
@@ -354,7 +359,7 @@ const ClientPayments = () => {
 			}
 		} catch (error) {
 			showAndHideModal('Error', 'Error al intentar validar si el contrato ya tiene cobro para el mes y ano actual', 'red')
-		} finally { setLoadingExpenses(false) }
+		}
 
 		try {
 			setLoadingExpenses(true)
@@ -364,57 +369,74 @@ const ClientPayments = () => {
 			const dps = http.get<IConfigResponse>(`/config?key=punitorio_diario,gastos_bancarios:or`)
 			const docsDebtss = http.get<IdebtsResponse>(`/debt-clients?paid=0&ContractId=${e.value.id}`)
 			const [docsExps, docsEvents, dp, docsDebts] = await Promise.all([docsExpss, docsEventss, dps, docsDebtss])
-			let dailyPunitive = Number(dp.data.data.find((d) => d.key === 'punitorio_diario')?.value)
-			bankExpensesValue.current = Number(dp.data.data.find((d) => d.key === 'gastos_bancarios')?.value)
-			// bankExpensesValue.current = bankExpenses
+
+			let dailyPunitive: number = Number(dp.data.data.find((d) => d.key === 'punitorio_diario')?.value)
+
+
+
+			// starDate to apply new value of the bank expenses 30/08/2021
+			if (diffenceBetweenDates(new Date(2023, 7, 31).toISOString().slice(0, 10), e.value.startDate) > 0 && e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount >= 85000) {
+				// bacnkExpenses should the 1% of the current price of the contract
+				bankExpensesValue.current = roundUp((e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount / 100))
+			} else {
+				bankExpensesValue.current = Number(dp.data.data.find((d) => d.key === 'gastos_bancarios')?.value)
+			}
 
 			setEventualityDetails(docsEvents.data.data)
-			setExpenseDetails([
-				{
+			// validate if the contract is expired before get the expenses 
+			if (diffenceBetweenDates(new Date().toISOString().slice(0, 10), e.value.endDate) > 0) {
+				// expenses section 
+				setExpenseDetails([
+					{
+						ContractId: e.value.id,
+						date: new Date().toISOString().slice(0, 10),
+						updatedAt: new Date().toISOString(),
+						deletedAt: null,
+						description: 'ALQUILER ' + e.value.Property.street + ' ' + e.value?.Property?.number + ' ' + e.value?.Property?.floor + ' ' + e.value?.Property?.dept + ' ' + month + '/' + year,
+						amount: e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount,
+						createdAt: (new Date().getTime().toString()),
+						paidCurrentMonth: true,
+						id: UUID()
+					},
+					// {
+					// 	ContractId: e.value.id,
+					// 	date: new Date().toISOString().slice(0, 10),
+					// 	updatedAt: new Date().toISOString(),
+					// 	deletedAt: null,
+					// 	description: 'GASTOS BANCARIOS' + ' ' + month + '/' + year,
+					// 	amount: bankExpenses,
+					// 	createdAt: (new Date().getTime().toString()),
+					// 	id: UUID()
+					// },
+					...docsExps.data.data.filter((d) => {
+						if (d.description !== 'AGUAS' && d.description !== 'API') {
+							return d
+						} else {
+							if (d.description === 'AGUAS' && ((new Date().getMonth() + 1) % 2) === 0) {
+								return d
+							}
+							if (d.description === 'API' && ((new Date().getMonth() + 1) % 2) !== 0) {
+								return d
+							}
+						}
+					}).map((d) => { return { ...d, description: d.description + ' ' + month + '/' + year } }),
+				])
+				setGG({
 					ContractId: e.value.id,
 					date: new Date().toISOString().slice(0, 10),
 					updatedAt: new Date().toISOString(),
 					deletedAt: null,
-					description: 'ALQUILER ' + e.value.Property.street + ' ' + e.value?.Property?.number + ' ' + e.value?.Property?.floor + ' ' + e.value?.Property?.dept + ' ' + month + '/' + year,
-					amount: e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount,
+					description: 'GASTOS DE GESTION ' + month + '/' + year,
+					amount: roundUp((e.value.admFeesPorc / 100) * e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount),
 					createdAt: (new Date().getTime().toString()),
-					paidCurrentMonth: true,
-					id: UUID()
-				},
-				// {
-				// 	ContractId: e.value.id,
-				// 	date: new Date().toISOString().slice(0, 10),
-				// 	updatedAt: new Date().toISOString(),
-				// 	deletedAt: null,
-				// 	description: 'GASTOS BANCARIOS' + ' ' + month + '/' + year,
-				// 	amount: bankExpenses,
-				// 	createdAt: (new Date().getTime().toString()),
-				// 	id: UUID()
-				// },
-				...docsExps.data.data.filter((d) => {
-					if (d.description !== 'AGUAS' && d.description !== 'API') {
-						return d
-					} else {
-						if (d.description === 'AGUAS' && ((new Date().getMonth() + 1) % 2) === 0) {
-							return d
-						}
-						if (d.description === 'API' && ((new Date().getMonth() + 1) % 2) !== 0) {
-							return d
-						}
-					}
-				}).map((d) => { return { ...d, description: d.description + ' ' + month + '/' + year } }),
-			])
-			setGG({
-				ContractId: e.value.id,
-				date: new Date().toISOString().slice(0, 10),
-				updatedAt: new Date().toISOString(),
-				deletedAt: null,
-				description: 'GASTOS DE GESTION ' + month + '/' + year,
-				amount: roundUp((gestionExpensePorc / 100) * e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount),
-				createdAt: (new Date().getTime().toString()),
-				id: UUID(),
-				checked: false
-			},)
+					id: UUID(),
+					checked: false
+				})
+			} else {
+				setIsExpired(true)
+			}
+
+
 			setDebts(docsDebts.data.data)
 
 			docsDebts.data.data.map((d) => {
@@ -910,6 +932,7 @@ const ClientPayments = () => {
 									options={contractQuery.data?.data}
 									optionLabel='street'
 									showClear
+									dropdownIcon={() => <DropDownIcon />}
 									valueTemplate={(data, props) => !data ? props.placeholder : (<span> {data.Client.fullName} | {data.Property.street} {data.Property.number} {data.Property.floor}-{data.Property.dept} </span>)}
 									itemTemplate={(data) => (<span> {data.Client.fullName} | {data.Property.street} {data.Property.number} {data.Property.floor}-{data.Property.dept} </span>)}
 									filterBy='Client.fullName,Property.street,Property.number,Property.floor,Property.dept'
@@ -928,7 +951,7 @@ const ClientPayments = () => {
 										</span>
 										<span className='text-blue-600 dark:text-blue-400 text-sm ' >
 											{/* @ts-expect-error */}
-											Fec. Venc. : {ContractId?.endDate}
+											Vigencia : {formatDateDDMMYYYY(ContractId?.startDate)} | {formatDateDDMMYYYY(ContractId?.endDate)}
 										</span>
 									</div>
 								)}
@@ -965,7 +988,7 @@ const ClientPayments = () => {
 
 						{
 							twoYearsWithoutPrice && (
-								<Box className="dark:!text-red-500 dark:!bg-red-100 text-center !p-2 !bg-red-200 mx-0 border-0 my-2 flex items-center gap-4 ">
+								<Box className="dark:!text-red-500 dark:!bg-red-100 rounded-none text-center !p-2 !bg-red-200 mx-0 border-0 my-2 flex items-center gap-4 ">
 									<FiAlertTriangle size={25} />
 									El contrato no tiene precio cargado para el 2 año !
 								</Box>
@@ -973,27 +996,27 @@ const ClientPayments = () => {
 						}
 						{
 							threeYearsWithoutPrice && (
-								<Box className="dark:!text-red-500 dark:!bg-red-100 text-center !p-2 !bg-red-200 mx-0 border-0 my-2 flex items-center gap-4 ">
+								<Box className="dark:!text-red-500 dark:!bg-red-100 text-center rounded-none !p-2 !bg-red-200 mx-0 border-0 my-2 flex items-center gap-4 ">
 									<FiAlertTriangle size={25} />
 									El contrato   no tiene precio cargado para el 3 año !
 								</Box>
 							)
 						}
 						{
-							// @ts-ignore
-							// (ContractId !== null && dateOneIsBiggerThanDateTwo(new Date().toLocaleString().slice(0, 10), ContractId.endDate!)) && (
-							// 	<Box className="dark:!text-red-500 dark:!bg-red-100 text-center !p-2 !bg-red-200 mx-0 border-0 my-2 flex items-center gap-4 ">
-							// 		<FiAlertTriangle size={25} />
-							// 		{/* @ts-ignore */}
-							// 		Este contrato esta vencido . Vencio el {ContractId.endDate} !
-							// 	</Box>
-							// )
+							(ContractId !== null && isExpired) && (
+								<Box className="dark:!text-red-500 dark:!bg-red-100 text-center rounded-none !p-2 !bg-red-200 mx-0 border-0 my-2 flex items-center gap-4 ">
+									<FiAlertTriangle size={25} />
+									{/* @ts-ignore */}
+									Este contrato esta vencido . Vencio el {formatDateDDMMYYYY(ContractId.endDate)} !
+								</Box>
+							)
 						}
 
 						{!loadingExpenses ? (
 							<div className='mt-4'>
 								{/* @ts-ignore */}
 								{/* && ContractId !== null && dateOneIsBiggerThanDateTwo(ContractId.endDate!, new Date().toLocaleString().slice(0, 10)) */}
+
 								{(expenseDetails.length > 0) && (
 									<div className=' border border-gray-300 dark:border-slate-700 dark:bg-slate-900 p-2'>
 										<h1 className='title-form mb-2'>Gastos inquilino</h1>
@@ -1153,6 +1176,8 @@ const ClientPayments = () => {
 											} else { setBankExpenses(0) }
 										}}
 										options={paymentTypeQuery.data?.data}
+										dropdownIcon={() => <DropDownIcon />}
+
 										optionLabel='name'
 										filterPlaceholder='Busca  forma de pago'
 										optionValue='id'

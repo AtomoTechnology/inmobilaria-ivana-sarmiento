@@ -1,13 +1,12 @@
-import React, { useState } from 'react'
-import { AiOutlineDashboard, AiOutlineLogout } from 'react-icons/ai'
-import { FaAngleDown } from 'react-icons/fa'
+import React, { useRef, useState } from 'react'
+import { AiOutlineLogout } from 'react-icons/ai'
 import { NavLink } from 'react-router-dom'
 import { AuthState } from '../context/authContext'
 import DefaultAvatar from './DefaultAvatar'
 import { menuItems } from '../helpers/general'
-import DownAngle from './icons/DownAngle'
 import { DobleChevronAngle } from './icons/DobleChevronAngle'
 import { Image } from 'primereact/image'
+import { useClickOutside } from 'primereact/hooks'
 
 type Props = {
 	authState: AuthState
@@ -19,6 +18,10 @@ type Props = {
 const LoggedUser = ({ authState, signOut }: Props) => {
 	const { user } = authState
 	const [showMobileMenu, setShowMobileMenu] = useState(false)
+	const overlayRef = useRef(null)
+
+	useClickOutside(overlayRef, () => setShowMobileMenu(false))
+
 
 	return (
 		<>
@@ -26,7 +29,7 @@ const LoggedUser = ({ authState, signOut }: Props) => {
 				<div
 					onClick={() => {
 						// document.querySelector('.dropdown-user-logged-box')!.classList.toggle('hidden')
-						setShowMobileMenu(prev => !prev)
+						setShowMobileMenu(!showMobileMenu)
 					}}
 				>
 					<button
@@ -57,6 +60,7 @@ const LoggedUser = ({ authState, signOut }: Props) => {
 							aria-orientation='vertical'
 							aria-labelledby='menu-button'
 							tabIndex={-1}
+							ref={overlayRef}
 						>
 							<div
 								className='py-1 flex flex-col '

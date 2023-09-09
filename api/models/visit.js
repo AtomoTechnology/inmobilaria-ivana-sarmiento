@@ -39,30 +39,30 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
-      fullName: {
-        allowNull: true,
-        type: DataTypes.STRING(150),
-        // validate: {
-        //   notNull: {
-        //     msg: "Ingresa el nombre del visitante",
-        //   },
-        //   notEmpty: {
-        //     msg: "Ingresa el nombre del visitante",
-        //   },
-        // },
-      },
-      phone: {
-        allowNull: false,
-        type: DataTypes.STRING(20),
-        // validate: {
-        //   notNull: {
-        //     msg: "Ingresa el teléfono",
-        //   },
-        //   notEmpty: {
-        //     msg: "Ingresa el teléfono",
-        //   },
-        // },
-      },
+      // fullName: {
+      //   allowNull: true,
+      //   type: DataTypes.STRING(150),
+      // validate: {
+      //   notNull: {
+      //     msg: "Ingresa el nombre del visitante",
+      //   },
+      //   notEmpty: {
+      //     msg: "Ingresa el nombre del visitante",
+      //   },
+      // },
+      // },
+      // phone: {
+      //   allowNull: false,
+      //   type: DataTypes.STRING(20),
+      // validate: {
+      //   notNull: {
+      //     msg: "Ingresa el teléfono",
+      //   },
+      //   notEmpty: {
+      //     msg: "Ingresa el teléfono",
+      //   },
+      // },
+      // },
       description: {
         allowNull: true,
         type: DataTypes.STRING,

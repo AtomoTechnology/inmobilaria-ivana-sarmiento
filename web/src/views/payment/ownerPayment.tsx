@@ -92,7 +92,7 @@ const OwnerPayment = () => {
 		'Owner.fullName': { value: null, matchMode: FilterMatchMode.CONTAINS },
 		createdAt: { value: null, matchMode: FilterMatchMode.EQUALS },
 		'PaymentType.name': { value: null, matchMode: FilterMatchMode.EQUALS },
-	});
+	})
 	const ownerPaymentQuery = useOwnerPayments()
 	const { data, isError, isLoading, error, isFetching } = useOwners()
 	const [loadingExpenses, setLoadingExpenses] = useState(false)
@@ -296,6 +296,7 @@ const OwnerPayment = () => {
 	}
 
 	const handleChangeOwner = async (e: DropdownChangeEvent) => {
+
 		setUpToDate(false)
 		setLoadingExpenses(true)
 		reset()
@@ -318,23 +319,16 @@ const OwnerPayment = () => {
 			OwnerId: e.value,
 		})
 
-		// validate if the contract has a payment for the current month
+		// get previews payment for the current month and year
 		try {
 			const res = await http.get(`/payment-owners?OwnerId=${e.value.id}&month=${month}&year=${year}&include=true`)
 			if (res.data.results > 0) {
 				res.data.data.map((p: any) => setLastPayment((prev: any) => ([...prev, ...p.expenseDetails.concat(p.eventualityDetails)])))
 				setUpToDate(true)
-				updateAll({
-					...values,
-					OwnerId: e.value,
-					total: 0,
-				})
-				// return
-
 			}
 		} catch (error) {
 			showAndHideModal('Error', 'Error al intentar validar si el contrato ya tiene cobro para el mes y ano actual', 'red')
-		} finally { setLoadingExpenses(false) }
+		}
 
 		try {
 			const ownerContracts = await http.get(`contracts/owner/${e.value.id}/all`)
@@ -348,7 +342,8 @@ const OwnerPayment = () => {
 
 				const [docsExps, docsEvents, docsDebts, padiCurMonth, hasDebtsResponse] = await Promise.all([docsExpss, docsEventss, docsDebtss, paidCurrentMonth, hasDebts])
 
-				let expensess = contract.state === 'Finalizado' ? [] : [
+				const isExpired = diffenceBetweenDates(new Date().toISOString().slice(0, 10), contract.endDate) <= 0
+				let expensess = (contract.state === 'Finalizado' || isExpired) ? [] : [
 					{
 						amount: roundUp(contract.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[contract.PriceHistorials?.length - 1]?.amount),
 						description: 'ALQUILER ' + contract?.Property?.street + ' ' + contract?.Property?.number + ' ' + contract?.Property?.floor + ' ' + contract?.Property?.dept + ' ' + month + '/' + year,
@@ -391,7 +386,8 @@ const OwnerPayment = () => {
 					contract: contract,
 					paidCurrentMonth: padiCurMonth.data.results > 0 ? true : false,
 					hasDebts: hasDebtsResponse.data.results > 0 ? true : false,
-				}]);
+					isExpired: isExpired
+				}])
 			})
 		} catch (error) { }
 		finally { setLoadingExpenses(false) }
@@ -399,7 +395,7 @@ const OwnerPayment = () => {
 
 	const printPdf = async (data: IClienyPayment) => {
 		currentPayment.current = data
-		let pd: any = {};
+		let pd: any = {}
 		data.eventualityDetails.map((d) => {
 			if (pd.hasOwnProperty(d.ContractId)) {
 				pd[d.ContractId] = [...pd[d.ContractId], d]
@@ -429,7 +425,7 @@ const OwnerPayment = () => {
 	const handleDownloadPdf = async () => {
 		setLoadingPdf(true)
 
-		var element = document.getElementById('pdf-download');
+		var element = document.getElementById('pdf-download')
 
 		var opt = {
 			margin: [.1, .1],
@@ -437,9 +433,9 @@ const OwnerPayment = () => {
 			image: { type: 'png', quality: 0.98 },
 			html2canvas: { scale: 2 },
 			jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
-		};
+		}
 		try {
-			await html2pdf().from(element).set(opt).save();
+			await html2pdf().from(element).set(opt).save()
 			closePrintPdfModal()
 		} catch (error) {
 			console.log(error)
@@ -652,8 +648,9 @@ const OwnerPayment = () => {
 								{
 									contractRows.map((contract, l) => (
 										<div key={l} className="bg-gray-50 shadow-sm border border-gray-300 dark:border-slate-700 dark:bg-slate-900 p-2">
-											<h2 className='font-semibold text-lg mb-3'>
+											<h2 className={`font-semibold text-lg mb-3 ${contract.isExpired ? 'text-red-400' : contract.contract.state == 'Finalizado' ? 'text-yellow-500' : 'text-green-400'} `}>
 												{contract.contract.Property.street} {contract.contract.Property.number} {contract.contract.Property.floor}-{contract.contract.Property.dept} | {contract.contract.Client.fullName}
+												{` | ${contract.contract.state} | ${contract.isExpired ? 'Vencido' : 'Vigente'} | ${formatDateDDMMYYYY(contract.contract.startDate)} - ${formatDateDDMMYYYY(contract.contract.endDate)}`}
 											</h2>
 
 											{(upToDate && OwnerId && lastPayment.filter(lp => lp.ContractId === contract.contract.id).length > 0) && (
@@ -664,13 +661,14 @@ const OwnerPayment = () => {
 												</div>
 											)}
 
-											<div className={`paid-current-month border border-dashed p-2  ${contract.paidCurrentMonth ? 'text-green-500 border-green-400 dark:text-green-400' : 'text-red-500 border-red-400 dark:text-red-400'} text-center my-2`}>
+											{
+												(!contract.isExpired && contract.contract.state !== 'Finalizado') && (
+													<div className={`paid-current-month border border-dashed p-2  ${contract.paidCurrentMonth ? 'text-green-500 border-green-400 dark:text-green-400' : 'text-red-500 border-red-400 dark:text-red-400'} text-center my-2`}>
+														{contract.paidCurrentMonth ? 'El inquilino ya pagó el mes actual.' : 'El inquilino  no pagó el mes actual todavía.'}
+													</div>
+												)
+											}
 
-												{
-													contract.paidCurrentMonth ? 'El inquilino ya pagó el mes actual.' : 'El inquilino  no pagó el mes actual todavía.'
-												}
-
-											</div>
 											{
 												contract.hasDebts && (
 													<div className={`has-debts border border-dashed p-2  border-red-400 dark:text-red-400 text-center my-2`}>

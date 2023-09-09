@@ -14,6 +14,7 @@ import 'primereact/resources/primereact.min.css'
 import 'primeicons/primeicons.css'
 
 import 'react-responsive-modal/styles.css'
+import FullLoading from './components/FullLoading'
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -30,7 +31,9 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
 	<React.StrictMode>
 		<QueryClientProvider client={queryClient}>
 			<AuthProvider>
-				<RouterProvider router={router} />
+				<React.Suspense fallback={<FullLoading />}>
+					<RouterProvider router={router} />
+				</React.Suspense>
 			</AuthProvider>
 		</QueryClientProvider>
 	</React.StrictMode>

@@ -9,6 +9,7 @@ import { addDate, diferenceBetweentwoDatesInYears, diffenceBetweenDates, formatD
 import html2pdf from 'html2pdf.js'
 import BoxContainerPage from '../../components/BoxContainerPage'
 import { IHistorialPrice } from '../../interfaces/Icontracts'
+import { DobleChevronAngle } from '../../components/icons/DobleChevronAngle'
 
 const ExpiredContracts = () => {
 	const [days, setDays] = useState(60)
@@ -17,7 +18,7 @@ const ExpiredContracts = () => {
 
 	const downloadPdf = async () => {
 		setLoadingPdf(true)
-		var element = document.getElementById('pdf-download');
+		var element = document.getElementById('pdf-download')
 
 		var opt = {
 			margin: [.1, .1],
@@ -25,10 +26,10 @@ const ExpiredContracts = () => {
 			// image: { type: 'jpeg', quality: 0.98 },
 			html2canvas: { scale: 2 },
 			jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
-		};
+		}
 		try {
 
-			await html2pdf().from(element).set(opt).save();
+			await html2pdf().from(element).set(opt).save()
 		} catch (error) {
 			console.log(error)
 		} finally {
@@ -97,7 +98,8 @@ const ExpiredContracts = () => {
 		// })
 		// doc.save(`CONTRATOS_A_VENCER_EN_${days}_DIAS_${formatDateDDMMYYYY(new Date().toISOString())}.pdf`);
 	}
-	const getExpiredDate = (date: string) => addDate(date, diferenceBetweentwoDatesInYears(date, new Date().toISOString().slice(0, 10)), 'years')
+	const getExpiredDate = (date: string) => addDate(addDate(date, -1, 'days').toISOString().slice(0, 10), diferenceBetweentwoDatesInYears(date, new Date().toISOString().slice(0, 10)), 'years')
+
 	const getDiffBetweenDate = (date: string) => diffenceBetweenDates(date, new Date().toISOString().slice(0, 10))
 	if (isLoading) return <Loading />
 	if (isError) return <RequestError error={error} />
@@ -110,9 +112,10 @@ const ExpiredContracts = () => {
 					<Dropdown
 						value={days}
 						onChange={(e: any) => setDays(e.value)}
+						dropdownIcon={() => <span className='dark:text-slate-400'><DobleChevronAngle /></span>}
 						options={[30, 60, 90, 120]}
 						placeholder='Cantidad días'
-						className='h-[42px]  items-center !border-gray-200 dark:!border-gray-700 shadow dark:bg-slate-900 dark:!text-slate-400 '
+						className='h-[42px]  items-center !bg-transparent !border-gray-400 dark:!border-gray-700  dark:!text-slate-400 '
 					/>
 				</fieldset>
 				<button
@@ -123,13 +126,13 @@ const ExpiredContracts = () => {
 				</button>
 			</Box>
 
-			<div className=' mx-auto !overflow-x-auto dark:text-slate-400  ' id='pdf-download'>
+			<div className=' mx-auto !overflow-x-auto dark:text-slate-500  ' id='pdf-download'>
 				<h2 className='my-4 text-2xl font-semibold leading-tight'>
 					<span>
 						Contratos a Vencer <br /> <span className='text-sm'> en los próximos {days} días </span>
 					</span>
 				</h2>
-				<Box className='!p-0 !m-0 '>
+				<div className='!p-0 !m-0 '>
 					<div className='' >
 						<div className='w-full  !overflow-x-auto text-xs text-left whitespace-nowrap'>
 							<div className=' rounded-t-lg   overflow-hidden'>
@@ -168,10 +171,10 @@ const ExpiredContracts = () => {
 							</div>
 							<div className=''>
 								{data?.data.sort((a, b) => getExpiredDate(a.startDate).getTime() - getExpiredDate(b.startDate).getTime()).map((c: any) => (
-									<div key={c.id} className='flex px-1 border-b dark:border-slate-700'>
+									<div key={c.id} className='flex px-1 border-b border-slate-400 dark:border-slate-700'>
 										<p className='w-[80px]  my-1  truncate p-2 px-0'>
-											{/* {formatDateDDMMYYYY(c.endDate)} |
-											{formatDateDDMMYYYY(c.startDate)} | */}
+											{/* {'endDate : ' + formatDateDDMMYYYY(c.endDate)} |
+											{'START DATE :: ' + formatDateDDMMYYYY(c.startDate)} | */}
 											{formatDateDDMMYYYY(getExpiredDate(c.startDate).toISOString().slice(0, 10))}
 										</p>
 										<p className='w-[40px]  my-1  truncate p-2 px-0'>
@@ -203,7 +206,7 @@ const ExpiredContracts = () => {
 							</div>
 						</div>
 					</div>
-				</Box>
+				</div>
 			</div >
 			{isFetching && (<Loading h={60} w={60} />)}
 			<button className='btn gradient  !my-4 !w-fit'

@@ -33,6 +33,8 @@ import FormActionBtns from '../../components/FormActionBtns'
 import { validateForm } from '../../helpers/form'
 import { diferenceBetweentwoDatesInYears, diffenceBetweenDates, formatDateDDMMYYYY } from '../../helpers/date'
 import BoxContainerPage from '../../components/BoxContainerPage'
+import DropDownIcon from '../../components/DropDownIcon'
+import { formatPrice } from '../../helpers/numbers'
 
 export interface Iassurance {
 	fullName: string
@@ -61,7 +63,7 @@ const Contracts = () => {
 		id: 0
 	})
 	const [editing, setEditing] = useState(false)
-	const [addGaranteeBox, setAddGaranteeBox] = useState(false);
+	const [addGaranteeBox, setAddGaranteeBox] = useState(false)
 	const { showAndHideModal } = useShowAndHideModal()
 	const [savingOrUpdating, setSavingOrUpdating] = useState(false)
 	const [showFinishContractModal, setShowFinishContractModal] = useState(false)
@@ -74,8 +76,10 @@ const Contracts = () => {
 		deposit: 0,
 		booking: 0,
 		amount: 0,
+		admFeesPorc: 2,
+		currency: 'ARS'
 	})
-	const { ClientId, PropertyId, startDate, endDate, description, deposit, booking, amount } =
+	const { ClientId, admFeesPorc, currency, PropertyId, startDate, endDate, description, deposit, booking, amount } =
 		values
 	const {
 		values: Gvalues,
@@ -321,7 +325,7 @@ const Contracts = () => {
 					<>
 						<AddGuarantee q={rowData.Assurances.length} action={() => showAddGuarantee(rowData)} />
 						<EditIcon action={() => edit(rowData)} />
-						<DeleteIcon action={() => ConfirmDestroy(rowData)} />
+						{/* <DeleteIcon action={() => ConfirmDestroy(rowData)} /> */}
 					</>
 				)}
 				{/* <TbReportMoney size={25} title='Agregar Eventualidad' onClick={() => openModalAddEvent(rowData)} /> */}
@@ -486,7 +490,6 @@ const Contracts = () => {
 										<span className={`${diferenceBetweentwoDatesInYears(data.startDate, new Date().toISOString().slice(0, 10)) === 3 && 'text-yellow-500 font-bold'}`}>
 											{
 												diferenceBetweentwoDatesInYears(data.startDate, new Date().toISOString().slice(0, 10)) || 1
-
 											}
 										</span>
 									)}
@@ -495,11 +498,14 @@ const Contracts = () => {
 								/>
 								<Column
 									header='Monto Actual'
-									body={(data) => (
-										<span >
-											${data.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[data.PriceHistorials?.length - 1]?.amount}
-										</span>
-									)}
+									body={(data: Contract) => {
+										return (
+											<div >
+												{data.currency} {formatPrice(data.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[data.PriceHistorials?.length - 1]?.amount)}
+											</div>
+										)
+									}
+									}
 									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 									className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 								/>
@@ -548,6 +554,7 @@ const Contracts = () => {
 								options={clientQuery.data?.data}
 								optionLabel='fullName'
 								filterPlaceholder='Busca  inquilino...'
+								dropdownIcon={() => <DropDownIcon />}
 								filter
 								optionValue='id'
 								showClear
@@ -588,6 +595,7 @@ const Contracts = () => {
 										options={propertyQuery.data?.data}
 										optionLabel='street'
 										showClear
+										dropdownIcon={() => <DropDownIcon />}
 										filterPlaceholder='Busca propiedad'
 										optionValue='id'
 										filterBy='street,number,dept,floor'
@@ -607,7 +615,6 @@ const Contracts = () => {
 							)
 						}
 					</FieldsetGroup>
-
 					<FieldsetGroup>
 						<FieldsetGroup className='w-full sm:w-[50%]'>
 							<CustomInput
@@ -654,23 +661,51 @@ const Contracts = () => {
 
 						</FieldsetGroup>
 					</FieldsetGroup>
-
 					<FieldsetGroup>
-						<CustomInput
-							placeholder='1000.99'
-							type='number'
-							label='Reserva'
-							initialValue={booking || ''}
-							optional
-							onChange={(value) => handleInputChange(value, 'booking')}
-						/>
+						<FieldsetGroup className='w-full sm:w-[50%]'>
+
+							<CustomInput
+								placeholder='1000.99'
+								type='number'
+								label='Reserva'
+								initialValue={booking || ''}
+								optional
+								onChange={(value) => handleInputChange(value, 'booking')}
+							/>
+						</FieldsetGroup>
+						<FieldsetGroup className='w-full sm:w-[50%]'>
+							<CustomInput
+								placeholder='2'
+								type='number'
+								label='% G. gestión'
+								initialValue={admFeesPorc}
+								onChange={(value) => handleInputChange(value, 'admFeesPorc')}
+							/>
+							<fieldset>
+								<label htmlFor='ClientId'>Moneda</label>
+								<Dropdown
+									value={currency}
+									onChange={(e) => handleInputChange(e.value, 'currency')}
+									options={['ARS', 'USD']}
+									// optionLabel='Moneda'
+									dropdownIcon={() => <DropDownIcon />}
+									placeholder='Elije una moneda'
+									className='h-[42px] items-center !border-gray-200 shadow'
+								/>
+							</fieldset>
+						</FieldsetGroup>
+
+					</FieldsetGroup>
+					<FieldsetGroup className='!flex-col !gap-0'>
 						<CustomTextArea
-							placeholder='Escribe una descripción para ese contrato'
+							placeholder='Escribe una descripción para ese contrato...'
 							initialValue={description || ''}
 							onChange={(value) => handleInputChange(value, 'description')}
 							label='Descripción'
+							maxLength={255}
 							optional
 						/>
+						<div className='items-end self-end'>{description.length}/255</div>
 					</FieldsetGroup>
 					{
 						(assurances?.length > 0 && editMode) && (
@@ -853,8 +888,11 @@ const Contracts = () => {
 													placeholder='Escribe una observación ...'
 													className={`dark:!bg-gray-900 dark:text-slate-400 border !border-gray-300 dark:!border-slate-700 !shadow`}
 													value={assuranceItem?.obs || ''}
+													maxLength={255}
 													onChange={(e) => setAssuranceItem((prev: any) => ({ ...prev, obs: e.target.value }))}
 												/>
+												<div className='items-end self-end'>{assuranceItem.obs.length}/255</div>
+
 											</fieldset>
 											<section className='my-4 flex flex-col sm:flex-row gap-4'>
 												<button
@@ -903,7 +941,6 @@ const Contracts = () => {
 				overlayClick={false}
 				titleText='Agregar  garante'
 				className='shadow-none border-0'
-			// overlayBackground={localStorage.theme === 'light' ? 'rgb(227 227 227)' : 'rgb(15 23 42)'}
 			>
 				<CloseOnClick action={closeGuaranteeModal} />
 				<form onSubmit={handleAddGuarantee} >
@@ -977,13 +1014,17 @@ const Contracts = () => {
 							errorText='La dirección es obligatoria.'
 						/>
 					</FieldsetGroup>
-					<CustomTextArea
-						placeholder='Escribe una observación o nota de algo...'
-						initialValue={obs || ''}
-						onChange={(value) => GhandleInputChange(value, 'obs')}
-						optional
-						label='Observación'
-					/>
+					<div className="flex flex-col">
+						<CustomTextArea
+							placeholder='Escribe una observación o nota de algo...'
+							initialValue={obs || ''}
+							onChange={(value) => GhandleInputChange(value, 'obs')}
+							optional
+							maxLength={255}
+							label='Observación'
+						/>
+						<div className='items-end self-end'>{Gvalues.obs.length}/255</div>
+					</div>
 					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeGuaranteeModal} />
 				</form>
 			</CreateModal>

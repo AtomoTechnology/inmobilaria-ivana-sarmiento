@@ -369,13 +369,17 @@ const Guarantors = () => {
                             errorText='La dirección es obligatoria.'
                         />
                     </FieldsetGroup>
-                    <CustomTextArea
-                        placeholder='Escribe una observación o nota de algo...'
-                        initialValue={obs || ''}
-                        onChange={(value) => handleInputChange(value, 'obs')}
-                        optional
-                        label='Observación'
-                    />
+                    <div className="flex flex-col justify-between">
+                        <CustomTextArea
+                            placeholder='Escribe una observación o nota de algo...'
+                            initialValue={obs || ''}
+                            onChange={(value) => handleInputChange(value, 'obs')}
+                            optional
+                            maxLength={255}
+                            label='Observación'
+                        />
+                        <div className='items-end self-end'>{obs.length}/255</div>
+                    </div>
                     <FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
                 </form>
             </CreateModal>

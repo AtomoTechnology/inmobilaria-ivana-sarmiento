@@ -31,6 +31,7 @@ interface IVisitor {
 	id: string
 	fullName: string
 	phone: string
+	email: string
 }
 
 const Visits = () => {
@@ -42,12 +43,13 @@ const Visits = () => {
 		phone: '',
 		description: '',
 		fullName: '',
-		PropertyId: 0,
+		PropertyId: null as number | null,
 	})
-	const { fullName: XfullName, phone: Xphone, values: Vvalues, handleInputChange: VhandleInputChange, reset: Vreset } = useForm({
+	const { email: Xemail, fullName: XfullName, phone: Xphone, values: Vvalues, handleInputChange: VhandleInputChange, reset: Vreset } = useForm({
 
 		phone: '',
 		fullName: '',
+		email: ''
 
 	})
 	const [globalFilterValue, setGlobalFilterValue] = useState('')
@@ -111,9 +113,10 @@ const Visits = () => {
 
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
-		const { error, ok } = validateForm({ ...values }, ['description', 'participants'])
+		const { error, ok } = validateForm({ ...values }, ['description', 'fullName', 'phone'])
+		console.log(error)
 		setErrors(error)
-		if (!ok) return false
+		if (!ok || otherVistors.length === 0) return false
 		if (editMode) {
 			try {
 				setSavingOrUpdating(true)
@@ -226,6 +229,13 @@ const Visits = () => {
 						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
 						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 					></Column>
+					<Column
+						field='email'
+						body={(data) => <span>{data.email} </span>}
+						header='Email'
+						headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+						className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+					></Column>
 				</DataTable>
 			</div>
 
@@ -284,13 +294,7 @@ const Visits = () => {
 								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 								sortable
 							/>
-							<Column
-								field='fullName'
-								header='Nombre'
-								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
-								sortable
-							/>
+
 							<Column
 								field='date'
 								header='Fecha Inicio'
@@ -300,16 +304,23 @@ const Visits = () => {
 								sortable
 							/>
 							<Column
-								field='phone'
-								header='Celular'
+								field='participants.length'
+								header='Cant. Visitores'
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 !text-center'
 							/>
+
+
 							<Column
 								field='description'
 								header='Nota'
+								body={(data) => (
+									<span title={data.description}>
+										{data.description.slice(0, 60)} {data.description.length > 60 ? '...' : ''}
+									</span>
+								)}
 								headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
-								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+								className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600'
 							/>
 
 							<Column
@@ -363,6 +374,14 @@ const Visits = () => {
 							label='Télefono'
 							required
 						/>
+						<CustomInput
+							placeholder='example@gmail.com'
+							initialValue={Xemail}
+							onChange={(value) => VhandleInputChange(value, 'email')}
+							maxLength={100}
+							label='Email'
+							required
+						/>
 					</div>
 					<FormActionBtns savingOrUpdating={addingNewVisitor} onClose={closeAddVisitor} />
 				</form>
@@ -373,12 +392,10 @@ const Visits = () => {
 				show={showCreateModal}
 				closeModal={closeCreateModal}
 				overlayClick={false}
-				className=''
+				className='sm:min-w-[350px] max-w-2xl'
 				titleText={`${editMode ? 'Editar' : 'Agendar'}   visita`}
 			>
-				<form
-					onSubmit={handleSave}
-				>
+				<form onSubmit={handleSave} 				>
 
 					<fieldset className=''>
 						<label htmlFor='PropertyId'>Propiedad</label>
@@ -392,6 +409,7 @@ const Visits = () => {
 							optionValue='id'
 							filterBy='street,number,dept,floor'
 							placeholder='elije una propiedad'
+							// required
 							filter
 							valueTemplate={(data, props) => {
 								if (!data) return props.placeholder
@@ -406,22 +424,16 @@ const Visits = () => {
 							itemTemplate={(data) => (<span> {data.street} {data.number} {data.floor}-{data.dept} </span>)}
 							className='h-[42px] items-center !border-gray-200 shadow'
 						/>
-						{PropertyId !== 0 && (
+						{PropertyId !== null && (
 							<span className='text-blue-600 dark:text-blue-400 text-sm ' >
 								Propietario :  {propertyQuery.data?.data.find((p) => p.id === PropertyId)?.Owner?.fullName}
 							</span>
 						)}
 						{errors?.PropertyId && <FormError text='La propiedad es obligatoria.' />}
 					</fieldset>
-					{
-						(!!fullName && !!phone) && (
-							<div className="add-more-visitors w-full grid items-center mt-2 border border-gray-400 bg-transparent  border-dashed ">
-								<button type='button' className='btn !bg-transparent dark:text-slate-400 hover:!text-blue-400 ' onClick={() => setAddVisitor(true)}>Agregar</button>
-							</div>
-						)
-					}
+
 					<FieldsetGroup>
-						<CustomInput
+						{/* <CustomInput
 							placeholder='Juan jose'
 							initialValue={fullName}
 							onChange={(value) => handleInputChange(value, 'fullName')}
@@ -441,7 +453,17 @@ const Visits = () => {
 							required
 							hasError={errors?.phone}
 							errorText='El télefono es obligatorio.'
-						/>
+						/> */}
+						{/* <CustomInput
+							placeholder='example@gmail.com'
+							initialValue={email}
+							onChange={(value) => handleInputChange(value, 'email')}
+							maxLength={100}
+							label='Email'
+							required
+							hasError={errors?.email}
+							errorText='El email es obligatorio.'
+						/> */}
 					</FieldsetGroup>
 					{
 						otherVistors.length > 0 && (
@@ -452,9 +474,10 @@ const Visits = () => {
 											<div className="absolute top-1 right-1">
 												<DeleteIcon action={() => deleteVisitor(vis)} />
 											</div>
-											<div className="flex items-center !border !border-gray-300 justify-between rounded shadow  dark:!border-slate-600 p-1 px-2 ">
+											<div className="flex items-center !border !border-gray-300 justify-between  shadow  dark:!border-slate-600 p-1 px-2 ">
 												<div title={vis.fullName} className='w-[220px] truncate '>{vis.fullName}</div>
 												<div className='w-[220px] '>{vis.phone}</div>
+												<div className='w-[220px] '>{vis.email}</div>
 											</div>
 										</div>
 
@@ -463,6 +486,9 @@ const Visits = () => {
 							</div>
 						)
 					}
+					<div className="add-more-visitors w-full grid items-center  hover:border-brand2 mt-2 border border-gray-400 bg-transparent  border-dashed ">
+						<button type='button' className='btn !bg-transparent dark:text-slate-400 hover:!text-blue-400 ' onClick={() => setAddVisitor(true)}>Agregar</button>
+					</div>
 
 
 					<FieldsetGroup>
@@ -477,13 +503,18 @@ const Visits = () => {
 							errorText='La fecha es obligatoria.'
 						/>
 					</FieldsetGroup>
-					<CustomTextArea
-						placeholder='Puede llegar tarde el inquilino'
-						initialValue={description}
-						onChange={(value) => handleInputChange(value, 'description')}
-						label='Nota'
-						optional
-					/>
+					<div className="flex flex-col justify-between">
+
+						<CustomTextArea
+							placeholder='Puede llegar tarde el inquilino'
+							initialValue={description}
+							onChange={(value) => handleInputChange(value, 'description')}
+							label='Nota'
+							maxLength={255}
+							optional
+						/>
+						<div className='items-end self-end'>{description.length}/255</div>
+					</div>
 					<FormActionBtns savingOrUpdating={savingOrUpdating} onClose={closeCreateModal} />
 				</form>
 			</CreateModal>

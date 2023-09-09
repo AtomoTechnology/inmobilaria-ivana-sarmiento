@@ -33,6 +33,8 @@ export interface Contract {
 	DebtOwners: Idebt[]
 	Assurances: IAssurance[]
 	amount: number
+	admFeesPorc: number
+	currency: 'ARS' | 'USD'
 }
 
 
