@@ -1,8 +1,8 @@
-const { Contract, Client, Assurance, ClientExpense, OwnerExpense, Property, sequelize, PriceHistorial, Owner, DebtOwner, DebtClient, Eventuality, } = require("../../models");
-const { Op } = require("sequelize");
-const { all, paginate, findOne, update, } = require("../Generic/FactoryGeneric");
-const AppError = require("../../helpers/AppError");
-const { catchAsync } = require("../../helpers/catchAsync");
+const { Contract, Client, Assurance, ClientExpense, OwnerExpense, Property, sequelize, PriceHistorial, Owner, DebtOwner, DebtClient, Eventuality, } = require("../../models")
+const { Op } = require("sequelize")
+const { all, paginate, findOne, update, } = require("../Generic/FactoryGeneric")
+const AppError = require("../../helpers/AppError")
+const { catchAsync } = require("../../helpers/catchAsync")
 
 exports.GetAll = all(Contract, {
   include: [
@@ -11,24 +11,24 @@ exports.GetAll = all(Contract, {
     { model: PriceHistorial },
     { model: Assurance, },
   ],
-});
+})
 exports.Paginate = paginate(Contract, {
   include: [
     { model: Client },
     { model: Property },
   ],
-});
+})
 
 exports.GetOwnerContracts = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
+  const { id } = req.params
   const properties = await Property.findAll({
     where: {
       OwnerId: id,
       // state: "Ocupado",
     },
     attributes: ['id']
-  });
-  const ids = properties.map((p) => p.id);
+  })
+  const ids = properties.map((p) => p.id)
   const contracts = await Contract.findAll({
     where: {
       PropertyId: { [Op.in]: ids },
@@ -41,7 +41,7 @@ exports.GetOwnerContracts = catchAsync(async (req, res, next) => {
       { model: Client },
       { model: Property },
     ],
-  });
+  })
   return res.json({
     code: 200,
     status: "success",
@@ -49,34 +49,34 @@ exports.GetOwnerContracts = catchAsync(async (req, res, next) => {
     results: contracts.length,
     message: "Lista de contratos",
     data: contracts,
-  });
-});
+  })
+})
 
 exports.Post = catchAsync(async (req, res, next) => {
-  const { PropertyId, amount, assurances } = req.body;
+  const { PropertyId, amount, assurances } = req.body
 
-  const p = await Property.findOne({ where: { id: PropertyId, state: "Libre" } });
+  const p = await Property.findOne({ where: { id: PropertyId, state: "Libre" } })
 
-  if (!p) return next(new AppError("Existe un contrato vigente para esta propiedad", 400));
+  if (!p) return next(new AppError("Existe un contrato vigente para esta propiedad", 400))
 
   const result = await sequelize.transaction(async (t) => {
 
-    const cont = await Contract.create(req.body, { transaction: t });
+    const cont = await Contract.create(req.body, { transaction: t })
 
     const updPro = await Property.update(
       { state: "Ocupado" },
       { where: { id: PropertyId, }, transaction: t },
-    );
+    )
 
     if (updPro[0] <= 0) {
-      await t.rollback();
+      await t.rollback()
       return next(new AppError("No se pudo actualizar el estado de la propiedad", 400))
     }
 
     if (assurances !== undefined && assurances.length > 0) {
-      for (let j = 0; j < assurances.length; j++) {
-        assurances[j].ContractId = cont.id;
-        await Assurance.create(assurances[j], { transaction: t });
+      for (let j = 0;j < assurances.length;j++) {
+        assurances[j].ContractId = cont.id
+        await Assurance.create(assurances[j], { transaction: t })
       }
     }
 
@@ -88,7 +88,7 @@ exports.Post = catchAsync(async (req, res, next) => {
         percent: 0,
       },
       { transaction: t }
-    );
+    )
 
     return res.json({
       code: 200,
@@ -96,10 +96,10 @@ exports.Post = catchAsync(async (req, res, next) => {
       ok: true,
       message: "El registro fue guardado con exito",
       data: cont,
-    });
+    })
 
-  });
-});
+  })
+})
 
 exports.GetById = findOne(Contract, {
   include: [
@@ -122,7 +122,7 @@ exports.GetById = findOne(Contract, {
       model: OwnerExpense,
     },
   ],
-});
+})
 exports.Put = update(Contract, [
   "PropertyId",
   "ClientId",
@@ -132,17 +132,21 @@ exports.Put = update(Contract, [
   "deposit",
   "booking",
   "state",
-  "description"
-]);
+  "description",
+  'admFeesPorc',
+  'currency'
+])
 exports.Destroy = catchAsync(async (req, res, next) => {
-  const id = req.params.id;
-  const contract = await Contract.findOne({ where: { id } });
-  if (!contract) return next(new AppError("No se encontró el contrato", 400));
-  const debts = await DebtClient.findAll({ where: { ContractId: id, paid: false } });
-  if (debts.length > 0) return next(new AppError("No se puede eliminar el contrato, existen deudas pendientes", 400));
+  const id = req.params.id
 
-  const payments = await DebtOwner.findAll({ where: { ContractId: id, paid: false } },);
-  if (payments.length > 0) return next(new AppError("No se puede eliminar el contrato, existen pagos pendientes", 400));
+  const contract = await Contract.findOne({ where: { id } })
+  if (!contract) return next(new AppError("No se encontró el contrato", 400))
+
+  const debts = await DebtClient.findAll({ where: { ContractId: id, paid: false } })
+  if (debts.length > 0) return next(new AppError("El inquilino tiene deudas pendientes,no se puede eliminar el contrato.", 400))
+
+  // const payments = await DebtOwner.findAll({ where: { ContractId: id, paid: false } },)
+  // if (payments.length > 0) return next(new AppError("El propietario tiene pagos pendientes,no se puede eliminar el contrato.", 400))
 
   const events = await Eventuality.findAll(
     {
@@ -152,21 +156,21 @@ exports.Destroy = catchAsync(async (req, res, next) => {
         clientPaid: false,
       },
     },
-  );
+  )
 
-  if (events.length > 0) return next(new AppError("No se puede eliminar el contrato, existen eventualidades sin  cobrar", 400));
+  if (events.length > 0) return next(new AppError("El inquilino tiene eventualidades sin pagar/cobrar,no se puede eliminar el contrato.", 400))
 
-  const eventsOwners = await Eventuality.findAll(
-    {
-      where: {
-        PropertyId: contract.PropertyId,
-        ownerAmount: { [Op.ne]: 0 },
-        ownerPaid: false,
-      },
-    },
-  );
+  // const eventsOwners = await Eventuality.findAll(
+  //   {
+  //     where: {
+  //       PropertyId: contract.PropertyId,
+  //       ownerAmount: { [Op.ne]: 0 },
+  //       ownerPaid: false,
+  //     },
+  //   },
+  // )
 
-  if (eventsOwners.length > 0) return next(new AppError("No se puede eliminar el contrato, existen eventualidades sin  pagar", 400));
+  // if (eventsOwners.length > 0) return next(new AppError("El propietario tiene eventualidades sin pagar/cobrar,no se puede eliminar el contrato.", 400))
 
 
   const result = await sequelize.transaction(async (t) => {
@@ -176,28 +180,30 @@ exports.Destroy = catchAsync(async (req, res, next) => {
         where: { id: contract.PropertyId },
         transaction: t
       },
-    );
+    )
 
-    await Contract.update({ state: 'Finalizado' }, { where: { id }, transaction: t });
-    await Contract.destroy({ where: { id }, transaction: t });
+    await Contract.update({ state: 'Finalizado' }, { where: { id }, transaction: t })
+    await Contract.destroy({ where: { id }, transaction: t })
     return res.json({
       ok: true,
       status: "success",
       message: "El registro fue eliminado con exito",
-    });
-  });
+    })
+  })
 
-});
+})
 
 exports.finish = catchAsync(async (req, res, next) => {
-  const id = req.params.id;
-  const contract = await Contract.findOne({ where: { id } });
-  if (!contract) return next(new AppError("No se encontró el contrato", 400));
-  const debts = await DebtClient.findAll({ where: { ContractId: id, paid: false } });
-  if (debts.length > 0) return next(new AppError("No se puede eliminar el contrato, existen deudas pendientes", 400));
+  const id = req.params.id
 
-  const payments = await DebtOwner.findAll({ where: { ContractId: id, paid: false } },);
-  if (payments.length > 0) return next(new AppError("No se puede eliminar el contrato, existen pagos pendientes", 400));
+  const contract = await Contract.findOne({ where: { id } })
+  if (!contract) return next(new AppError("No se encontró el contrato", 400))
+
+  const debts = await DebtClient.findAll({ where: { ContractId: id, paid: false } })
+  if (debts.length > 0) return next(new AppError('El inquilino tiene deudas pendientes,no se puede finalizar el contrato.', 400))
+
+  // const payments = await DebtOwner.findAll({ where: { ContractId: id, paid: false } },)
+  // if (payments.length > 0) return next(new AppError("El propietario tiene pagos pendientes,no se puede finalizar el contrato.", 400))
 
   const events = await Eventuality.findAll(
     {
@@ -207,21 +213,20 @@ exports.finish = catchAsync(async (req, res, next) => {
         clientPaid: false,
       },
     },
-  );
+  )
 
-  if (events.length > 0) return next(new AppError("No se puede eliminar el contrato, existen eventualidades sin  cobrar", 400));
+  if (events.length > 0) return next(new AppError("El inquilino tiene eventualidades sin pagar/cobrar,no se puede finalizar el contrato.", 400))
 
-  const eventsOwners = await Eventuality.findAll(
-    {
-      where: {
-        PropertyId: contract.PropertyId,
-        ownerAmount: { [Op.ne]: 0 },
-        ownerPaid: false,
-      },
-    },
-  );
-
-  if (eventsOwners.length > 0) return next(new AppError("No se puede eliminar el contrato, existen eventualidades sin  pagar", 400));
+  // const eventsOwners = await Eventuality.findAll(
+  //   {
+  //     where: {
+  //       PropertyId: contract.PropertyId,
+  //       ownerAmount: { [Op.ne]: 0 },
+  //       ownerPaid: false,
+  //     },
+  //   },
+  // )
+  // if (eventsOwners.length > 0) return next(new AppError("El propietario tiene eventualidades sin pagar/cobrar,no se puede finalizar el contrato.", 400))
 
 
   const result = await sequelize.transaction(async (t) => {
@@ -231,20 +236,20 @@ exports.finish = catchAsync(async (req, res, next) => {
         where: { id: contract.PropertyId },
         transaction: t
       },
-    );
+    )
 
-    await Contract.update({ state: 'Finalizado', motive: req.body.motive }, { where: { id }, transaction: t });
+    await Contract.update({ state: 'Finalizado', motive: req.body.motive }, { where: { id }, transaction: t })
     return res.json({
       ok: true,
       status: "success",
       message: "El contrato se finalizó con éxito",
-    });
-  });
+    })
+  })
 
-});
+})
 
 exports.ExpiredContracts = catchAsync(async (req, res, next) => {
-  const days = req.params.days * 1;
+  const days = req.params.days * 1
 
   const docs = await Contract.findAll({
     where: {
@@ -287,22 +292,22 @@ exports.ExpiredContracts = catchAsync(async (req, res, next) => {
       { model: Property, include: { model: Owner } },
       { model: PriceHistorial },
     ],
-  });
+  })
 
   return res.json({
     results: docs.length,
     ok: true,
     status: "success",
     data: docs,
-  });
-});
+  })
+})
 
 exports.HistorialPrice = all(Contract, {
   include: [
     { model: PriceHistorial },
     { model: Property, include: { model: Owner } },
   ],
-});
+})
 
 // para obtener las deudas pagas o impagas de los clientes
 exports.DebtsClients = catchAsync(async (req, res, next) => {
@@ -313,15 +318,15 @@ exports.DebtsClients = catchAsync(async (req, res, next) => {
       { model: PriceHistorial },
       { model: DebtClient },
     ],
-  });
+  })
 
   return res.json({
     results: docs.length,
     ok: true,
     status: "success",
     data: docs,
-  });
-});
+  })
+})
 
 //  para obtener las deudas pagas o impagas de los propietarios
 exports.DebtsOwners = catchAsync(async (req, res, next) => {
@@ -332,12 +337,12 @@ exports.DebtsOwners = catchAsync(async (req, res, next) => {
       { model: PriceHistorial },
       { model: DebtOwner },
     ],
-  });
+  })
 
   return res.json({
     results: docs.length,
     ok: true,
     status: "success",
     data: docs,
-  });
-});
+  })
+})

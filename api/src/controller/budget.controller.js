@@ -1,9 +1,9 @@
-const { catchAsync } = require('../../helpers/catchAsync');
-const { cloudinary } = require('../../helpers/cloudinary');
+const { catchAsync } = require('../../helpers/catchAsync')
+const { cloudinary } = require('../../helpers/cloudinary')
 const { Budget, Property } = require('../../models')
 const { all, paginate, create, findOne, update, destroy } = require('../Generic/FactoryGeneric')
 
-
+const allowedFields = ['PropertyId', 'type', 'description', 'category', 'photo', 'approved', 'state', 'charged', 'belongsTo']
 
 exports.uploadPhoto = catchAsync(async (req, res, next) => {
     if (!req.body.photo || req.body.photo === null || req.body?.photo.length < 300) return next()
@@ -33,9 +33,10 @@ exports.uploadPhoto = catchAsync(async (req, res, next) => {
 
 exports.GetAll = all(Budget, { include: [{ model: Property, attributes: ['id', 'street', 'number', 'dept', 'floor'] }] })
 exports.Paginate = paginate(Budget)
-exports.Create = create(Budget, ['PropertyId', 'type', 'description', 'category', 'photo'])
+exports.Create = create(Budget, allowedFields)
 exports.GetById = findOne(Budget)
-exports.Put = update(Budget, ['PropertyId', 'type', 'description', 'category', 'photo'])
+exports.Put = update(Budget, allowedFields)
+
 
 
 exports.Destroy = catchAsync(async (req, res, next) => {

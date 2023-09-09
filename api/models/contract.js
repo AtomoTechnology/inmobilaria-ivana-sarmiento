@@ -78,18 +78,22 @@ module.exports = (sequelize, DataTypes) => {
 					},
 				},
 			},
-			// commission: {
-			// 	allowNull: false,
-			// 	type: DataTypes.FLOAT,
-			// 	validate: {
-			// 		notNull: {
-			// 			msg: 'La comisión es obligatoria',
-			// 		},
-			// 		notEmpty: {
-			// 			msg: 'La comisión es obligatoria',
-			// 		},
-			// 	},
-			// },
+			admFeesPorc: {
+				allowNull: false,
+				type: DataTypes.FLOAT,
+				defaultValue: 2,
+			},
+			currency: {
+				allowNull: false,
+				type: DataTypes.STRING(3),
+				defaultValue: 'ARS',
+				validate: {
+					isIn: {
+						args: [['ARS', 'USD']],
+						msg: 'La moneda igresada no está permitida.',
+					},
+				}
+			},
 			state: {
 				type: DataTypes.STRING,
 				defaultValue: 'En curso',

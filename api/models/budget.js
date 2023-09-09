@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			type: {
 				allowNull: false,
-				type: DataTypes.STRING(11),
+				type: DataTypes.STRING(25),
 				validate: {
 					notNull: {
 						msg: 'El tipo no puede ser nulo.',
@@ -40,13 +40,65 @@ module.exports = (sequelize, DataTypes) => {
 					isIn: {
 						args: [['Factura', 'Recibo', 'Presupuesto', 'Expensas extraordinarias']],
 						msg: 'El tipo no es valido.',
+					},
+					len: {
+						args: [3, 25],
+						msg: 'El tipo debe tener entre 3 y 25 caracteres.',
 					}
 				},
 
 			},
-			description: DataTypes.TEXT('long'),
+			description: {
+				type: DataTypes.STRING(255),
+				allowNull: false,
+				validate: {
+					notNull: {
+						msg: 'La descripcion no puede ser nula.',
+					},
+					notEmpty: {
+						msg: 'La descripcion no puede ser nula.',
+					},
+					len: {
+						args: [3, 255],
+						msg: 'La descripcion debe tener entre 3 y 255 caracteres.',
+					}
+				}
+			},
+			approved: {
+				type: DataTypes.BOOLEAN,
+				defaultValue: false,
+			},
+			state: {
+				type: DataTypes.STRING(11),
+				defaultValue: 'En curso',
+				validate: {
+					isIn: {
+						args: [['En curso', 'Visto', 'Aprobado', 'Rechazado']],
+						msg: 'El estado no es valido.',
+					}
+				}
+			},
+			charged: {
+				type: DataTypes.BOOLEAN,
+				defaultValue: false,
+			},
+			belongsTo: {
+				type: DataTypes.STRING(11),
+				allowNull: false,
+				validate: {
+					isIn: {
+						args: [['Inquilino', 'Propietario']],
+						msg: 'El tipo no es valido.',
+					}
+				}
+			},
+			// loaded: {
+			// 	type: DataTypes.BOOLEAN,
+			// 	defaultValue: false,
+			// },
+
 			category: {
-				type: DataTypes.STRING,
+				type: DataTypes.STRING(15),
 				allowNull: false,
 				validate: {
 					notNull: {

@@ -1,10 +1,10 @@
-"use strict";
-const { Model } = require("sequelize");
+"use strict"
+const { Model } = require("sequelize")
 module.exports = (sequelize, DataTypes) => {
   class Visit extends Model {
     static associate(models) {
       //  Relation
-      Visit.belongsTo(models.Property);
+      Visit.belongsTo(models.Property)
     }
   }
   Visit.init(
@@ -40,45 +40,54 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
       fullName: {
-        allowNull: false,
+        allowNull: true,
         type: DataTypes.STRING(150),
-        validate: {
-          notNull: {
-            msg: "Ingresa el nombre del visitante",
-          },
-          notEmpty: {
-            msg: "Ingresa el nombre del visitante",
-          },
-        },
+        // validate: {
+        //   notNull: {
+        //     msg: "Ingresa el nombre del visitante",
+        //   },
+        //   notEmpty: {
+        //     msg: "Ingresa el nombre del visitante",
+        //   },
+        // },
       },
       phone: {
         allowNull: false,
         type: DataTypes.STRING(20),
-        validate: {
-          notNull: {
-            msg: "Ingresa el teléfono",
-          },
-          notEmpty: {
-            msg: "Ingresa el teléfono",
-          },
-        },
+        // validate: {
+        //   notNull: {
+        //     msg: "Ingresa el teléfono",
+        //   },
+        //   notEmpty: {
+        //     msg: "Ingresa el teléfono",
+        //   },
+        // },
       },
       description: {
         allowNull: true,
         type: DataTypes.STRING,
       },
       participants: {
-        allowNull: true,
-        type: DataTypes.TEXT("long"),
+        allowNull: false,
+        type: DataTypes.JSON,
+        validate: {
+          notNull: {
+            msg: 'Hay que ingresar por lo menos un visitor'
+          },
+          notEmpty: {
+            msg: 'Hay que ingresar por lo menos un visitor'
+          }
+
+        },
         get: function () {
-          if (!this.getDataValue("participants")) return null;
-          return JSON.parse(this.getDataValue("participants"));
+          if (!this.getDataValue("participants")) return null
+          return JSON.parse(this.getDataValue("participants"))
         },
         set: function (value) {
           return this.setDataValue(
             "participants",
             JSON.stringify(value || "")
-          );
+          )
         },
       },
     },
@@ -88,7 +97,7 @@ module.exports = (sequelize, DataTypes) => {
       indexes: [
         {
           unique: true,
-          fields: ["PropertyId", "date", "phone", "fullName"],
+          fields: ["PropertyId", "date"],
           name: "visitUnique",
         },
       ],
@@ -97,6 +106,6 @@ module.exports = (sequelize, DataTypes) => {
       tableName: 'visits',
       modelName: "Visit",
     }
-  );
-  return Visit;
-};
+  )
+  return Visit
+}
