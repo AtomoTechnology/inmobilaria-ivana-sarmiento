@@ -95,7 +95,7 @@ module.exports = (sequelize, DataTypes) => {
 				}
 			},
 			state: {
-				type: DataTypes.STRING,
+				type: DataTypes.STRING(10),
 				defaultValue: 'En curso',
 				validate: {
 					isIn: {
