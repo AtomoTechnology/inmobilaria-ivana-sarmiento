@@ -958,7 +958,7 @@ const OwnerPayment = () => {
 												<div className="">
 													<span className='flex gap-x-2'>
 														<span>Rosario</span>
-														<span>{formatDateDDMMYYYY(new Date().toISOString())}</span>
+														<span>{formatDateDDMMYYYY(currentPayment.current?.createdAt as string)}</span>
 													</span>
 												</div>
 											</div>

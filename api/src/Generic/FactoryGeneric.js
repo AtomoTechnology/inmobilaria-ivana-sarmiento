@@ -11,8 +11,12 @@ const filterFields = (obj, allowedFields) => {
 
 exports.all = (Model, opts = null) =>
 	catchAsync(async (req, res) => {
+		var order = null
 		if (opts && req.query.include === undefined ? true : false) {
 			var { include } = opts
+		}
+		if (opts && opts.order !== undefined) {
+			order = opts.order
 		}
 		const queryFiltered = {
 			...req.query,
@@ -107,7 +111,7 @@ exports.all = (Model, opts = null) =>
 					.split(',')
 					.map((el) => (el.includes(':') ? el.split(':') : el))
 				: '',
-			order:
+			order: order != null ? order :
 				req.query.sort !== undefined
 					? req.query.sort
 						.toString()

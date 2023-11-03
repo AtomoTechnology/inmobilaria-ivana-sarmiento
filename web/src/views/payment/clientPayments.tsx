@@ -61,7 +61,6 @@ const initStateUseForm = {
 const ClientPayments = () => {
 
 	const [showCreateModal, setShowCreateModal] = useState(false)
-	const [downloadPdf, setDownloadPdf] = useState(false)
 	const [show, setShow] = useState(false)
 	const {
 		ContractId,
@@ -98,6 +97,7 @@ const ClientPayments = () => {
 	const expsTotal = useRef(0)
 	const debtsTotal = useRef(0)
 	const currentPayment = useRef<IClienyPayment | null>()
+	const [downloadPdf, setDownloadPdf] = useState(false)
 	const [expenseDetails, setExpenseDetails] = useState<IClientExpItem[]>([])
 	const [eventualityDetails, setEventualityDetails] = useState<IEventuality[]>([])
 	const [debts, setDebts] = useState<Idebt[]>([])
@@ -293,7 +293,6 @@ const ClientPayments = () => {
 
 	const handleChangeContract = async (e: DropdownChangeEvent) => {
 		// TODO save currentprice in a variable to use it in the future
-		// console.log(e.value)
 		// reset()
 		// updateAll(initStateUseForm)
 		// handleInputChange('', 'paidTotal')
@@ -375,7 +374,10 @@ const ClientPayments = () => {
 
 
 			// starDate to apply new value of the bank expenses 30/08/2021
-			if (diffenceBetweenDates(new Date(2023, 7, 31).toISOString().slice(0, 10), e.value.startDate) > 0 && e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount >= 85000) {
+			// diffenceBetweenDates(new Date(2023, 7, 31).toISOString().slice(0, 10), e.value.startDate) > 0 && e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount >= 85000
+
+			// new conditios --> base on the new atributte of the contract paymentType
+			if (e.value.paymentType === 'Porcentual') {
 				// bacnkExpenses should the 1% of the current price of the contract
 				bankExpensesValue.current = roundUp((e.value.PriceHistorials.sort((a: IHistorialPrice, b: IHistorialPrice) => a.id - b.id)[e.value.PriceHistorials.length - 1]?.amount / 100))
 			} else {
@@ -762,7 +764,7 @@ const ClientPayments = () => {
 												<div className="">
 													<span className='flex gap-x-2'>
 														<span>Rosario</span>
-														<span>{formatDateDDMMYYYY(new Date().toISOString())}</span>
+														<span>{formatDateDDMMYYYY(currentPayment.current?.createdAt as string)}</span>
 													</span>
 												</div>
 											</div>

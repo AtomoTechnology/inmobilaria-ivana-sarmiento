@@ -77,9 +77,11 @@ const Contracts = () => {
 		booking: 0,
 		amount: 0,
 		admFeesPorc: 2,
-		currency: 'ARS'
+		currency: 'ARS',
+		paymentType: "Fijo",
+		adjustmentMonth: 12,
 	})
-	const { ClientId, admFeesPorc, currency, PropertyId, startDate, endDate, description, deposit, booking, amount } =
+	const { ClientId, admFeesPorc, currency, PropertyId, startDate, endDate, adjustmentMonth, paymentType, description, deposit, booking, amount } =
 		values
 	const {
 		values: Gvalues,
@@ -152,6 +154,8 @@ const Contracts = () => {
 		e.preventDefault()
 		const { error, ok } = validateForm({ ...values }, ['description', 'booking', 'deposit', 'motive'])
 		setErrors(error)
+		console.log(values)
+		// return
 		if (!ok) return false
 		if (editMode) {
 			try {
@@ -497,6 +501,15 @@ const Contracts = () => {
 									className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
 								/>
 								<Column
+									field='adjustmentMonth'
+									header='Ajuste'
+									// body={(data) => <span>{formatDateDDMMYYYY(data.endDate)}</span>}
+									headerClassName='!border-none dark:!bg-gray-800 dark:!text-slate-400'
+									className='dark:bg-slate-700 dark:text-slate-400 dark:!border-slate-600 '
+									sortable
+								/>
+
+								<Column
 									header='Monto Actual'
 									body={(data: Contract) => {
 										return (
@@ -696,6 +709,32 @@ const Contracts = () => {
 						</FieldsetGroup>
 
 					</FieldsetGroup>
+					<FieldsetGroup className='w-full'>
+						<fieldset>
+							<label htmlFor='ClientId'>Ajuste</label>
+							<Dropdown
+								value={adjustmentMonth}
+								onChange={(e) => handleInputChange(e.value, 'adjustmentMonth')}
+								options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
+								// optionLabel='Moneda'
+								dropdownIcon={() => <DropDownIcon />}
+								placeholder='Elije una opcion'
+								className='h-[42px] items-center !border-gray-200 shadow'
+							/>
+						</fieldset>
+						<fieldset>
+							<label htmlFor='ClientId'>Pago transferencia</label>
+							<Dropdown
+								value={paymentType}
+								onChange={(e) => handleInputChange(e.value, 'paymentType')}
+								options={['Fijo', 'Porcentual']}
+								// optionLabel='Moneda'
+								dropdownIcon={() => <DropDownIcon />}
+								placeholder='Elije una opcion'
+								className='h-[42px] items-center !border-gray-200 shadow'
+							/>
+						</fieldset>
+					</FieldsetGroup>
 					<FieldsetGroup className='!flex-col !gap-0'>
 						<CustomTextArea
 							placeholder='Escribe una descripción para ese contrato...'
@@ -707,6 +746,7 @@ const Contracts = () => {
 						/>
 						<div className='items-end self-end'>{description.length}/255</div>
 					</FieldsetGroup>
+
 					{
 						(assurances?.length > 0 && editMode) && (
 							<div className="mt-4">

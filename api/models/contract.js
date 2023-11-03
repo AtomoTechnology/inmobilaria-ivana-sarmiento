@@ -104,6 +104,20 @@ module.exports = (sequelize, DataTypes) => {
 					},
 				},
 			},
+			paymentType: {
+				type: DataTypes.STRING(10),
+				defaultValue: 'Fijo',
+				validate: {
+					isIn: {
+						args: [['Fijo', 'Porcentual']],
+						msg: 'El valor del ajuste igresado no está permitido.',
+					},
+				},
+			},
+			adjustmentMonth: {
+				type: DataTypes.INTEGER,
+				defaultValue: 12
+			},
 			amount: {
 				type: DataTypes.FLOAT,
 				allowNull: false,

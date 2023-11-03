@@ -1,4 +1,4 @@
-const { Contract, Client, Assurance, ClientExpense, OwnerExpense, Property, sequelize, PriceHistorial, Owner, DebtOwner, DebtClient, Eventuality, } = require("../../models")
+const { Contract, Client, Assurance, ClientExpense, OwnerExpense, Property, sequelize, PriceHistorial, Owner, DebtOwner, DebtClient, Eventuality, PaymentClient, PaymentType } = require("../../models")
 const { Op } = require("sequelize")
 const { all, paginate, findOne, update, } = require("../Generic/FactoryGeneric")
 const AppError = require("../../helpers/AppError")
@@ -134,7 +134,9 @@ exports.Put = update(Contract, [
   "state",
   "description",
   'admFeesPorc',
-  'currency'
+  'currency',
+  'paymentType',
+  'adjustmentMonth',
 ])
 exports.Destroy = catchAsync(async (req, res, next) => {
   const id = req.params.id
@@ -300,6 +302,17 @@ exports.ExpiredContracts = catchAsync(async (req, res, next) => {
     status: "success",
     data: docs,
   })
+})
+
+exports.HistorialPayments = all(Contract, {
+  include: [
+    // { model: PaymentOwner },
+    { model: Client },
+    { model: PriceHistorial },
+    { model: PaymentClient, order: [['id', 'DESC']], include: { model: PaymentType } },
+    { model: Property, include: { model: Owner } },
+  ],
+  order: [['id', 'DESC'], [PaymentClient, 'createdAt', 'DESC']]
 })
 
 exports.HistorialPrice = all(Contract, {

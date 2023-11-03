@@ -13,6 +13,7 @@ router.get('/:id', ctrl.GetById)
 
 router.get('/expired-contracts/:days', ctrl.ExpiredContracts)
 router.get('/historial/prices', ctrl.HistorialPrice)
+router.get('/historial/payment', ctrl.HistorialPayments)
 router.get('/debts/client/all', ctrl.DebtsClients)
 router.get('/debts/owner/all', ctrl.DebtsOwners)
 router.get('/owner/:id/all', ctrl.GetOwnerContracts)

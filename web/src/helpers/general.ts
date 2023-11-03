@@ -1,14 +1,14 @@
 export async function copyToClipboard(text: string) {
 	try {
-		await navigator.clipboard.writeText(text);
+		await navigator.clipboard.writeText(text)
 	} catch (err) {
-		console.error('Failed to copy text: ', err);
+		console.error('Failed to copy text: ', err)
 	}
 }
 
 export const validateMail = (mail: string): boolean => {
-	return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(mail);
-};
+	return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(mail)
+}
 
 
 export const menuItems = [
@@ -60,9 +60,12 @@ export const menuItems = [
 		subLink: [],
 	},
 	{
-		to: 'contracts',
+		to: null,
 		title: 'Contratos',
-		subLink: [],
+		subLink: [
+			{ to: 'contracts', title: 'Vigentes' },
+			{ to: 'done-contracts', title: 'Finalizados' },
+		],
 	},
 	{
 		to: null,
@@ -80,13 +83,13 @@ export const menuItems = [
 
 
 export const UUID = () => {
-	let d = Date.now();
+	let d = Date.now()
 	if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
-		d += performance.now(); // use high-precision timer if available
+		d += performance.now() // use high-precision timer if available
 	}
 	const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-		const r = crypto.getRandomValues(new Uint8Array(1))[0] % 16;
-		return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-	});
-	return uuid;
+		const r = crypto.getRandomValues(new Uint8Array(1))[0] % 16
+		return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16)
+	})
+	return uuid
 }

@@ -35,6 +35,8 @@ export interface Contract {
 	amount: number
 	admFeesPorc: number
 	currency: 'ARS' | 'USD'
+	paymentType: "Fijo" | "Porcentual",
+	adjustmentMonth: number,
 }
 
 

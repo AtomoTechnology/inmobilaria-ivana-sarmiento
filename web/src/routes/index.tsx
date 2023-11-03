@@ -54,6 +54,7 @@ const Owners = lazy(() => import('../views/clients/owners'))
 const Clients = lazy(() => import('../views/clients/allClients'))
 const Guarantors = lazy(() => import('../views/contracts/Guarantors'))
 const Contracts = lazy(() => import('../views/contracts/Contracts'))
+const DoneContracts = lazy(() => import('../views/contracts/doneContracts'))
 const ExpiredContracts = lazy(() => import('../views/contracts/ExpiredContracts'))
 const ContractDetail = lazy(() => import('../views/contracts/ContractDetail'))
 const HistorialPrices = lazy(() => import('../views/contracts/HistorialPrice'))
@@ -154,6 +155,14 @@ export const router = createBrowserRouter([
 				element: (
 					<PrivateRoute>
 						<Contracts />
+					</PrivateRoute>
+				),
+			},
+			{
+				path: '/done-contracts',
+				element: (
+					<PrivateRoute>
+						<DoneContracts />
 					</PrivateRoute>
 				),
 			},

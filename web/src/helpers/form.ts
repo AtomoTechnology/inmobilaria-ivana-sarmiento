@@ -9,7 +9,6 @@ export const validateForm = (data: Object, notAllowedKeys: string[] = []): { ok:
     })
 
     Object.entries(data).forEach(([key, value]) => {
-        console.log(key, ' ::: ', value)
         switch (typeof value) {
             case "string":
                 if (!value.trim().length) {
