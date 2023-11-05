@@ -255,38 +255,44 @@ exports.ExpiredContracts = catchAsync(async (req, res, next) => {
 
   const docs = await Contract.findAll({
     where: {
-      [Op.or]: [
-        sequelize.where(
-          sequelize.fn(
-            "datediff",
-            sequelize.fn("NOW"),
-            sequelize.col("startDate")
-          ),
-          {
-            [Op.between]: [365.25 - days, 365.25],
-          }
-        ),
-        sequelize.where(
-          sequelize.fn(
-            "datediff",
-            sequelize.fn("NOW"),
-            sequelize.col("startDate")
-          ),
-          {
-            [Op.between]: [730.5 - days, 730.5],
-          }
-        ),
-        sequelize.where(
-          sequelize.fn(
-            "datediff",
-            sequelize.fn("NOW"),
-            sequelize.col("startDate")
-          ),
-          {
-            [Op.between]: [1095.75 - days, 1095.75],
-          }
-        ),
-      ],
+      // [Op.or]: [
+      //   sequelize.where(
+      //     sequelize.fn(
+      //       "datediff",
+      //       sequelize.fn("NOW"),
+      //       sequelize.col("startDate")
+      //     ),
+      //     {
+      //       [Op.between]: [365.25 - days, 365.25],
+      //     }
+      //   ),
+      //   sequelize.where(
+      //     sequelize.fn(
+      //       "datediff",
+      //       sequelize.fn("NOW"),
+      //       sequelize.col("startDate")
+      //     ),
+      //     {
+      //       [Op.between]: [730.5 - days, 730.5],
+      //     }
+      //   ),
+      //   sequelize.where(
+      //     sequelize.fn(
+      //       "datediff",
+      //       sequelize.fn("NOW"),
+      //       sequelize.col("startDate")
+      //     ),
+      //     {
+      //       [Op.between]: [1095.75 - days, 1095.75],
+      //     }
+      //   ),
+      // ],
+      startDate: {
+        [Op.lte]: new Date()
+      },
+      endDate: {
+        [Op.gt]: new Date()
+      },
       state: "En curso",
     },
     include: [
