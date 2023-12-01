@@ -12,7 +12,8 @@ const {
     Owner,
     OwnerExpense,
     JobLog,
-    Assurance
+    Assurance,
+    MailLog
 } = require('../../models')
 
 
@@ -26,6 +27,20 @@ const {
     monthsInSpanish
 } = require('../../helpers/variablesAndConstantes')
 const Email = require('../../helpers/email')
+const { all } = require('../Generic/FactoryGeneric')
+
+const MAIL_MOTIVE = {
+    EXPIRED_CONTRACT: 'VENCIMIENTO DE CONTRATO',
+    DEBT: 'DEUDA',
+}
+
+
+exports.GetAll = all(MailLog, {
+    include: [
+        { model: Assurance },
+        { model: Client },
+    ]
+})
 
 exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 
@@ -56,7 +71,7 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
 
     try {
 
-        for (let k = 0; k < docs2.length; k++) {
+        for (let k = 0;k < docs2.length;k++) {
             let prevExps = []
             let pmtContr = await PaymentClient.findAll({ where: { month: monthsInSpanish[month - 1], year, ContractId: docs2[k].id } })
             pmtContr.forEach((p) => prevExps.push(...p.expenseDetails))
@@ -86,7 +101,7 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
                     }, { transaction: transact })
                 }
 
-                for (let l = 0; l < docs2[k].ClientExpenses.length; l++) {
+                for (let l = 0;l < docs2[k].ClientExpenses.length;l++) {
                     if (prevExps.filter(pe => pe.ContractId === docs2[k].ClientExpenses[l].ContractId && pe.description === docs2[k].ClientExpenses[l].description + ' ' + mothYearText).length <= 0) {
                         if (
                             (docs2[k].ClientExpenses[l].description !== 'AGUAS' && docs2[k].ClientExpenses[l].description !== 'API') ||
@@ -135,15 +150,15 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
             // where: { id: 15 },
             include: [{ model: Property }]
         }
-    );
+    )
 
-    const transact = await sequelize.transaction();
+    const transact = await sequelize.transaction()
     try {
 
-        for (let i = 0; i < owners.length; i++) {
+        for (let i = 0;i < owners.length;i++) {
             if (owners[i].Properties.length > 0) {
                 // get owner properties ids
-                let propertyIds = owners[i].Properties.map((doc) => doc.id);
+                let propertyIds = owners[i].Properties.map((doc) => doc.id)
 
                 // get contracts with owner properties ids
                 const docs2 = await Contract.findAll(
@@ -160,8 +175,8 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
                             { model: PriceHistorial }
                         ]
                     }
-                );
-                for (let k = 0; k < docs2.length; k++) {
+                )
+                for (let k = 0;k < docs2.length;k++) {
                     let prevExps = []
                     let pmtContr = await PaymentOwner.findAll({ where: { month: monthsInSpanish[month - 1], year, OwnerId: owners[i].id } })
                     pmtContr.forEach((p) => prevExps.push(...p.expenseDetails))
@@ -193,10 +208,10 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
                                     ContractId: docs2[k].id,
                                 },
                                 { transaction: transact, }
-                            );
+                            )
                         }
 
-                        for (let l = 0; l < docs2[k].OwnerExpenses.length; l++) {
+                        for (let l = 0;l < docs2[k].OwnerExpenses.length;l++) {
                             if (prevExps.filter(pe => pe.ContractId === docs2[k].OwnerExpenses[l].ContractId && pe.description === docs2[k].OwnerExpenses[l].description + ' ' + mothYearText).length <= 0) {
                                 if (
                                     (docs2[k].OwnerExpenses[l].description !== 'AGUAS' && docs2[k].OwnerExpenses[l].description !== 'API') ||
@@ -220,16 +235,16 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
                 }
             }
         }
-        await JobLog.create({ type: "debts", state: "success", message: "DEBTS OWNER JOB DONE SUCCESSFULLY.", }, { transaction: transact, });
-        await transact.commit();
+        await JobLog.create({ type: "debts", state: "success", message: "DEBTS OWNER JOB DONE SUCCESSFULLY.", }, { transaction: transact, })
+        await transact.commit()
 
-        return res.json({ ok: true, message: "DEBTS OWNER JOB DONE SUCCESSFULLY.", });
+        return res.json({ ok: true, message: "DEBTS OWNER JOB DONE SUCCESSFULLY.", })
 
     } catch (error) {
-        await JobLog.create({ type: "debts", state: "fail", message: error.message || "Something went wrong.", });
-        await transact.rollback();
+        await JobLog.create({ type: "debts", state: "fail", message: error.message || "Something went wrong.", })
+        await transact.rollback()
     }
-});
+})
 
 
 
@@ -249,11 +264,17 @@ exports.noticeExpiringContracts = catchAsync(async (req, res, next) => {
 
     contracts.forEach(async (contract) => {
         await new Email({ email: contract.Client.email, fullName: contract.Client.fullName, endDate: contract.endDate }).sendExpireContract()
+        // store in maillog
+        await MailLog.create({
+            motive: MAIL_MOTIVE.EXPIRED_CONTRACT,
+            status: true,
+            ClientId: contract.Client.id,
+        })
     })
 
     // return res.json({ ok: true, results: contracts.length, data: contracts, })
 
-});
+})
 exports.noticeDebts = catchAsync(async (req, res, next) => {
 
     const contracts = await Contract.findAll({
@@ -265,10 +286,13 @@ exports.noticeDebts = catchAsync(async (req, res, next) => {
         ],
         attributes: ['id', 'startDate', 'endDate', 'state'],
     })
+
+    // if(1 === 1) return res.json({ ok: true, results: contracts.length, data: contracts, })
+
     // 44 avec debts
     // slice(2, 4).
     if (!contracts || contracts.length <= 0) return res.json({ ok: true, message: 'No hay contratos con deudas' })
-    contracts.forEach(async (con) => {
+    contracts.slice(0, 3).forEach(async (con) => {
         const monthsDebts = con.DebtClients.map((d) => d.month)
         // convert to a set to remove duplicates
         const monthsDebtsSet = new Set(monthsDebts)
@@ -287,8 +311,15 @@ exports.noticeDebts = catchAsync(async (req, res, next) => {
                     month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', '),
                     property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + '-' + con.Property.dept,
                 }).sendNoticeDebtForOneMonth()
+
+                // store in maillog
+                await MailLog.create({
+                    motive: MAIL_MOTIVE.DEBT + ' DE 1 MES',
+                    status: true,
+                    ClientId: con.Client.id,
+                })
             } catch (error) {
-                console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error);
+                console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error)
             }
 
 
@@ -301,8 +332,14 @@ exports.noticeDebts = catchAsync(async (req, res, next) => {
                     month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', '),
                     property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + '-' + con.Property.dept,
                 }).sendNoticeDebtForTwoMonth()
+
+                await MailLog.create({
+                    motive: MAIL_MOTIVE.DEBT + ' DE 2 MESES',
+                    status: true,
+                    ClientId: con.Client.id,
+                })
             } catch (error) {
-                console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error);
+                console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error)
             }
 
         } else if (monthsDebtsUnique.length === 3) {
@@ -315,8 +352,14 @@ exports.noticeDebts = catchAsync(async (req, res, next) => {
                     month: monthsDebtsUnique.map(m => monthsInSpanish[m - 1]).join(', '),
                     property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + ' ' + con.Property.dept,
                 }).sendNoticeDebtForThreeMonth()
+
+                await MailLog.create({
+                    motive: MAIL_MOTIVE.DEBT + ' DE 3 MESES',
+                    status: true,
+                    ClientId: con.Client.id,
+                })
             } catch (error) {
-                console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error);
+                console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error)
 
             }
 
@@ -334,10 +377,17 @@ exports.noticeDebts = catchAsync(async (req, res, next) => {
                             property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + ' ' + con.Property.dept,
                             assuranceName: as.fullName
                         }).sendNoticeDebtForAssurance()
+
+                        await MailLog.create({
+                            motive: MAIL_MOTIVE.DEBT + ' DE 3 MESES',
+                            status: true,
+                            ClientId: con.Client.id,
+                            AssuranceId: as.id,
+                        })
                     })
                 }
             } catch (error) {
-                console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error);
+                console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error)
 
             }
 
@@ -352,6 +402,12 @@ exports.noticeDebts = catchAsync(async (req, res, next) => {
                     property: con.Property.street + ' ' + con.Property.number + ' ' + con.Property.floor + ' ' + con.Property.dept,
                     total: con.DebtClients.reduce((a, b) => a + b.amount, 0)
                 }).sendNoticeDebtForFourMonth()
+
+                await MailLog.create({
+                    motive: MAIL_MOTIVE.DEBT + ' DE 4 MESES',
+                    status: true,
+                    ClientId: con.Client.id,
+                })
             } catch (error) {
                 console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error)
             }
@@ -370,10 +426,18 @@ exports.noticeDebts = catchAsync(async (req, res, next) => {
                             assuranceName: as.fullName,
                             total: con.DebtClients.reduce((a, b) => a + b.amount, 0)
                         }).sendNoticeDebtForFourMonth()
+
+
+                        await MailLog.create({
+                            motive: MAIL_MOTIVE.DEBT + ' DE 4 MESES',
+                            status: true,
+                            ClientId: con.Client.id,
+                            AssuranceId: as.id,
+                        })
                     })
                 }
             } catch (error) {
-                console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error);
+                console.log("ERROR AL MANDAR LOS MAILS DE DEUDAS", error)
             }
 
         }
@@ -384,4 +448,4 @@ exports.noticeDebts = catchAsync(async (req, res, next) => {
     // return res.json({ ok: true, results: contracts.length })
     // return res.json({ ok: true, results: contracts.length, data: contracts, })
 
-});
+})
