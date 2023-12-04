@@ -1,0 +1,1 @@
+import{h as o}from"./index-3ed1fa78.js";import{u as r}from"./useQuery-6083f14c.js";const a=async t=>await o.get(`/contracts${t.length>0?t:""}`).then(c=>c.data),s=(t="")=>r({queryKey:["contracts",{filter:t}],queryFn:()=>a(t)});export{s as u};

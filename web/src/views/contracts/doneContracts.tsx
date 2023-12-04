@@ -470,7 +470,6 @@ const DoneContracts = () => {
 							[1, 2].map((pdf, index) => {
 
 								const Contract = data.data.find(item => item.id === currentPayment.current?.ContractId)
-								console.log('DD :: ', Contract)
 
 								return (
 

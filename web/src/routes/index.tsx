@@ -62,6 +62,7 @@ const ResetPassword = lazy(() => import('../views/auth/ResetPassword'))
 const SignUp = lazy(() => import('../views/auth/signUp'))
 const SignIn = lazy(() => import('../views/auth/SignIn'))
 const PageNotFound = lazy(() => import('../views/general/PageNotFound'))
+const MailsNotice = lazy(() => import('../views/notices/Mails'))
 
 
 
@@ -235,6 +236,14 @@ export const router = createBrowserRouter([
 				element: (
 					<PrivateRoute>
 						<OwnerPayment />
+					</PrivateRoute>
+				),
+			},
+			{
+				path: '/mails-notice',
+				element: (
+					<PrivateRoute>
+						<MailsNotice />
 					</PrivateRoute>
 				),
 			},

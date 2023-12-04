@@ -1,0 +1,1 @@
+import{r as a,A as o,j as s}from"./index-3ed1fa78.js";const x=({children:e,className:r})=>{const{authState:t}=a.useContext(o);return s("div",{id:"box-app",className:` ${t==null?void 0:t.theme}  box-app mt-4  dark:bg-slate-800 text-slate-900 dark:text-slate-400 rounded-md shadow-md border border-gray-200 dark:border-slate-800   bg-white  p-6 mx-2 `+r,children:e})};export{x as B};

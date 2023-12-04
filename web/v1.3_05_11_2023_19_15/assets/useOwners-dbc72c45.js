@@ -1,0 +1,1 @@
+import{h as r}from"./index-3ed1fa78.js";import{u as n}from"./useQuery-6083f14c.js";const s=async()=>await r.get("/owners").then(e=>e.data),u=()=>n({queryKey:["owners"],queryFn:s,refetchOnWindowFocus:!1});export{u};

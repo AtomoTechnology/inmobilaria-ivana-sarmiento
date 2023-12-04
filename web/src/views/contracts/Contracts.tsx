@@ -154,8 +154,6 @@ const Contracts = () => {
 		e.preventDefault()
 		const { error, ok } = validateForm({ ...values }, ['description', 'booking', 'deposit', 'motive'])
 		setErrors(error)
-		console.log(values)
-		// return
 		if (!ok) return false
 		if (editMode) {
 			try {

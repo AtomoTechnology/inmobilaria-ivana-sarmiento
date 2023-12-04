@@ -35,6 +35,7 @@ export const menuItems = [
 			{ to: 'visits', title: 'Visitas' },
 			{ to: 'claims', title: 'Reclamos' },
 			{ to: 'budgets', title: 'Presupuestos' },
+			{ to: 'mails-notice', title: 'Avisos' },
 		],
 	},
 	{

@@ -1,0 +1,1 @@
+import{j as s}from"./index-3ed1fa78.js";const m=({children:e,className:t=""})=>s("div",{className:`container !m-auto  flex sm:mx-0 md:max-w-[95%]  flex-col justify-center sm:justify-center  ${t} `,children:e});export{m as B};

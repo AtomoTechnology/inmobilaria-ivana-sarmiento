@@ -1,7 +1,7 @@
 import React from 'react'
 import { MdAdd } from 'react-icons/md'
 
-const HeaderData = ({ text, action, showBtn = true }: { action: any, text: string, showBtn?: boolean }) => {
+const HeaderData = ({ text, action, showBtn = true }: { action?: any, text: string, showBtn?: boolean }) => {
     return (
         <div className='flex gap-x-4 mb-6 mx-2 sm:mx-0  items-center justify-between sm:justify-start'>
             <h3 className='font-bold  text-slate-700 dark:text-slate-500 text-3xl sm:text-4xl'>{text}</h3>

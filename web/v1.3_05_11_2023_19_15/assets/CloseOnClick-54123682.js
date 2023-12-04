@@ -1,0 +1,1 @@
+import{j as e,y as t}from"./index-3ed1fa78.js";const s=({action:r})=>e("button",{onClick:r,type:"button",className:"absolute bg-white hover:opacity-75 dark:bg-slate-700 right-4 top-6 w-10 h-10 rounded-full shadow-lg flex items-center justify-center border border-gray-200 dark:border-slate-800",children:e(t,{})});export{s as C};

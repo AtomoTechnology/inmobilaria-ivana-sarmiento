@@ -114,7 +114,6 @@ const Visits = () => {
 	const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		const { error, ok } = validateForm({ ...values }, ['description', 'fullName', 'phone'])
-		console.log(error)
 		setErrors(error)
 		if (!ok || otherVistors.length === 0) return false
 		if (editMode) {

@@ -1,0 +1,1 @@
+import{h as t}from"./index-3ed1fa78.js";import{u as y}from"./useQuery-6083f14c.js";const a=async()=>await t.get("/paymenttypes?sort=name").then(e=>e.data),s=()=>y({queryKey:["paymenttypes"],queryFn:a});export{s as u};
