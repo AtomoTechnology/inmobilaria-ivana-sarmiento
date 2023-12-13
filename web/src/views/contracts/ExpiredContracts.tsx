@@ -35,68 +35,6 @@ const ExpiredContracts = () => {
 		} finally {
 			setLoadingPdf(false)
 		}
-
-		// html2pdf(document.getElementById('pdf-download')!, {
-		// 	filename: 'my-pdf-document.pdf',
-
-		// });
-
-		// return
-		// const doc = new jsPDF({
-		// 	orientation: "landscape",
-		// 	unit: "px",
-		// 	format: 'a4',
-		// 	// format: [4, 2]
-		// });
-
-		// doc.html(document.getElementById('pdf-download')!, {
-		// 	callback: function (doc) {
-		// 		doc.save();
-		// 	},
-		// 	x: 10,
-		// 	y: 10
-		// });
-
-		// doc.setFontSize(25)
-		// doc.text(`Contratos a vencer en `, 20, 20)
-		// doc.setFontSize(18)
-		// doc.text(`en los próximos ${days} días`, 20, 35)
-		// let cleandata: {
-		// 	'Vence el': string;
-		// 	Resta: string;
-		// 	Carpeta: string;
-		// 	Propiedad: string;
-		// 	Propietario: string;
-		// 	Inquilino: string;
-		// 	'Monto Alq.': string;
-		// 	'Alq. Neto': string;
-		// 	Observaciones: string;
-		// }[] = data?.data.map((c: any) => ({
-		// 	'Vence el': formatDateDDMMYYYY(c.endDate),
-		// 	Resta: diffenceBetweenDates(new Date().toISOString(), c.endDate,).toString(),
-		// 	Carpeta: c.Property.folderNumber,
-		// 	Propiedad: `${c.Property.street} ${c.Property.number} ${c.Property.dept} - ${c.Property.floor}`,
-		// 	Propietario: c.Property.Owner.fullName,
-		// 	Inquilino: c.Client.fullName.trim(),
-		// 	'Monto Alq.': c.PriceHistorials[c.PriceHistorials.length - 1].amount.toString(),
-		// 	'Alq. Neto': (c.PriceHistorials[c.PriceHistorials.length - 1].amount - (c.PriceHistorials[c.PriceHistorials?.length - 1].amount * (c.Property.Owner.commision / 100))).toString(),
-		// 	Observaciones: c.description,
-
-		// }))
-		// doc.table(20, 45, cleandata, ['Vence el', 'Resta', 'Carpeta', 'Propiedad', 'Propietario', 'Inquilino', 'Monto Alq.', 'Alq. Neto', 'Observaciones'], {
-		// 	autoSize: true,
-		// 	fontSize: 11,
-		// 	headerBackgroundColor: '#f1f1f1',
-
-
-		// })
-		// doc.text(`Contratos a vencer en los próximos ${days} días`, 10, 10)
-		// doc.text(`Vence el     Resta    Carpeta  Propiedad           Propietario          Inquilino         Monto Alq.	 Alq. Neto	     Observaciones            `, 10, 15)
-		// data?.data.map((c, index) => {
-		// 	doc.text(`${formatDateDDMMYYYY(c.endDate)}   ${diffenceBetweenDates(new Date().toISOString(), c.endDate,)} ${c.Client.fullName}  `, 10, 10 + ((index + 1) * 10));
-
-		// })
-		// doc.save(`CONTRATOS_A_VENCER_EN_${days}_DIAS_${formatDateDDMMYYYY(new Date().toISOString())}.pdf`);
 	}
 	const getExpiredDate = (date: string) => addDate(addDate(date, -1, 'days').toISOString().slice(0, 10), diferenceBetweentwoDatesInYears(date, new Date().toISOString().slice(0, 10)), 'years')
 
@@ -205,7 +143,7 @@ const ExpiredContracts = () => {
 											<p className='w-[150px] text-center bg-green-100l  border-r border-slate-400 dark:border-slate-700 truncate p-2 px-0'>{c.Property.Owner?.fullName}</p>
 											<p className='w-[150px] bg-green-100l  border-r border-slate-400 dark:border-slate-700 truncate p-2 px-0'> {c.Client.fullName}</p>
 											<p className='w-[80px]  bg-green-100l  border-r border-slate-400 dark:border-slate-700 truncate p-2 px-0'>${ap.amount}</p>
-											<p className='w-[80px]  bg-green-100l  border-r border-slate-400 dark:border-slate-700 truncate p-2 px-0'>${ap.amount - (ap.amount * (c.Property.Owner.commision / 100))}</p>
+											<p className='w-[80px]  bg-green-100l  border-r border-slate-400 dark:border-slate-700 truncate p-2 px-0'>${ap.amount - (ap.amount * (c.Property?.Owner?.commision / 100))}</p>
 											<p className='w-[40px]  bg-green-100l truncate border-r border-slate-400 dark:border-slate-700 p-2 px-0'>
 												<span className={`${diferenceBetweentwoDatesInYears(c.startDate, new Date().toISOString().slice(0, 10)) === 3 && 'text-yellow-500 font-bold'}`}>
 													{diferenceBetweentwoDatesInYears(c.startDate, new Date().toISOString().slice(0, 10))}

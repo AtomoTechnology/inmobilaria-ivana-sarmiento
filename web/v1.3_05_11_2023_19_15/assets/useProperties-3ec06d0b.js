@@ -1,1 +1,0 @@
-import{h as p}from"./index-3ed1fa78.js";import{u as o}from"./useQuery-6083f14c.js";const s=async r=>{let e=(r==null?void 0:r.length)>0?`/properties?${r}`:"/properties";const{data:t}=await p.get(e);return t},a=r=>o({queryKey:["properties",{filter:r}],queryFn:()=>s(r)});export{a as u};

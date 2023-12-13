@@ -1,1 +1,0 @@
-import{h as r}from"./index-3ed1fa78.js";import{u as t}from"./useQuery-6083f14c.js";const p=async()=>await r.get("/propertytypes?sort=description").then(e=>e.data),s=()=>t({queryKey:["property-types"],queryFn:p});export{s as u};
