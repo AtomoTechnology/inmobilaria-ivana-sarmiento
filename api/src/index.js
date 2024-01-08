@@ -1,20 +1,18 @@
-const dotenv = require("dotenv")
-const express = require("express")
-const helmet = require("helmet")
-const morgan = require("morgan")
-const cors = require("cors")
-const schedule = require("node-schedule")
+const dotenv = require('dotenv')
+const express = require('express')
+const helmet = require('helmet')
+const morgan = require('morgan')
+const cors = require('cors')
+const schedule = require('node-schedule')
 // const rateLimit = require("express-rate-limit");
-const bodyParser = require("body-parser")
+const bodyParser = require('body-parser')
 // const axios = require("axios");
 
 dotenv.config()
 
-const { globalError } = require("./Generic/errorGeneric")
-const routeconfig = require("./routeconfig/config")
-const ctrlDebtsClient = require("./controller/debtClient.controller")
-const ctrlDebtsOwner = require("./controller/debtOwner.controller")
-const jobs = require("./controller/jobs.controller")
+const { globalError } = require('./Generic/errorGeneric')
+const routeconfig = require('./routeconfig/config')
+const jobs = require('./controller/jobs.controller')
 // const { catchAsync } = require("../helpers/catchAsync");
 // const {
 //   Zone,
@@ -40,14 +38,14 @@ const { sequelize } = require('../models')
 
 const app = express()
 
-app.use(morgan("dev"))
+app.use(morgan('dev'))
 
 const Port = 4000
-app.set("port", process.env.PORT || Port)
-app.use(express.static(__dirname + "/uploads"))
-app.use(bodyParser.json({ limit: "50mb", }))
-app.use(bodyParser.urlencoded({ limit: "50mb", parameterLimit: 100000, extended: true, }))
-var corsOptions = { origin: "*", optionsSuccessStatus: 200, }
+app.set('port', process.env.PORT || Port)
+app.use(express.static(__dirname + '/uploads'))
+app.use(bodyParser.json({ limit: '50mb' }))
+app.use(bodyParser.urlencoded({ limit: '50mb', parameterLimit: 100000, extended: true }))
+var corsOptions = { origin: '*', optionsSuccessStatus: 200 }
 app.use(cors(corsOptions))
 app.use(helmet())
 app.use(express.json())
@@ -126,7 +124,7 @@ app.use(routeconfig)
 
 // }));
 
-app.all("*", (req, res, next) => res.json(next(new Error(`can´t find the url ${req.originalUrl} for this server...`))))
+app.all('*', (req, res, next) => res.json(next(new Error(`can´t find the url ${req.originalUrl} for this server...`))))
 
 //Global error
 app.use(globalError)
@@ -134,29 +132,26 @@ app.use(globalError)
 // * * * * * -- para ejecutar a cada minuto
 // 0 0 1 * * --  se ejecutara todo el primer dia de cada mes a las 12:00 am
 
-schedule.scheduleJob("0 0 1 * *", function () {
-  ctrlDebtsClient.jobDebtsClients()
-  ctrlDebtsOwner.jobDebtsOwner()
+schedule.scheduleJob('0 0 1 * *', function () {
+  jobs.jobDebtsClients()
+  jobs.jobDebtsOwner()
 })
 
-schedule.scheduleJob("0 0 2 * *", function () {
+schedule.scheduleJob('0 0 2 * *', function () {
   jobs.noticeExpiringContracts()
   jobs.noticeDebts()
 })
 
-// schedule.scheduleJob("* * * * *", function () {
-// return ctrl.jobDebtsClients();
-// ctrlDebtsClient.jobDebtsClients();
-// ctrlDebtsOwner.jobDebtsOwner();
-// jobs.noticeExpiringContracts()
-// jobs.noticeDebts()
-// console.log('yes!!!');
-
-// });
+// if (process.env.NODE_ENV !== 'production') {
+//   schedule.scheduleJob('* * * * *', function () {
+//     jobs.jobDebtsClients()
+//     jobs.jobDebtsOwner()
+//   })
+// }
 
 //Starting
-app.listen(app.get("port"), () => {
-  console.log("APP RUNNING ON PORT : ", app.get("port"), "  MODE : ", process.env.NODE_ENV)
+app.listen(app.get('port'), () => {
+  console.log('APP RUNNING ON PORT : ', app.get('port'), '  MODE : ', process.env.NODE_ENV)
   // if (process.env.NODE_ENV !== 'production') {
   // sequelize
   //   .sync({ alter: true, })
