@@ -78,7 +78,7 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
       })
 
       //   if (1 === 1) return res.json({ ok: true, results: docs2.length })
-      if (!exist) console.log('EXIST :: ', exist)
+      if (!exist) console.log('NOT EXISTE  :: ', exist, 'CONTRACTS :: ', docs2[k].id)
 
       if (!exist) {
         count++
