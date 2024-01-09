@@ -36,8 +36,7 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
   const year = req?.query?.year ? req.query.year : new Date().getFullYear()
   const mothYearText = monthsInSpanish[month == 0 ? 11 : month - 1] + '/' + (month == 0 ? year - 1 : year)
   const d = new Date(year, month - 1, new Date(year, month, 0).getDate())
-  d.setDate(d.getDate() + 7)
-  //   if (1 === 1) return res.json({ ok: true, results: 2 })
+  d.setDate(d.getDate() - 1)
 
   const docs2 = await Contract.findAll({
     where: {
@@ -45,13 +44,16 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
       // id: 44,
       state: 'En curso',
       startDate: { [Op.lt]: new Date(year, month - 1, new Date(year, month, 0).getDate()) }, // 2023-08-31 para mes : 8
-      endDate: { [Op.gt]: d },
+      endDate: { [Op.gte]: d },
     },
+    // attributes: ['id'],
     include: [{ model: ClientExpense }, { model: Property }, { model: PriceHistorial }],
   })
+  // if (1 === 1) return res.json({ ok: true, results: docs2.length, docs2 })
 
   const transact = await sequelize.transaction()
 
+  let count = 0
   try {
     for (let k = 0; k < docs2.length; k++) {
       let prevExps = []
@@ -77,6 +79,7 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
       //   if (1 === 1) return res.json({ ok: true, results: docs2.length })
 
       if (!exist) {
+        count++
         let textRent =
           'ALQUILER ' +
           docs2[k].Property.street +
@@ -144,9 +147,9 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
       }
     }
 
-    await JobLog.create({ type: 'debts', state: 'success', message: 'DEBTS CLIENT JOB DONE SUCCESSFULLY.' })
+    await JobLog.create({ type: 'debts', state: 'success', message: `DEBTS CLIENT JOB DONE SUCCESSFULLY(${count}).` })
     await transact.commit()
-    console.log('DEBTS CLIENT JOB DONE SUCCESSFULLY ON :::  ' + new Date().toLocaleString())
+    console.log(`DEBTS CLIENT JOB DONE SUCCESSFULLY ON :::(${count}) ` + new Date().toLocaleString())
 
     // return res.json({ ok: true, message: 'DEBTS CLIENT JOB DONE SUCCESSFULLY.' })
   } catch (error) {
@@ -164,7 +167,7 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
   const year = req?.query?.year ? req.query.year : new Date().getFullYear()
   const mothYearText = monthsInSpanish[month == 0 ? 11 : month - 1] + '/' + (month == 0 ? year - 1 : year)
   const d = new Date(year, month - 1, new Date(year, month, 0).getDate())
-  d.setDate(d.getDate() + 7)
+  d.setDate(d.getDate() - 1)
   //   if (1 === 1) return res.json({ ok: true, results: 1 })
   const owners = await Owner.findAll({
     // where: { id: 15 },
@@ -172,6 +175,7 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
   })
 
   const transact = await sequelize.transaction()
+  let count = 0
   try {
     for (let i = 0; i < owners.length; i++) {
       if (owners[i].Properties.length > 0) {
@@ -184,7 +188,7 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
             PropertyId: { [Op.in]: propertyIds },
             state: 'En curso',
             startDate: { [Op.lt]: new Date(year, month - 1, new Date(year, month, 0).getDate()) },
-            endDate: { [Op.gt]: d },
+            endDate: { [Op.gte]: d },
           },
           include: [
             { model: OwnerExpense },
@@ -212,6 +216,7 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
           })
 
           if (!exist) {
+            count++
             let textRent =
               'ALQUILER ' +
               docs2[k].Property.street +
@@ -293,9 +298,12 @@ exports.jobDebtsOwner = catchAsync(async (req, res, next) => {
         }
       }
     }
-    await JobLog.create({ type: 'debts', state: 'success', message: 'DEBTS OWNER JOB DONE SUCCESSFULLY.' }, { transaction: transact })
+    await JobLog.create(
+      { type: 'debts', state: 'success', message: `DEBTS OWNER JOB DONE SUCCESSFULLY(${count}).` },
+      { transaction: transact }
+    )
     await transact.commit()
-    console.log('DEBTS OWNER JOB DONE SUCCESSFULLY ON :::  ' + new Date().toLocaleString())
+    console.log(`DEBTS OWNER JOB DONE SUCCESSFULLY(${count}) ON ::: ` + new Date().toLocaleString())
 
     // return res.json({ ok: true, message: 'DEBTS OWNER JOB DONE SUCCESSFULLY.' })
   } catch (error) {
