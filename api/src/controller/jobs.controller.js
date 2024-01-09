@@ -50,6 +50,7 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
     include: [{ model: ClientExpense }, { model: Property }, { model: PriceHistorial }],
   })
   // if (1 === 1) return res.json({ ok: true, results: docs2.length, docs2 })
+  console.log('DOCS :: ', docs2.length)
 
   const transact = await sequelize.transaction()
 
@@ -77,6 +78,7 @@ exports.jobDebtsClients = catchAsync(async (req, res, next) => {
       })
 
       //   if (1 === 1) return res.json({ ok: true, results: docs2.length })
+      if (!exist) console.log('EXIST :: ', exist)
 
       if (!exist) {
         count++
