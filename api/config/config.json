@@ -10,7 +10,7 @@
       "collate": "utf8mb4_0900_ai_ci", 
       "timestamps": true
     },
-    "logging":false
+    "logging": true
   },
   "test": {
     "username": "novaitfl_ivanadb",

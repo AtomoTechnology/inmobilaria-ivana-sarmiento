@@ -5,6 +5,7 @@ const validador = require('../../helpers/validador')
 router.use(validador.protect)
 router.get('/', ctrl.GetAll)
 router.get('/paginate', ctrl.Paginate)
+router.get('/statistics', ctrl.statistics)
 //Get by id
 router.get('/:id', ctrl.GetById)
 
